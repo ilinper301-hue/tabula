@@ -5,7 +5,7 @@
 // Estilos: css/bienvenida.css (la pantalla se superpone a la navegación: es a pantalla completa).
 
 import { store } from '../store.js';
-import { h, icon } from '../ui.js';
+import { h, icon, logoLockup } from '../ui.js';
 import { TOTAL_STEPS, FINAL_STEP, loadState, saveState, clearDrafts } from './bienvenida/common.js';
 import { stepPerfil } from './bienvenida/step-perfil.js';
 import { stepGrupo } from './bienvenida/step-grupo.js';
@@ -87,7 +87,7 @@ export function render(container) {
 
     root.replaceChildren(
       h('header', { class: 'bv-top' },
-        h('div', { class: 'bv-brand' }, h('span', { class: 'brand-mark' }, icon('logo', 18)), h('span', { class: 'brand-name' }, 'Tabula')),
+        h('div', { class: 'bv-brand' }, logoLockup({ size: 30 })),
         h('span', { class: 'bv-stepno', 'aria-live': 'polite' }, isFinal ? '¡Listo!' : `Paso ${n} de ${TOTAL_STEPS}`),
         isFinal ? h('span') : h('button', { type: 'button', class: 'link-btn bv-skipall', onclick: skipAll }, 'Saltar asistente')),
       progress, main, h('footer', { class: 'bv-foot' }, foot));

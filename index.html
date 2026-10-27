@@ -11,7 +11,8 @@
   <meta name="apple-mobile-web-app-title" content="Tabula">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Inter:wght@400;500;600&display=swap">
@@ -32,7 +33,7 @@
       var t = JSON.parse(localStorage.getItem('tabula:v1:set:theme') || '"system"');
       var dark = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
       if (dark) document.documentElement.dataset.theme = 'dark';
-      var ac = JSON.parse(localStorage.getItem('tabula:v1:set:accent') || '"terracota"');
+      var ac = JSON.parse(localStorage.getItem('tabula:v1:set:accent') || '"azul"');
       if (ac && ac !== 'terracota') document.documentElement.dataset.accent = ac;
       // Si hay bloqueo, se oculta el contenido desde el primer instante
       var lk = JSON.parse(localStorage.getItem('tabula:v1:set:lock') || 'null');
@@ -44,6 +45,7 @@
   <div class="app">
     <nav class="sidebar" id="sidebar" aria-label="Principal"></nav>
     <main class="main" id="main">
+    <header class="mobile-brand" id="mobile-brand"></header>
       <div class="view" id="view"></div>
     </main>
   </div>

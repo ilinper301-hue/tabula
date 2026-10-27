@@ -33,7 +33,7 @@ export function render(container) {
     }, label));
 
   // --- Color de la app ---
-  const curAccent = store.getSetting('accent', 'terracota');
+  const curAccent = store.getSetting('accent', 'azul');
   const swatches = h('div', { class: 'swatches', role: 'radiogroup', 'aria-label': 'Color de la app' },
     ...ACCENTS.map(([key, label, hex]) => h('button', {
       type: 'button', class: 'swatch', role: 'radio', 'aria-checked': String(key === curAccent),

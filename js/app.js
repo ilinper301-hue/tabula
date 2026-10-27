@@ -1,7 +1,7 @@
 // Tabula · arranque, navegación y estructura
 
 import { store } from './store.js';
-import { h, icon } from './ui.js';
+import { h, icon, logoLockup } from './ui.js';
 import { initSync, getSyncState, onSyncChange, SYNC_LABELS } from './sync.js';
 import './plan-sync.js';
 import { initLock, setForgotHandler, resetLock } from './lock.js';
@@ -58,9 +58,7 @@ function renderNav(activeId) {
   const sub = sync.enabled ? SYNC_LABELS[sync.status] : (profile.centro || 'Ajustes');
 
   sidebar.replaceChildren(
-    h('div', { class: 'brand' },
-      h('div', { class: 'brand-mark' }, icon('logo', 18)),
-      h('span', { class: 'brand-name' }, 'Tabula')),
+    h('a', { class: 'brand', href: '#/hoy', 'aria-label': 'Tabula, ir a Hoy' }, logoLockup({ size: 34 })),
     ...ROUTES.map(link),
     h('div', { class: 'side-spacer' }),
     h('a', {
@@ -72,6 +70,13 @@ function renderNav(activeId) {
       h('span', { class: 'user-name' }, displayName || 'Mi perfil'),
       h('span', { class: `user-sub sync-${sync.status}` }, sub))),
   );
+
+  const mobileBrand = document.getElementById('mobile-brand');
+  if (mobileBrand && !mobileBrand.firstChild) {
+    mobileBrand.append(h('a', { href: '#/hoy', class: 'brand', 'aria-label': 'Tabula, ir a Hoy' }, logoLockup({ size: 30 })));
+  }
+  // En el móvil, el logotipo encabeza la pantalla principal (Hoy)
+  if (mobileBrand) mobileBrand.hidden = activeId !== 'hoy';
 
   const mob = ROUTES.filter((r) => r.mobile);
   const moreActive = !mob.some((r) => r.id === activeId);
@@ -127,11 +132,11 @@ store.subscribe('settings', () => renderNav(parseHash().id));
 // Tema según sistema si el usuario no ha elegido
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => applyTheme());
 export const ACCENTS = [
-  ['terracota', 'Terracota', '#AE5630'], ['azul', 'Azul', '#3E5C76'], ['verde', 'Verde', '#4F6B4A'],
+  ['azul', 'Azul', '#3E5C76'], ['terracota', 'Terracota', '#AE5630'], ['verde', 'Verde', '#4F6B4A'],
   ['morado', 'Morado', '#6B4E7A'], ['petroleo', 'Petróleo', '#2E6A6A'], ['grafito', 'Grafito', '#3D3C38'],
 ];
 export function applyAccent() {
-  const a = store.getSetting('accent', 'terracota');
+  const a = store.getSetting('accent', 'azul');
   if (a && a !== 'terracota' && ACCENTS.some(([k]) => k === a)) document.documentElement.dataset.accent = a;
   else delete document.documentElement.dataset.accent;
 }

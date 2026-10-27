@@ -9,7 +9,7 @@
 // (la verificación la hace el sistema operativo; no sale nada del dispositivo).
 // La configuración es de cada dispositivo: no se sincroniza.
 
-import { h, icon } from './ui.js';
+import { h, icon, logoMark } from './ui.js';
 
 const KEY = 'tabula:v1:set:lock';
 const FAIL_KEY = 'tabula:v1:lockFails';
@@ -223,7 +223,7 @@ function buildOverlay() {
   const ok = h('button', { type: 'button', class: 'btn btn-primary lock-ok', onclick: tryPin }, 'Desbloquear');
 
   const card = h('div', { class: 'lock-card' },
-    h('div', { class: 'brand-mark lock-mark' }, icon('logo', 22)),
+    h('div', { class: 'lock-mark' }, logoMark(56)),
     h('h1', { class: 'lock-title', id: 'lock-title' }, 'Tabula está bloqueada'),
     h('p', { class: 'lock-sub' }, 'Introduce tu PIN'),
     dots, live, msg, pad, ok, forgot);
