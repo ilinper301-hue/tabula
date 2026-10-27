@@ -1,0 +1,41 @@
+/* Tabula · página pública de encuestas (usa los tokens de app.css) */
+body.ep-page { min-height: 100dvh; display: flex; flex-direction: column; }
+.ep {
+  width: 100%; max-width: 680px; margin: 0 auto; flex: 1;
+  padding: max(28px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 28px max(16px, env(safe-area-inset-left));
+  display: flex; flex-direction: column; gap: 14px;
+}
+.ep-loading { color: var(--muted); text-align: center; margin-top: 30vh; }
+.ep-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 22px; }
+.ep-head { border-top: 6px solid var(--accent); }
+.ep-title { margin: 0 0 6px; font-family: var(--font-serif); font-weight: 400; font-size: 30px; line-height: 1.2; text-wrap: balance; }
+.ep-desc { margin: 6px 0 10px; white-space: pre-line; color: var(--text-2); }
+.ep-meta { margin: 0; font-size: 13px; color: var(--muted); }
+.ep-form { display: flex; flex-direction: column; gap: 14px; }
+.ep-field { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.ep-q { font-weight: 500; font-size: 16px; padding: 0; }
+.ep-qn { color: var(--muted); font-variant-numeric: tabular-nums; }
+.ep-req { color: var(--danger); }
+.ep-opt-tag { color: var(--muted); font-weight: 400; }
+.ep-help { margin: -4px 0 0; font-size: 13px; color: var(--muted); }
+.ep-opts { display: flex; flex-direction: column; gap: 6px; }
+.ep-opt {
+  display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 8px 12px; cursor: pointer;
+  border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface);
+}
+.ep-opt:hover { background: var(--hover); }
+.ep-opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.ep-opt input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); flex-shrink: 0; }
+.ep-scale { display: grid; grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); gap: 6px; }
+.ep-scale-opt { justify-content: center; flex-direction: column; gap: 4px; padding: 8px 4px; font-variant-numeric: tabular-nums; }
+.ep-scale-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+.ep-err { margin: 10px 0 0; font-size: 14px; color: var(--danger); }
+.ep-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.ep-submit { min-height: 48px; padding: 0 26px; font-size: 16px; }
+.ep-status { margin: 0; font-size: 14px; color: var(--muted); }
+.ep-msg { text-align: center; padding: 40px 24px; }
+.ep-msg p { color: var(--text-2); margin: 8px 0 18px; }
+.ep-done .ep-title::before { content: ''; display: block; width: 44px; height: 44px; margin: 0 auto 14px; border-radius: 50%; background: var(--t3-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23435536' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center / 24px no-repeat; }
+.ep-foot { text-align: center; font-size: 12px; color: var(--muted); padding: 10px 16px calc(18px + env(safe-area-inset-bottom)); }
+@media (max-width: 520px) { .ep-card { padding: 18px; } .ep-title { font-size: 26px; } }
+legend.ep-q { margin-bottom: 10px; }

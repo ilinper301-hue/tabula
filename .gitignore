@@ -1,0 +1,6 @@
+# Sistema
+.DS_Store
+Thumbs.db
+# Copias de datos: nunca al repositorio (datos de alumnado)
+*.json.bak
+tabula-copia-*.json

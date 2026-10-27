@@ -1,0 +1,86 @@
+/* Tabula · estilos del módulo Tareas (usa solo variables de app.css) */
+
+.tareas-view .page-head { margin-bottom: 18px; }
+.tareas-tabs { margin-bottom: 18px; max-width: 100%; }
+.tareas-tabs button { min-height: 40px; }
+
+/* Etiquetas de filtro */
+.tag-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+@media (max-width: 680px) {
+  .tag-filter { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -18px; padding-inline: 18px; }
+  .tag-filter::-webkit-scrollbar { display: none; }
+  .tag-filter > * { flex-shrink: 0; }
+}
+.tag-toggle {
+  min-height: 44px; padding: 0 14px; border-radius: 999px; cursor: pointer; font-size: 13px;
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-2);
+}
+.tag-toggle:hover { background: var(--hover); }
+.tag-toggle.on, .tag-toggle[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent-text); font-weight: 550; }
+
+/* Listas */
+.tareas-card { padding: 16px 22px; }
+.tareas-group + .tareas-group { margin-top: 18px; }
+.tareas-group .section-label { margin-bottom: 2px; }
+.task-list { list-style: none; margin: 0; padding: 0; }
+.task-list[hidden] { display: none; }
+.task-row { display: flex; align-items: flex-start; gap: 4px; }
+.task-row + .task-row { border-top: 1px solid var(--divider); }
+
+/* Casilla con zona táctil de 44px */
+.task-check { width: 44px; min-height: 44px; display: grid; place-items: center; flex-shrink: 0; cursor: pointer; margin-left: -10px; }
+.task-check .check { margin: 0; }
+
+.task-body { flex: 1; min-width: 0; padding: 11px 0 11px 2px; min-height: 44px; cursor: pointer; border-radius: 8px; }
+.task-row.compact .task-body { padding: 8px 0 8px 2px; }
+.task-title { font-size: 15px; line-height: 1.35; overflow-wrap: anywhere; }
+.task-notes { margin-top: 2px; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 5px; font-size: 12.5px; color: var(--muted); }
+.task-meta > span { display: inline-flex; align-items: center; gap: 4px; }
+.task-meta .chip { gap: 0; }
+.task-date.overdue { color: var(--accent-text); font-weight: 600; }
+.task-flag { color: var(--accent-text); }
+.task-row.is-done .task-title { text-decoration: line-through; color: var(--muted); }
+.task-row.is-done .task-meta { opacity: .75; }
+
+/* Completadas */
+.tareas-completed { margin-top: 22px; }
+.completed-toggle {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 6px;
+  background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 600;
+  letter-spacing: .3px;
+}
+.completed-toggle:hover { color: var(--text); }
+.completed-toggle .chev { transition: transform .15s; transform: rotate(-90deg); }
+.completed-toggle[aria-expanded="true"] .chev { transform: none; }
+.tareas-completed .tareas-card { display: none; margin-top: 4px; }
+.completed-toggle[aria-expanded="true"] + .tareas-card { display: block; }
+
+/* Editor */
+.te-form { display: flex; flex-direction: column; }
+.te-row { display: flex; flex-direction: column; gap: 8px; }
+.te-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+.te-quick .btn { min-height: 44px; }
+.te-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.prio-toggle { min-height: 44px; justify-content: flex-start; }
+.prio-toggle[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent-text); }
+.te-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.te-chips:empty { display: none; }
+.te-subs { list-style: none; margin: 0; padding: 0; }
+.te-sub { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--divider); }
+.te-sub-title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.te-sub.is-done .te-sub-title { text-decoration: line-through; color: var(--muted); }
+.te-sub .icon-btn { width: 44px; height: 44px; }
+.te-foot {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  position: sticky; bottom: -24px; margin: 8px -24px -24px; padding: 14px 24px;
+  background: var(--bg); border-top: 1px solid var(--border);
+}
+.te-foot .btn { min-height: 44px; }
+
+@media (max-width: 680px) {
+  .tareas-card { padding: 8px 16px; }
+  .tareas-tabs { display: flex; width: 100%; }
+  .tareas-tabs button { flex: 1; padding: 0 8px; }
+  .te-foot { padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+}

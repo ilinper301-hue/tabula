@@ -1,0 +1,55 @@
+rules_version = '2';
+
+// IMPORTANTE: este proyecto de Firebase lo comparten varias apps (Barri, Lectori, Tabula).
+// No sustituyas tus reglas actuales: copia SOLO el bloque "Tabula" dentro de tu
+// `match /databases/{database}/documents { … }`, junto a los bloques de las otras apps.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Tabula ----------
+    // Datos de cada docente: solo él o ella puede leerlos y escribirlos.
+    match /apps/tabula/users/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Encuestas para compañeros.
+    // - La definición la crea y gestiona su autor (cuenta de Google, no anónima).
+    // - Quien tiene el enlace puede leerla solo mientras está abierta.
+    // - Cada navegador (sesión anónima) puede enviar UNA respuesta y modificarla mientras esté abierta.
+    // - Solo el autor puede leer y borrar las respuestas.
+    match /apps/tabula/surveys/{sid} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == resource.data.ownerUid;
+      }
+      allow read: if resource.data.estado == 'abierta' || isOwner();
+      allow create: if request.auth != null
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isOwner() && request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if isOwner();
+
+      match /responses/{rid} {
+        function survey() {
+          return get(/databases/$(database)/documents/apps/tabula/surveys/$(sid)).data;
+        }
+        function validResponse() {
+          return request.auth != null && request.auth.uid == rid
+            && survey().estado == 'abierta'
+            && request.resource.data.keys().hasOnly(['answers', 'nombre', 'createdAt', 'version'])
+            && request.resource.data.answers is map
+            && request.resource.data.answers.size() <= 60
+            && (request.resource.data.nombre == null
+                || (request.resource.data.nombre is string && request.resource.data.nombre.size() <= 80))
+            && request.resource.data.createdAt == request.time;
+        }
+        allow create, update: if validResponse();
+        allow read: if request.auth != null
+          && (request.auth.uid == rid || request.auth.uid == survey().ownerUid);
+        allow delete: if request.auth != null && request.auth.uid == survey().ownerUid;
+      }
+    }
+    // ---------- fin Tabula ----------
+
+  }
+}
