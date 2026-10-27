@@ -3,6 +3,7 @@
 import { store, uid } from '../../store.js';
 import { getStudents, currentSchoolYear } from '../../school.js';
 import { computeGroup, newGradebookConfig } from '../../grading.js';
+import { loadCurriculo, officialFor, mergeOfficial, hasOfficial } from '../../curriculo.js';
 
 /** Trimestre actual: sept–dic → 1, ene–mar → 2, abr–ago → 3. */
 export function currentEv(d = new Date()) {
@@ -40,11 +41,39 @@ export function loadContext({ groupId, area, ev }) {
 }
 
 /** Crea el cuaderno de un área con la configuración elegida. */
-export function createGradebook(groupId, area, { escala, modo, final }) {
-  return store.add('gradebooks', {
+export function createGradebook(groupId, area, { escala, modo, final }, { onOfficial } = {}) {
+  const gb = store.add('gradebooks', {
     groupId, area, cursoEscolar: yearOf(groupId),
     ...newGradebookConfig({ escala, modo, final }, uid),
   });
+  // Se rellenan solos los criterios oficiales del área y curso del grupo (BOJA)
+  addOfficialCriteria(gb.id).then((r) => { if (r && r.added && onOfficial) onOfficial(r); }).catch(() => {});
+  return gb;
+}
+
+/** Curso (1–6) del grupo, o null. */
+export const cursoOf = (groupId) => {
+  const n = Number(store.get('groups', groupId)?.curso);
+  return n >= 1 && n <= 6 ? n : null;
+};
+
+/** Criterios oficiales para el área y curso del grupo (o null). */
+export async function officialForGroup(groupId, area) {
+  const curso = cursoOf(groupId);
+  if (!curso || !hasOfficial(area, curso)) return null;
+  return officialFor(await loadCurriculo(), area, curso);
+}
+
+/** Añade al cuaderno los criterios oficiales que aún no tenga. */
+export async function addOfficialCriteria(gbId) {
+  const gb = store.get('gradebooks', gbId);
+  if (!gb) return null;
+  const off = await officialForGroup(gb.groupId, gb.area);
+  if (!off) return null;
+  const fresh = store.get('gradebooks', gbId);
+  const r = mergeOfficial(fresh.criterios || [], off.criterios, uid);
+  if (r.added) store.update('gradebooks', gbId, { criterios: r.criterios });
+  return { ...r, official: off };
 }
 
 export const evaluacionDefaults = () =>

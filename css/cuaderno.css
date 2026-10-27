@@ -249,6 +249,13 @@ tbody tr:focus-within > td.cb-cell .cb-in:focus { background: var(--surface); }
 .cb-preview { width: 100%; font-size: 13px; }
 .cb-prev-row { display: flex; gap: 8px; align-items: baseline; padding: 3px 0; border-bottom: 1px solid var(--divider); }
 .cb-prev-row strong { flex-shrink: 0; min-width: 40px; }
+.cb-official { border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: var(--surface-2, transparent); }
+.cb-off-title { margin: 0; font-size: 14px; }
+.cb-off-list { max-height: 46vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; font-size: 13px; padding-right: 4px; }
+.cb-off-ce-t { display: flex; gap: 8px; align-items: baseline; margin: 0 0 4px; font-weight: 600; }
+.cb-off-ce-t .chip { flex-shrink: 0; }
+.cb-off-ce .cb-prev-row strong { min-width: 48px; font-variant-numeric: tabular-nums; }
+.cb-prev-row.is-have { opacity: .5; }
 .cb-lv-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
 .cb-lv-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; text-align: center; }
 .cb-lv-field .input { text-align: center; padding: 9px 4px; }

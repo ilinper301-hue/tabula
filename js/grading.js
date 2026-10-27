@@ -198,7 +198,7 @@ export function configWarnings(gb, activities = []) {
 /** Interpreta criterios pegados (una línea por criterio): "1.1. Descripción", "CE1.2 - Descripción", "LCL.1.3 Descripción". */
 export function parseCriteriaList(text) {
   return String(text || '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean).map((line) => {
-    const m = line.match(/^((?:[A-Za-zÁÉÍÓÚÑ]{1,5}\.?\s?)?\d+(?:\.\d+)+)\.?\s*[-–:)]?\s*(.*)$/);
+    const m = line.match(/^((?:[A-Za-zÁÉÍÓÚÑ]{1,5}\.?\s?)?\d+(?:\.\d+)+(?:\.[a-f](?=[.\s)]|$))?)\.?\s*[-–:)]?\s*(.*)$/);
     return m ? { codigo: m[1].replace(/\s/g, ''), descripcion: m[2].trim() } : { codigo: '', descripcion: line };
   });
 }

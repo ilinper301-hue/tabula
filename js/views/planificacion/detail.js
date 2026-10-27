@@ -3,6 +3,8 @@ import { store } from '../../store.js';
 import { h, icon, toast } from '../../ui.js';
 import { hasSlots } from '../../planning.js';
 import { competenciaOf } from '../../grading.js';
+import { hasOfficial } from '../../curriculo.js';
+import { createGradebook, evaluacionDefaults, addOfficialCriteria, cursoOf } from '../cuaderno/model.js';
 import {
   ESTADOS_SIT, ESTADO_SIT_CLASS, ESTADOS_SES, ESTADO_SES_CLASS, plural, whenText, href, ico, field, debounced,
   swapOrden, normalizeOrden, addSession, sesionesOfSit, sesionesOf, ctxFor, gradebookOf, replaceInOrder,
@@ -76,10 +78,26 @@ function criteriosCard(env, sit) {
           h('input', { type: 'checkbox', checked: chosen.has(c.id), 'data-k': `crit-${c.id}`, onchange: (e) => toggle(c.id, e.target.checked) }),
           h('span', { class: 'pl-crit-code' }, c.codigo),
           h('span', { class: 'pl-crit-desc' }, c.descripcion || '')))),
-    ] : h('p', { class: 'pl-hint' },
-      `El cuaderno de ${env.area} de este grupo aún no tiene criterios de evaluación. `,
-      h('a', { href: `#/cuaderno?${new URLSearchParams({ grupo: env.groupId, area: env.area })}` }, 'Añádelos en el Cuaderno'),
-      ' y podrás vincularlos aquí.'));
+    ] : emptyCriterios(env, gb));
+}
+
+function emptyCriterios(env, gb) {
+  const curso = cursoOf(env.groupId);
+  const link = h('a', { href: `#/cuaderno?${new URLSearchParams({ grupo: env.groupId, area: env.area })}` }, 'el Cuaderno');
+  if (!curso || !hasOfficial(env.area, curso)) {
+    return h('p', { class: 'pl-hint' }, `El cuaderno de ${env.area} de este grupo aún no tiene criterios de evaluación. Añádelos en `, link, ' y podrás vincularlos aquí.');
+  }
+  const btn = h('button', {
+    type: 'button', class: 'btn btn-primary', onclick: async () => {
+      btn.disabled = true;
+      const done = (r) => { btn.disabled = false; toast(r && r.added ? `${r.added} criterios oficiales de ${curso}º cargados` : 'No se pudieron cargar los criterios'); };
+      if (gb) done(await addOfficialCriteria(gb.id).catch(() => null));
+      else createGradebook(env.groupId, env.area, evaluacionDefaults(), { onOfficial: done });
+    },
+  }, icon('download', 16), `Cargar criterios oficiales de ${curso}º`);
+  return h('div', { class: 'pl-crit-empty' },
+    h('p', { class: 'pl-hint' }, `Aún no hay criterios de ${env.area} para este grupo. Carga los del BOJA (Orden de 30 de mayo de 2023) y podrás vincularlos aquí; también quedarán en `, link, gb ? '.' : ', que se creará con tu configuración habitual.'),
+    btn);
 }
 
 // ---------- Sesiones ----------

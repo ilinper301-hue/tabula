@@ -8,7 +8,7 @@
 //   sheet-*.js        hojas: actividad, configuración, desglose del alumno
 //   export.js         CSV
 import { store } from '../store.js';
-import { h, icon, openSheet } from '../ui.js';
+import { h, icon, openSheet, toast } from '../ui.js';
 import { getGroups, getGroup, AREAS, areaShort, areaColor, currentSchoolYear } from '../school.js';
 import { EVALUACIONES, configWarnings } from '../grading.js';
 import {
@@ -144,7 +144,8 @@ export function render(container, params = new URLSearchParams()) {
         h('div', { class: 'field' }, h('span', { class: 'field-label' }, 'Cálculo de la nota'), modo)),
       h('button', {
         type: 'button', class: 'btn btn-primary',
-        onclick: () => createGradebook(st.groupId, st.area, { escala: choice.escala, modo: choice.modo, final: d.final }),
+        onclick: () => createGradebook(st.groupId, st.area, { escala: choice.escala, modo: choice.modo, final: d.final },
+          { onOfficial: (r) => toast(`${r.added} criterios oficiales de ${r.official.curso}º cargados`) }),
       }, icon('plus', 16), `Crear cuaderno de ${areaShort(st.area)}`));
   }
 

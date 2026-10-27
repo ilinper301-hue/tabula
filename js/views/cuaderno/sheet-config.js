@@ -2,7 +2,8 @@
 import { store, uid } from '../../store.js';
 import { h, icon, toast, openSheet } from '../../ui.js';
 import { LEVELS, LEVEL_LABELS, configWarnings, parseCriteriaList, round1 } from '../../grading.js';
-import { removeGradebook, restoreGradebook } from './model.js';
+import { removeGradebook, restoreGradebook, officialForGroup } from './model.js';
+import { mergeOfficial } from '../../curriculo.js';
 import { field, segmented, confirmDelete, plural, trunc } from './common.js';
 import { areaShort } from '../../school.js';
 
@@ -62,7 +63,7 @@ export function openConfigSheet({ gb, activities }) {
       const p = h('input', { class: 'input cb-w-num', type: 'number', inputmode: 'decimal', min: '0', step: '0.5', value: String(cr.peso ?? 1), title: 'Peso', 'aria-label': `Peso del criterio ${i + 1}`, oninput: () => { cr.peso = toNum(p.value, 1); } });
       return h('div', { class: 'cb-row cb-row-crit' }, c, d, p,
         h('button', { type: 'button', class: 'icon-btn', 'aria-label': `Quitar criterio ${cr.codigo || i + 1}`, onclick: () => { D.criterios.splice(i, 1); paintCriterios(); paintWarnings(); } }, icon('x', 18)));
-    }) : [h('p', { class: 'cb-hint' }, 'Sin criterios. Pega la lista del área o añádelos uno a uno.')]));
+    }) : [h('p', { class: 'cb-hint' }, 'Sin criterios. Carga los oficiales del BOJA, pega una lista o añádelos uno a uno.')]));
   }
   paintCriterios();
 
@@ -86,6 +87,39 @@ export function openConfigSheet({ gb, activities }) {
     paste.value = ''; parsed = []; preview.replaceChildren(); addPasted.disabled = true; addPasted.textContent = 'Añadir criterios';
     paintCriterios(); paintWarnings();
   });
+  // Criterios oficiales (BOJA) del área y curso del grupo
+  const offBox = h('div', { class: 'cb-official', hidden: true });
+  const offBtn = h('button', { type: 'button', class: 'btn btn-sm', onclick: async () => {
+    if (!offBox.hidden) { offBox.hidden = true; return; }
+    offBtn.disabled = true;
+    let off = null;
+    try { off = await officialForGroup(gb.groupId, gb.area); } catch (e) { off = null; }
+    offBtn.disabled = false;
+    if (!off) { toast('No hay criterios oficiales para esta área o el grupo no tiene curso asignado'); return; }
+    const have = new Set(D.criterios.map((c) => String(c.codigo || '').trim().replace(/\.$/, '')));
+    const faltan = off.criterios.filter((c) => !have.has(c.codigo)).length;
+    const apply = (replace) => {
+      const r = mergeOfficial(replace ? [] : D.criterios, off.criterios, uid);
+      D.criterios = r.criterios;
+      offBox.hidden = true;
+      toast(replace ? `${plural(r.added, 'criterio oficial', 'criterios oficiales')} en lugar de los anteriores` : `${plural(r.added, 'criterio añadido', 'criterios añadidos')}`);
+      paintCriterios(); paintWarnings();
+    };
+    offBox.replaceChildren(...[
+      h('p', { class: 'cb-off-title' }, h('strong', {}, `${areaShort(gb.area)} · ${off.curso}º`), ` · ${plural(off.criterios.length, 'criterio', 'criterios')}, ${plural(off.competencias.length, 'competencia específica', 'competencias específicas')}`),
+      off.nota ? h('p', { class: 'cb-hint' }, off.nota) : null,
+      h('div', { class: 'cb-off-list' }, off.competencias.map((ce) => h('div', { class: 'cb-off-ce' },
+        h('p', { class: 'cb-off-ce-t' }, h('span', { class: `chip t${(ce.n - 1) % 6 + 1}` }, `CE${ce.n}`), h('span', {}, trunc(ce.texto, 140))),
+        off.criterios.filter((c) => c.competencia === ce.n).map((c) => h('div', { class: `cb-prev-row${have.has(c.codigo) ? ' is-have' : ''}` },
+          h('strong', {}, c.codigo), h('span', {}, c.descripcion)))))),
+      h('p', { class: 'cb-hint' }, `Fuente: ${off.fuente}.`),
+      h('div', { class: 'cb-inline-actions' },
+        h('button', { type: 'button', class: 'btn btn-sm btn-primary', disabled: !faltan, onclick: () => apply(false) },
+          faltan ? (D.criterios.length ? `Añadir los ${plural(faltan, 'que falta', 'que faltan')}` : `Añadir ${plural(faltan, 'criterio', 'criterios')}`) : 'Ya están todos'),
+        D.criterios.length ? h('button', { type: 'button', class: 'btn btn-sm', onclick: () => apply(true) }, 'Sustituir los actuales') : null)].filter(Boolean));
+    offBox.hidden = false;
+  } }, icon('download', 14), 'Criterios oficiales (BOJA)');
+
   const pasteDet = h('details', { class: 'cb-details' }, h('summary', {}, 'Pegar criterios'),
     h('div', { class: 'cb-details-body' }, paste, preview, addPasted));
 
@@ -127,7 +161,8 @@ export function openConfigSheet({ gb, activities }) {
     h('h3', { class: 'section-label cb-sec' }, 'Criterios de evaluación (modo criterios)'),
     critList,
     h('div', { class: 'cb-inline-actions' },
-      h('button', { type: 'button', class: 'btn btn-sm', onclick: () => { D.criterios.push({ id: uid(), codigo: '', descripcion: '', peso: 1 }); paintCriterios(); critList.querySelector('.cb-row:last-child input').focus(); } }, icon('plus', 14), 'Añadir criterio')),
+      h('button', { type: 'button', class: 'btn btn-sm', onclick: () => { D.criterios.push({ id: uid(), codigo: '', descripcion: '', peso: 1 }); paintCriterios(); critList.querySelector('.cb-row:last-child input').focus(); } }, icon('plus', 14), 'Añadir criterio'), offBtn),
+    offBox,
     pasteDet,
     h('h3', { class: 'section-label cb-sec' }, 'Valor de cada nivel'),
     h('p', { class: 'cb-hint' }, 'Nota (0–10) que se guarda al elegir cada nivel.'),
