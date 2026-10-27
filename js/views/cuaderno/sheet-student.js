@@ -3,6 +3,7 @@ import { h, toast, openSheet } from '../../ui.js';
 import { listName } from '../../school.js';
 import { parseGradeInput, formatGrade, competenciaOf, toLevel, EVALUACIONES } from '../../grading.js';
 import { saveAdjustment } from './model.js';
+import { critRubric } from '../../informes.js';
 import { levelChip, num, plural, trunc, field } from './common.js';
 import { getGroup } from '../../school.js';
 import { listObservations, tally } from '../../observations.js';
@@ -13,8 +14,9 @@ export function openStudentSheet({ ctx, student, ev }) {
   const res = ctx.results[student.id];
   const evLabel = EVALUACIONES.find((e) => e.id === ev)?.label || '';
 
-  const row = (label, sub, v, count) => h('div', { class: 'cb-bk-row' },
-    h('div', { class: 'cb-bk-label' }, h('span', {}, label), sub ? h('small', {}, sub) : null),
+  const row = (label, sub, v, count, rubric) => h('div', { class: 'cb-bk-row', title: rubric || null },
+    h('div', { class: 'cb-bk-label' }, h('span', {}, label), sub ? h('small', {}, sub) : null,
+      rubric ? h('small', { class: 'cb-bk-rub' }, rubric) : null),
     h('div', { class: 'cb-bk-val' },
       count != null ? h('small', {}, plural(count, 'actividad', 'actividades')) : null,
       h('strong', {}, v == null ? '—' : num(v)), levelChip(v) || h('span', { class: 'cb-chip-ph' })));
@@ -23,7 +25,10 @@ export function openStudentSheet({ ctx, student, ev }) {
   const rows = [];
   if (gb.modo === 'criterios') {
     rows.push(h('h3', { class: 'section-label' }, 'Por criterio de evaluación'));
-    (gb.criterios || []).forEach((cr) => rows.push(row(cr.codigo || '·', trunc(cr.descripcion, 70), res.porCriterio[cr.id], countFor((a) => (a.criterioIds || []).includes(cr.id)))));
+    (gb.criterios || []).forEach((cr) => {
+      const lv = toLevel(res.porCriterio[cr.id]);
+      rows.push(row(cr.codigo || '·', trunc(cr.descripcion, 70), res.porCriterio[cr.id], countFor((a) => (a.criterioIds || []).includes(cr.id)), lv ? critRubric(cr)[lv] : null));
+    });
     const ces = [...new Set((gb.criterios || []).map((c) => competenciaOf(c.codigo)).filter(Boolean))].sort((a, b) => a - b);
     if (ces.length) {
       rows.push(h('h3', { class: 'section-label cb-sec' }, 'Por competencia específica'));

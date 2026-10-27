@@ -8,6 +8,7 @@ import { store } from '../../store.js';
 import { h, icon, openSheet, toast, todayISO, fromISO } from '../../ui.js';
 import { areaShort, areaColor, getGroup } from '../../school.js';
 import { slotsFor, hasSlots, isLectivo } from '../../planning.js';
+import { docsField } from '../documentos/attach.js';
 import {
   ctxFor, sesionesOfSit, whenText, slotTime, shortDate, plural, postponeSession, fixSessionDate, applyChanges,
   debounced, field, href, ico, ESTADOS_SES, ESTADO_SES_CLASS,
@@ -141,6 +142,7 @@ export function openSessionSheet(sessionId) {
   }
 
   // ---------- Montaje ----------
+  const docs = docsField(sessionId);
   const body = h('div', { class: 'pl-ss' },
     meta,
     field('Título', titleInput),
@@ -152,6 +154,7 @@ export function openSessionSheet(sessionId) {
     textField('objetivo', 'Objetivo', { rows: 2, placeholder: '¿Qué deben aprender hoy?' }),
     textField('desarrollo', 'Desarrollo', { rows: 5, placeholder: 'Actividades, agrupamientos, tiempos…' }),
     textField('materiales', 'Materiales', { rows: 2, placeholder: 'Libro, fichas, proyector…' }),
+    docs.el,
     h('div', { class: 'pl-diary' }, textField('diario', 'Diario de clase', { rows: 4, placeholder: '¿Qué pasó realmente?' })),
     h('section', { class: 'pl-ss-block' }, h('h3', { class: 'section-label' }, 'Fijar fecha'), fixBox),
     h('div', { class: 'pl-ss-foot' },
@@ -172,7 +175,7 @@ export function openSessionSheet(sessionId) {
 
   const pos = sesionesOfSit(first.situacionId).findIndex((x) => x.id === sessionId) + 1;
   const close = openSheet(pos ? `Sesión ${pos}` : 'Sesión', body, {
-    onClose: () => { flushers.forEach((f) => f()); unsub.forEach((u) => u()); },
+    onClose: () => { flushers.forEach((f) => f()); unsub.forEach((u) => u()); docs.destroy(); },
   });
   return close;
 }

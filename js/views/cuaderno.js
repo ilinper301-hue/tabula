@@ -27,6 +27,12 @@ const last = { groupId: null, area: null, ev: null };
 let lastVista = 'actividades';
 
 export function render(container, params = new URLSearchParams()) {
+  // Informes del grupo (perfil competencial, Séneca, familias): vista aparte, cargada solo si se pide
+  if (params.get('vista') === 'informes') {
+    let off = null; let gone = false;
+    import('./cuaderno/informes.js').then((m) => { if (!gone) off = m.renderInformes(container, params); });
+    return () => { gone = true; if (off) off(); };
+  }
   container.className = (container.className.replace(/\bcuaderno-view\b/g, '') + ' cuaderno-view').trim();
 
   // ---------- Selección actual ----------
@@ -102,6 +108,8 @@ export function render(container, params = new URLSearchParams()) {
     evSeg.classList.add('cb-ev');
     evSeg.querySelectorAll('button').forEach((b, i) => { b.setAttribute('aria-label', EVALUACIONES[i].label); });
 
+    const informes = h('a', { class: 'btn cb-informes-btn', href: `#/cuaderno?${new URLSearchParams({ grupo: st.groupId, vista: 'informes', ev: st.ev })}`, 'aria-label': 'Informes del grupo' },
+      icon('table', 16), h('span', { class: 'cb-lbl' }, 'Informes'));
     const row2 = [evSeg];
     if (ctx.gb && ctx.gb.modo === 'criterios') {
       const vSeg = segmented([['actividades', 'Actividades'], ['criterios', 'Criterios'], ['competencias', 'Competencias']], st.vista, (v) => {
@@ -111,7 +119,7 @@ export function render(container, params = new URLSearchParams()) {
       row2.push(vSeg);
     }
     return h('div', { class: 'cb-toolbar' },
-      h('div', { class: 'cb-tb-row' }, groupSel, areaChips), h('div', { class: 'cb-tb-row' }, row2));
+      h('div', { class: 'cb-tb-row' }, groupSel, areaChips, informes), h('div', { class: 'cb-tb-row' }, row2));
   }
 
   function openAreaPicker() {

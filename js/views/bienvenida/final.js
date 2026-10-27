@@ -3,6 +3,9 @@ import { store } from '../../store.js';
 import { h, icon } from '../../ui.js';
 import { getStudents } from '../../school.js';
 import { plural } from '../grupos/common.js';
+import { currentSchoolYear } from '../../school.js';
+import { PRESETS, presetLoaded } from '../../calendario-escolar.js';
+import { loadCalendar } from '../ajustes/calendario-escolar.js';
 
 export function finalScreen(ctx) {
   const group = ctx.st.groupId ? store.get('groups', ctx.st.groupId) : null;
@@ -25,12 +28,24 @@ export function finalScreen(ctx) {
       ['Planificar una situación de aprendizaje', 'Organiza tus sesiones por áreas.', `#/planificacion?grupo=${q(group.id)}`, 'planificacion']]
     : [['Crear tu primer grupo', 'Es el punto de partida de todo lo demás.', '#/grupos', 'grupos']];
 
+  // Calendario escolar de Andalucía (si hay uno para este curso y aún no está cargado)
+  const year = currentSchoolYear();
+  const calItem = PRESETS[year] && !presetLoaded(year) ? h('li', {},
+    h('a', { href: '#/calendario', role: 'button', onclick: (e) => {
+      e.preventDefault();
+      loadCalendar(year);
+      e.currentTarget.replaceChildren(h('span', { class: 'bv-suggest-ic' }, icon('check', 20)),
+        h('span', { class: 'bv-suggest-tx' }, h('strong', {}, 'Calendario escolar cargado'), h('span', {}, 'Añade a mano tus festivos locales en Ajustes.')));
+    } }, h('span', { class: 'bv-suggest-ic' }, icon('calendario', 20)),
+    h('span', { class: 'bv-suggest-tx' }, h('strong', {}, `Cargar el calendario escolar ${year}`), h('span', {}, 'Inicio y fin de curso, Navidad, Semana Santa y festivos de Andalucía.')),
+    icon('chevronRight', 18))) : null;
+
   const el = h('div', { class: 'bv-form' }, summary,
     h('h2', { class: 'bv-sub' }, 'Por dónde seguir'),
     h('ul', { class: 'bv-suggest' }, suggestions.map(([t, d, href, ic]) => h('li', {},
       h('a', { href }, h('span', { class: 'bv-suggest-ic' }, icon(ic, 20)),
         h('span', { class: 'bv-suggest-tx' }, h('strong', {}, t), h('span', {}, d)),
-        icon('chevronRight', 18))))));
+        icon('chevronRight', 18)))), calItem));
 
   return {
     title: 'Todo listo',

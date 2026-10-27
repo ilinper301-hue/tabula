@@ -11,9 +11,11 @@ import { signOutAndClear } from './sync.js';
 const ROUTES = [
   { id: 'hoy', label: 'Hoy', icon: 'hoy', load: () => import('./views/hoy.js'), mobile: true },
   { id: 'tareas', label: 'Tareas', icon: 'tareas', load: () => import('./views/tareas.js'), mobile: true, count: true },
-  { id: 'documentos', label: 'Documentos', icon: 'documentos', fase: 2 },
+  { id: 'documentos', label: 'Documentos', icon: 'documentos', load: () => import('./views/documentos.js') },
   { id: 'calendario', label: 'Calendario', icon: 'calendario', load: () => import('./views/calendario.js'), mobile: true },
   { id: 'grupos', label: 'Grupos', icon: 'grupos', load: () => import('./views/grupos.js'), mobile: true },
+  { id: 'aula', label: 'En clase', icon: 'aula', load: () => import('./views/aula.js') },
+  { id: 'tutoria', label: 'Tutoría', icon: 'tutoria', load: () => import('./views/tutoria.js') },
   { id: 'cuaderno', label: 'Cuaderno', icon: 'cuaderno', load: () => import('./views/cuaderno.js') },
   { id: 'planificacion', label: 'Planificación', icon: 'planificacion', load: () => import('./views/planificacion.js') },
   { id: 'programas', label: 'Planes y programas', icon: 'programas', load: () => import('./views/programas.js') },

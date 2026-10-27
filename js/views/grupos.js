@@ -84,7 +84,7 @@ function renderList(container) {
         h('button', {
           type: 'button', class: 'gr-archived-toggle', 'aria-expanded': String(archivedOpen),
           onclick: () => { archivedOpen = !archivedOpen; paint(); },
-        }, icon(archivedOpen ? 'chevronDown' : 'chevronRight', 16), `Archivados (${archived.length})`),
+        }, icon(archivedOpen ? 'chevronDown' : 'chevronRight', 16), `Cursos anteriores (${archived.length})`),
         archivedOpen ? h('div', { class: 'gr-cards' }, archived.map(card)) : null));
     }
     body.replaceChildren(...parts);

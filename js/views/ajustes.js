@@ -8,6 +8,8 @@ import {
   isLockEnabled, setPin, verifyPin, disableLock, isValidPin, lockTimeout, setLockTimeout, TIMEOUTS,
   biometricAvailable, enableBiometric, disableBiometric, hasBiometric, lockNow, onLockConfigChange,
 } from '../lock.js';
+import { calendarioEscolarCard } from './ajustes/calendario-escolar.js';
+import { nuevoCursoCard } from './ajustes/nuevo-curso.js';
 
 export function render(container) {
   const profile = store.getSetting('profile', { nombre: '', centro: '' });
@@ -187,6 +189,7 @@ export function render(container) {
   paintLock();
   const unsubLock = onLockConfigChange(() => { if (!lockMode) paintLock(); });
 
+  const calEsc = calendarioEscolarCard();
   container.replaceChildren(
     h('header', { class: 'page-head' }, h('div', {}, h('h1', { class: 'page-title' }, 'Ajustes'))),
     h('div', { class: 'settings' },
@@ -205,6 +208,8 @@ export function render(container) {
         evSeg('escala', 'Forma de calificar', [['numerica', 'Notas (0–10)'], ['niveles', 'Niveles (IN–SB)']]),
         evSeg('modo', 'Cálculo de la nota', [['porcentajes', 'Por porcentajes'], ['criterios', 'Por criterios (Séneca)']]),
         evSeg('final', 'Nota final', [['continua', 'Evaluación continua'], ['media', 'Media de evaluaciones']])),
+      calEsc.el,
+      nuevoCursoCard(),
       h('section', { class: 'card' },
         h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Bloqueo')),
         lockBody),
@@ -219,5 +224,5 @@ export function render(container) {
           h('button', { class: 'btn', onclick: () => fileInput.click() }, icon('upload', 18), 'Restaurar copia'), fileInput),
         importBox)),
   );
-  return () => { unsubSync(); unsubLock(); };
+  return () => { unsubSync(); unsubLock(); calEsc.destroy(); };
 }

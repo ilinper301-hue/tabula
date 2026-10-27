@@ -1,0 +1,235 @@
+/* Tabula · Tutoría, calendario escolar y nuevo curso (solo variables de app.css: claro y oscuro) */
+
+[class*="tu-"][hidden] { display: none !important; }
+.tutoria-view { min-width: 0; }
+.tu-hint { color: var(--muted); font-size: 13px; margin: 2px 0 0; }
+.tu-lead { margin: 0; color: var(--muted); font-size: 14px; flex: 1; min-width: 220px; }
+.tu-spacer { flex: 1; }
+.tu-error { margin: 0 0 12px; color: var(--danger); font-size: 13px; }
+.tu-stack { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.tu-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.tu-toolbar .btn { min-height: 44px; }
+.tu-empty { margin: 0; padding: 18px 8px; text-align: center; color: var(--muted); font-size: 14px; }
+.tu-empty-actions { margin-top: 16px; }
+.tu-chev { color: var(--muted); }
+.tu-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ---------- Selector de grupo y pestañas ---------- */
+.tu-group-select { width: auto; min-width: 150px; min-height: 44px; }
+.tu-tabs { margin-bottom: 20px; max-width: 100%; }
+.tu-tab {
+  min-height: 40px; padding: 0 20px; border-radius: 9px; display: inline-flex; align-items: center;
+  color: var(--muted); text-decoration: none; font-size: 14px;
+}
+.tu-tab:hover { color: var(--text); }
+.tu-tab[aria-selected="true"] { background: var(--surface); color: var(--text); font-weight: 500; box-shadow: var(--shadow-sm); }
+
+/* ---------- Listas ---------- */
+.tu-section > .section-label { margin-bottom: 8px; }
+.tu-stack > .tu-section + .tu-section { margin-top: 0; }
+.tu-list { padding: 6px 8px; min-width: 0; }
+.tu-list-flat { padding: 0; }
+.tu-row { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--divider); padding-right: 6px; min-width: 0; }
+.tu-row:last-child { border-bottom: 0; }
+.tu-row-main {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; min-height: 60px; padding: 8px 8px;
+  background: none; border: 0; border-radius: 10px; text-align: left; cursor: pointer; color: var(--text);
+}
+.tu-row-main:hover { background: var(--surface-2); }
+.tu-row-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.tu-row-title { font-weight: 500; overflow-wrap: anywhere; }
+.tu-row-sub { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; overflow-wrap: anywhere; }
+.tu-row-end { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; }
+.tu-row.is-cancel .tu-row-title { text-decoration: line-through; color: var(--muted); }
+.tu-date {
+  width: 46px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; line-height: 1.1;
+  padding: 6px 0; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border);
+}
+.tu-date strong { font-family: var(--font-serif); font-size: 20px; font-weight: 500; }
+.tu-date span { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+.tu-ag { padding-left: 12px; }
+.tu-ag .check { margin-top: 0; }
+.tu-ag-main { min-height: 56px; }
+.tu-mini { min-height: 52px; padding: 8px 4px; border-radius: 0; }
+.tu-mini-date { width: 70px; flex-shrink: 0; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tu-list-flat .tu-row-main { width: 100%; border-radius: 0; }
+.tu-list-flat .tu-row-main + .tu-row-main { border-top: 1px solid var(--divider); }
+.tu-pupil { overflow: hidden; }
+
+/* ---------- Familias ---------- */
+.tu-cover { padding: 20px 22px; }
+.tu-cover-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.tu-cover-text { margin: 0; font-size: 16px; color: var(--text-2); }
+.tu-cover-text strong { font-family: var(--font-serif); font-size: 34px; font-weight: 500; color: var(--text); margin-right: 2px; }
+.tu-cover-pct { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tu-bar { height: 8px; border-radius: 999px; background: var(--hover); overflow: hidden; }
+.tu-bar i { display: block; height: 100%; border-radius: 999px; background: var(--accent); transition: width .3s ease; }
+.tu-cover .tu-hint { margin-top: 10px; }
+.tu-seg button { min-height: 36px; }
+.tutoria-view .tu-toolbar:has(.tu-seg) { margin-bottom: 0; }
+
+/* ---------- Diversidad ---------- */
+.tu-summary { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.tu-summary:empty { display: none; }
+.tu-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.tu-chip-big { font-size: 13px; padding: 7px 10px; gap: 8px; }
+.tu-chip-big b { font-weight: 700; font-variant-numeric: tabular-nums; }
+.tu-alert {
+  display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 12px; border-radius: var(--r-sm);
+  background: var(--accent-soft); color: var(--accent-text); border: 1px solid var(--accent-line); font-size: 14px;
+}
+.tu-pupil { padding: 8px 8px 4px; }
+.tu-pupil-head { display: flex; align-items: center; gap: 12px; padding: 8px 8px 10px; border-bottom: 1px solid var(--divider); }
+.tu-pupil-head strong { flex: 1; min-width: 0; font-weight: 550; overflow-wrap: anywhere; }
+.tu-medida.is-off { opacity: .65; }
+.tu-foot { margin-top: 22px; display: flex; flex-direction: column; gap: 12px; }
+.tu-check-inline { display: inline-flex; align-items: center; gap: 10px; min-height: 36px; font-size: 14px; color: var(--text-2); cursor: pointer; }
+.tu-check-inline input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+.tu-privacy { display: flex; align-items: flex-start; gap: 8px; margin: 14px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+.tu-privacy .icon { margin-top: 2px; }
+.tu-foot .tu-privacy { margin-top: 0; }
+
+/* ---------- Hojas y formularios ---------- */
+.sheet.tu-sheet { width: min(var(--tu-w, 560px), 100%); }
+.tu-form .input, .tu-form .select, .tu-form .textarea { min-height: 44px; font-size: 16px; }
+.tu-form .textarea { min-height: 72px; }
+.tu-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 420px) { .tu-two { grid-template-columns: 1fr; gap: 0; } }
+.tu-two:has(> span:last-child:empty) > span:last-child { display: none; }
+.tu-three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 560px) { .tu-three { grid-template-columns: 1fr; gap: 0; } }
+.tu-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+.tu-actions .btn { min-height: 44px; }
+.tu-form .segmented { display: flex; width: 100%; }
+.tu-form .segmented button { flex: 1; min-height: 40px; padding: 0 8px; }
+.tu-calnote { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.tu-markdone { margin-top: 10px; align-self: flex-start; }
+.tu-seg + .tu-markdone { display: inline-flex; }
+.tu-result { margin-top: 4px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+/* Selector de alumnado */
+.tu-picker { display: flex; flex-direction: column; gap: 8px; }
+.tu-picked { display: flex; gap: 6px; flex-wrap: wrap; min-height: 28px; align-items: center; }
+.tu-pchip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 4px 4px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); border: 1px solid var(--accent-line); font-size: 13px; }
+.tu-pchip button { width: 22px; height: 22px; display: grid; place-items: center; border: 0; background: none; border-radius: 50%; color: inherit; cursor: pointer; padding: 0; }
+.tu-pchip button:hover { background: var(--accent-line); }
+.tu-pick-list { max-height: 188px; overflow-y: auto; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); padding: 4px; }
+.tu-pick-row { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 4px 8px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+.tu-pick-row:hover { background: var(--surface-2); }
+.tu-pick-cb { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; flex-shrink: 0; }
+.tu-pick-list .tu-hint { padding: 8px; }
+
+/* Acuerdos */
+.tu-acuerdos { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.tu-acuerdos:empty { display: none; }
+.tu-ag-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) 140px 40px; gap: 8px; align-items: center; }
+.tu-ag-row .check { margin: 0; }
+.tu-ag-date { padding-left: 8px; padding-right: 6px; }
+@media (max-width: 520px) {
+  .tu-ag-row { grid-template-columns: 22px minmax(0, 1fr) 40px; }
+  .tu-ag-date { grid-column: 2 / 3; grid-row: 2; }
+}
+
+/* Áreas (botones de selección) */
+.tu-areas { display: flex; gap: 6px; flex-wrap: wrap; }
+.tu-toggle {
+  min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface);
+  color: var(--text-2); font-size: 13px; cursor: pointer;
+}
+.tu-toggle:hover { background: var(--hover); }
+.tu-toggle[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent-text); font-weight: 600; }
+
+/* Seguimiento de una medida */
+.tu-seguimiento { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--border); }
+.tu-log-add { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.tu-log { display: flex; flex-direction: column; }
+.tu-log-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--divider); }
+.tu-log-item:last-child { border-bottom: 0; }
+.tu-log-date { width: 70px; flex-shrink: 0; font-size: 13px; color: var(--muted); padding-top: 2px; }
+.tu-log-text { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; overflow-wrap: anywhere; }
+.tu-log-item .icon-btn { width: 32px; height: 32px; margin-top: -4px; }
+
+/* Ficha de tutoría */
+.tu-ficha { display: flex; flex-direction: column; gap: 20px; }
+.tu-ficha-head { display: flex; align-items: center; gap: 14px; }
+.tu-ficha-name { font-family: var(--font-serif); font-size: 22px; font-weight: 500; }
+.tu-ficha-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.tu-ficha-actions .btn { min-height: 44px; }
+.tu-contact { padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); }
+.tu-contact .section-label { margin-bottom: 6px; }
+.tu-contact-text { margin: 0 0 4px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; overflow-wrap: anywhere; }
+.tu-contact .link-btn { padding-left: 0; }
+.tu-ficha section > .section-label { margin-bottom: 4px; }
+.tu-ficha .tu-privacy { margin-top: 0; }
+
+/* Banners y listas del calendario escolar */
+.tu-banner {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin-bottom: 18px;
+  background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--r-md);
+}
+.tu-banner-text { flex: 1; min-width: 0; font-size: 14px; color: var(--text-2); }
+.tu-banner-text strong { display: block; color: var(--text); font-weight: 550; margin-bottom: 2px; }
+.tu-banner .btn { flex-shrink: 0; min-height: 44px; }
+@media (max-width: 560px) { .tu-banner { flex-direction: column; align-items: stretch; } }
+.tu-state { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.tu-ok { display: inline-flex; align-items: center; gap: 6px; font-weight: 550; color: var(--t3-fg); }
+.tu-days { margin: 0 0 18px; padding: 0; list-style: none; font-size: 14px; }
+.tu-days li { display: flex; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--divider); }
+.tu-days li:last-child { border-bottom: 0; }
+.tu-days time { width: 120px; flex-shrink: 0; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tu-days span { min-width: 0; overflow-wrap: anywhere; }
+.tu-local { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+@media (max-width: 480px) { .tu-local { grid-template-columns: 1fr; } }
+.tu-local .field { margin-bottom: 12px; }
+
+/* ---------- Asistente de nuevo curso ---------- */
+.tu-wiz { display: flex; flex-direction: column; gap: 18px; }
+.tu-steps { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.tu-steps li { flex: 1; height: 4px; border-radius: 999px; background: var(--hover); }
+.tu-steps li.on { background: var(--accent); }
+.tu-wiz-lead { margin: 0; font-size: 15px; color: var(--text-2); }
+.tu-wiz-list { margin: 0; padding-left: 20px; color: var(--text-2); font-size: 14px; display: flex; flex-direction: column; gap: 6px; }
+.tu-wiz-group { padding: 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); display: flex; flex-direction: column; gap: 12px; }
+.tu-wiz-group h3 { margin: 0; font-family: var(--font-serif); font-weight: 500; font-size: 18px; }
+.tu-wiz-group .field { margin-bottom: 0; }
+.tu-opts { display: flex; flex-direction: column; gap: 8px; }
+.tu-opt {
+  display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid var(--border-strong); border-radius: var(--r-md);
+  background: var(--surface); cursor: pointer; min-height: 52px;
+}
+.tu-opt:hover { background: var(--surface-2); }
+.tu-opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.tu-opt:has(input:disabled) { opacity: .55; cursor: not-allowed; }
+.tu-opt input { margin: 3px 0 0; width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+.tu-opt-text { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.tu-opt-text small { color: var(--muted); font-size: 12.5px; }
+.tu-sub { display: flex; flex-direction: column; gap: 10px; margin-left: 30px; }
+.tu-sum { display: flex; flex-direction: column; gap: 10px; }
+.tu-sum-row { padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); font-size: 14px; }
+.tu-sum-row strong { display: block; font-weight: 550; margin-bottom: 2px; }
+.tu-sum-row span { color: var(--muted); display: block; }
+.tu-done { text-align: center; padding: 10px 0 0; }
+.tu-done .icon { margin: 0 auto 10px; color: var(--t3-fg); }
+.tu-done h3 { margin: 0 0 6px; font-family: var(--font-serif); font-size: 22px; font-weight: 500; }
+.tu-links { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.tu-links a, .tu-links button { justify-content: flex-start; text-decoration: none; }
+
+@media (max-width: 680px) {
+  .tu-tabs { display: flex; width: 100%; }
+  .tu-tab { flex: 1; justify-content: center; padding: 0 8px; }
+  .tu-group-select { min-width: 0; width: 100%; }
+  .tu-cover { padding: 18px; }
+  .tu-row-main { flex-wrap: wrap; gap: 8px 12px; }
+  .tu-row-main .tu-row-end { flex-basis: 100%; justify-content: flex-start; margin-left: 58px; }
+  .tu-mini .tu-row-end { margin-left: 82px; }
+  .tu-ag-main .tu-row-end { margin-left: 0; }
+  .tu-medida .tu-row-end { margin-left: 0; }
+}
+
+/* ---------- Sección «Tutoría» en la ficha del alumno (Grupos) ---------- */
+.tu-grupos { margin-top: 22px; }
+.tu-grupos-line { margin: 0 0 8px; font-size: 14px; }
+.tu-grupos-chips { margin-bottom: 4px; }
+.tu-grupos-link { display: inline-flex; align-items: center; min-height: 44px; padding-left: 0; font-size: 14px; }
+.tu-ag.is-done .tu-row-title { text-decoration: line-through; color: var(--muted); }
+.tu-seg button[aria-checked="true"] { background: var(--surface); color: var(--text); font-weight: 500; box-shadow: var(--shadow-sm); }

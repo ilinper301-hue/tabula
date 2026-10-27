@@ -6,6 +6,7 @@ import { removeGradebook, restoreGradebook, officialForGroup } from './model.js'
 import { mergeOfficial } from '../../curriculo.js';
 import { field, segmented, confirmDelete, plural, trunc } from './common.js';
 import { areaShort } from '../../school.js';
+import { DEFAULT_CRIT_RUBRIC, critRubric } from '../../informes.js';
 
 const toNum = (v, fb = 0) => { const n = Number(String(v).replace(',', '.')); return Number.isFinite(n) ? n : fb; };
 
@@ -61,8 +62,14 @@ export function openConfigSheet({ gb, activities }) {
       const d = h('textarea', { class: 'textarea cb-desc', rows: 2, maxlength: 600, 'aria-label': `Descripción del criterio ${i + 1}`, placeholder: 'Descripción', oninput: () => { cr.descripcion = d.value; } });
       d.value = cr.descripcion || '';
       const p = h('input', { class: 'input cb-w-num', type: 'number', inputmode: 'decimal', min: '0', step: '0.5', value: String(cr.peso ?? 1), title: 'Peso', 'aria-label': `Peso del criterio ${i + 1}`, oninput: () => { cr.peso = toNum(p.value, 1); } });
-      return h('div', { class: 'cb-row cb-row-crit' }, c, d, p,
-        h('button', { type: 'button', class: 'icon-btn', 'aria-label': `Quitar criterio ${cr.codigo || i + 1}`, onclick: () => { D.criterios.splice(i, 1); paintCriterios(); paintWarnings(); } }, icon('x', 18)));
+      const hasRub = cr.rubrica && Object.keys(cr.rubrica).length > 0;
+      const rub = h('button', {
+        type: 'button', class: `icon-btn cb-rub-btn${hasRub ? ' is-custom' : ''}`, title: hasRub ? 'Rúbrica personalizada' : 'Rúbrica del criterio',
+        'aria-label': `Rúbrica del criterio ${cr.codigo || i + 1}${hasRub ? ' (personalizada)' : ''}`,
+        onclick: () => openRubricSheet(cr, paintCriterios),
+      }, icon('note', 18));
+      return h('div', { class: 'cb-row cb-row-crit' }, c, d, p, h('div', { class: 'cb-crit-btns' }, rub,
+        h('button', { type: 'button', class: 'icon-btn', 'aria-label': `Quitar criterio ${cr.codigo || i + 1}`, onclick: () => { D.criterios.splice(i, 1); paintCriterios(); paintWarnings(); } }, icon('x', 18))));
     }) : [h('p', { class: 'cb-hint' }, 'Sin criterios. Carga los oficiales del BOJA, pega una lista o añádelos uno a uno.')]));
   }
   paintCriterios();
@@ -134,7 +141,8 @@ export function openConfigSheet({ gb, activities }) {
     e.preventDefault();
     const instrumentos = D.instrumentos.filter((i) => (i.nombre || '').trim()).map((i) => ({ id: i.id, nombre: i.nombre.trim(), peso: Number(i.peso) || 0 }));
     const criterios = D.criterios.filter((c) => (c.codigo || '').trim() || (c.descripcion || '').trim())
-      .map((c) => ({ id: c.id, codigo: (c.codigo || '').trim(), descripcion: (c.descripcion || '').trim(), peso: c.peso > 0 ? c.peso : 1 }));
+      .map((c) => ({ id: c.id, codigo: (c.codigo || '').trim(), descripcion: (c.descripcion || '').trim(), peso: c.peso > 0 ? c.peso : 1,
+        ...(c.rubrica && Object.keys(c.rubrica).length ? { rubrica: c.rubrica } : {}) }));
     store.update('gradebooks', gb.id, { escala: D.escala, modo: D.modo, final: D.final, instrumentos, criterios, niveles: D.niveles });
     close();
     toast('Configuración guardada');
@@ -175,5 +183,48 @@ export function openConfigSheet({ gb, activities }) {
 
   paintWarnings();
   const close = openSheet('Configurar cuaderno', form);
+  return close;
+}
+
+/** Hoja con los cinco niveles de logro de un criterio. Escribe en el borrador `cr.rubrica` (solo lo que difiere del texto de serie). */
+function openRubricSheet(cr, onDone) {
+  const cur = critRubric(cr);
+  const areas = {};
+  const form = h('form', { class: 'cb-form cb-rubform', novalidate: true });
+  const fields = LEVELS.map((lv) => {
+    const id = `cb-rub-${lv}`;
+    const ta = h('textarea', { class: 'textarea', id, rows: 2, maxlength: 300 });
+    ta.value = cur[lv];
+    areas[lv] = ta;
+    return h('div', { class: 'field cb-rub-field' },
+      h('label', { for: id }, h('span', { class: `chip cb-chip chip-${lv}` }, lv), ` ${LEVEL_LABELS[lv]}`), ta);
+  });
+  const reset = () => { LEVELS.forEach((lv) => { areas[lv].value = DEFAULT_CRIT_RUBRIC[lv]; }); toast('Textos de serie restablecidos'); };
+  const apply = (e) => {
+    e && e.preventDefault();
+    const custom = {};
+    for (const lv of LEVELS) {
+      const t = areas[lv].value.trim();
+      if (t && t !== DEFAULT_CRIT_RUBRIC[lv]) custom[lv] = t;
+    }
+    if (Object.keys(custom).length) cr.rubrica = custom; else delete cr.rubrica;
+    close();
+    onDone && onDone();
+    toast('Rúbrica lista. Pulsa «Guardar» para conservarla');
+  };
+  form.append(
+    h('div', { class: 'cb-rub-crit' }, h('strong', {}, cr.codigo || 'Criterio'), h('p', {}, cr.descripcion || 'Sin descripción')),
+    h('p', { class: 'cb-hint' }, 'Describe cómo se ve cada nivel en este criterio. Se muestra en el desglose de cada alumno.'),
+    ...fields,
+    h('div', { class: 'cb-actions' },
+      h('button', { type: 'button', class: 'btn btn-ghost', onclick: reset }, 'Restablecer'),
+      h('span', { class: 'cb-spacer' }),
+      h('button', { type: 'button', class: 'btn', onclick: () => close() }, 'Cancelar'),
+      h('button', { type: 'submit', class: 'btn btn-primary' }, 'Listo')));
+  form.addEventListener('submit', apply);
+  // Esc cierra solo esta hoja (no la de configuración que hay debajo)
+  const onEsc = (e) => { if (e.key === 'Escape') { e.stopImmediatePropagation(); close(); } };
+  window.addEventListener('keydown', onEsc, true);
+  const close = openSheet(`Rúbrica · ${cr.codigo || 'criterio'}`, form, { onClose: () => window.removeEventListener('keydown', onEsc, true) });
   return close;
 }

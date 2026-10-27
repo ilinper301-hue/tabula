@@ -8,6 +8,7 @@ import { COLORS, COLOR_NAMES, colorOf, plural, norm, reorderStudents } from './c
 import { groupDocs, studentStats } from './summary.js';
 import { renderStudentObservations } from '../anecdotario/list.js';
 import { openQuickObservation } from '../anecdotario/quick.js';
+import { tutoriaSection } from '../tutoria/grupos-section.js';
 
 const focusLater = (el) => setTimeout(() => el.focus(), 80);
 
@@ -246,10 +247,10 @@ export function openFicha(studentId) {
 
   const form = h('form', { class: 'gr-form', onsubmit: save, novalidate: true },
     h('div', { class: 'gr-two' }, field('Nombre', nombre), field('Apellidos', apellidos)), error,
-    field('Medidas de atención a la diversidad', medidas, 'Apoyos, adaptaciones, refuerzos… Solo para uso docente.'),
+    field('Medidas de atención a la diversidad', medidas, 'Apoyos, adaptaciones, refuerzos… Solo para uso docente. Para llevar su seguimiento, usa las medidas de Tutoría.'),
     field('Observaciones', observaciones),
     field('Contacto de la familia', contacto),
-    asistencia, obsSection, actions, confirmBox);
+    asistencia, tutoriaSection(s.id, () => close()), obsSection, actions, confirmBox);
 
   const close = openSheet('Ficha del alumno', form, { onClose: stopObs });
   focusLater(nombre);

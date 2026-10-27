@@ -3,11 +3,13 @@
 import { h, icon } from '../ui.js';
 
 const ITEMS = [
+  { id: 'aula', label: 'En clase', icon: 'aula', desc: 'Temporizador, al azar, grupos y ruido' },
+  { id: 'tutoria', label: 'Tutoría', icon: 'tutoria', desc: 'Familias, reuniones y atención a la diversidad' },
   { id: 'cuaderno', label: 'Cuaderno', icon: 'cuaderno', desc: 'Notas y evaluación' },
   { id: 'planificacion', label: 'Planificación', icon: 'planificacion', desc: 'Situaciones de aprendizaje y sesiones' },
   { id: 'programas', label: 'Planes y programas', icon: 'programas', desc: 'Diario de coordinación y memorias' },
   { id: 'encuestas', label: 'Encuestas', icon: 'encuestas', desc: 'Pregunta a tus compañeros con un enlace' },
-  { id: 'documentos', label: 'Documentos', icon: 'documentos', desc: 'Fichas para imprimir (próximamente)' },
+  { id: 'documentos', label: 'Documentos', icon: 'documentos', desc: 'Fichas, archivos y cola de impresión' },
   { id: 'ajustes', label: 'Ajustes', icon: 'ajustes', desc: 'Perfil, cuenta, evaluación y copias' },
 ];
 

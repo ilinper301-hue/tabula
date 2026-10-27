@@ -11,7 +11,7 @@ const listeners = new Map();  // colección -> Set<fn>
 /** Colecciones que se sincronizan con la nube. */
 export const SYNC_COLLECTIONS = ['tasks', 'groups', 'students', 'schedule', 'events', 'attendance',
   'gradebooks', 'activities', 'grades', 'situaciones', 'sesiones', 'observaciones',
-  'programas', 'diarioPrograma', 'encuestas', 'encuestaRespuestas'];
+  'programas', 'diarioPrograma', 'encuestas', 'encuestaRespuestas', 'documentos', 'impresiones', 'reuniones', 'medidas', 'informes'];
 /** Ajustes que se quedan solo en este dispositivo. */
 const LOCAL_ONLY_SETTINGS = new Set(['theme', 'syncUid', 'lock', 'onboarding']);
 

@@ -91,7 +91,11 @@ export async function initSync() {
     if (user) attach(user).catch((e) => setState({ status: 'error', error: friendlyError(e) }));
     else detach();
   });
-  window.addEventListener('online', () => state.user && setState({ status: 'syncing' }));
+  window.addEventListener('online', () => {
+    if (!state.user) return;
+    setState({ status: 'syncing' });
+    import('./files.js').then((f) => f.uploadPending()).catch(() => {});
+  });
   window.addEventListener('offline', () => state.user && setState({ status: 'offline' }));
 }
 
@@ -119,6 +123,7 @@ export async function signOutAndClear() {
   detach();
   await fb.auth.signOut(auth);
   store._clearLocal();
+  try { await (await import('./files.js')).clearLocalFiles(); } catch {}
   // Se recarga para vaciar también la caché interna de Firestore
   try { await fb.fs.terminate(db); await fb.fs.clearIndexedDbPersistence(db); } catch {}
   location.reload();
@@ -192,6 +197,8 @@ async function attach(user) {
   unsubs.push(fb.fs.onSnapshotsInSync(db, () => {
     if (state.status !== 'error') setState({ status: navigator.onLine ? 'synced' : 'offline' });
   }));
+  // Archivos de Documentos guardados sin sesión o sin conexión
+  import('./files.js').then((f) => f.uploadPending()).catch(() => {});
 }
 
 function detach() {

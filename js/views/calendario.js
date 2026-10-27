@@ -8,6 +8,7 @@ import {
 } from '../school.js';
 import { buildFranjas, applyFranjas, fillFranja } from '../timetable.js';
 import { getPrograms } from '../programs.js';
+import { calendarBanner } from './ajustes/calendario-escolar.js';
 
 const VISTAS = [['semana', 'Semana'], ['mes', 'Mes'], ['horario', 'Horario']];
 const HOUR_PX = 64;                                   // alto de una hora en la rejilla semanal
@@ -153,11 +154,13 @@ export function render(container, params = new URLSearchParams()) {
     h('button', { type: 'button', class: 'icon-btn', 'aria-label': vista === 'semana' ? 'Semana siguiente' : 'Mes siguiente', onclick: () => shift(1) }, icon('chevronRight')));
 
   const body = h('div', { class: 'cal-body', id: 'cal-body' });
+  const banner = calendarBanner();
   container.replaceChildren(h('div', { class: 'cal-view' },
     h('header', { class: 'page-head' },
       h('div', {}, h('div', { class: 'eyebrow' }, eyebrowText), h('h1', { class: 'page-title' }, 'Calendario')),
       h('button', { type: 'button', class: 'btn btn-primary', onclick: () => openEventEditor(null, { fecha: vista === 'mes' ? selDay : (validISO(fecha) ? fecha : todayISO()) }) },
         icon('plus', 18), 'Nuevo evento')),
+    banner.el,
     h('div', { class: 'cal-toolbar' }, nav || h('span'), tabs),
     body));
 
@@ -398,6 +401,7 @@ export function render(container, params = new URLSearchParams()) {
 
   return () => {
     unsubs.forEach((u) => u());
+    banner.destroy();
     mq.removeEventListener('change', repaint);
     clearInterval(timer);
     cancelAnimationFrame(raf);

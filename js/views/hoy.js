@@ -5,6 +5,8 @@ import { h, icon, longDate, greeting, todayISO, relativeDay, toast } from '../ui
 import { getSessionsForDate, getEventsForDate, getGroup, getAttendance, sessionLabel, areaShort, toMin, EVENT_TYPES } from '../school.js';
 import { getPrograms } from '../programs.js';
 import { matchProgramForSession, isCoordSession } from './programas/common.js';
+import { dueNow, canPrint } from '../documents.js';
+import { splitReuniones, reviewsDue, TIPOS_REUNION, MEDIDAS } from '../tutoria.js';
 import { parseQuickInput, createTask, sortTasks, taskRow, isOverdue } from '../tasks-model.js';
 
 export function render(container) {
@@ -84,6 +86,25 @@ export function render(container) {
     }, 'Anotar');
   }
 
+  // Clip con el número de documentos de la sesión: abre el documento (o la sesión si hay varios)
+  function docClip(plan) {
+    const ids = plan.documentoIds.filter((id) => store.get('documentos', id));
+    const label = `${ids.length} documento${ids.length === 1 ? '' : 's'} adjunto${ids.length === 1 ? '' : 's'}`;
+    return ids.length === 1
+      ? h('a', { class: 'dc-clip', href: `#/documentos?doc=${ids[0]}`, 'aria-label': label, title: label }, icon('paperclip', 16), '1')
+      : h('button', { type: 'button', class: 'dc-clip', 'aria-label': label, title: label,
+        onclick: () => import('./planificacion/session-sheet.js').then((m) => m.openSessionSheet(plan.id)) }, icon('paperclip', 16), String(ids.length));
+  }
+
+  // «Evaluar»: abre la evaluación rápida del grupo y área de la sesión (destacada si es la clase en curso)
+  function evalButton(s, group, plan, current) {
+    const open = () => import('./aula/evaluar.js').then((m) => m.openQuickEval({ groupId: group.id, area: s.area, sesionId: plan ? plan.id : null }));
+    const label = `Evaluar ${areaShort(s.area)} con ${group.nombre}`;
+    return current
+      ? h('button', { type: 'button', class: 'btn btn-sm au-eval', 'aria-label': label, title: 'Evaluar', onclick: open }, icon('check', 18), h('span', { class: 'au-eval-lbl' }, 'Evaluar'))
+      : h('button', { type: 'button', class: 'icon-btn au-eval', title: 'Evaluar', 'aria-label': label, onclick: open }, icon('check', 20));
+  }
+
   function paintSchedule() {
     const today = todayISO();
     const sessions = getSessionsForDate(today);
@@ -153,6 +174,10 @@ export function render(container) {
             onclick: () => import('./anecdotario.js').then((m) => m.openQuickObservation({ groupId: group.id, area: s.area, sesionId: plan ? plan.id : null })),
           }, icon('note', 20))
           : null,
+        // Evaluación rápida (niveles por criterio) durante o después de la clase
+        s.tipo === 'clase' && group && s.area ? evalButton(s, group, plan, current) : null,
+        // Documentos adjuntos a la sesión planificada
+        plan && (plan.documentoIds || []).filter((id) => store.get('documentos', id)).length ? docClip(plan) : null,
         // Programas: anotar en el diario desde una sesión de coordinación u otra actividad de un programa
         programButton(s),
         s.tipo === 'clase' && group && (current || !past)
@@ -166,26 +191,101 @@ export function render(container) {
     scheduleBody.replaceChildren(...items);
   }
 
-  const soonCard = (title, iconName, text) => h('section', { class: 'card' },
-    h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, title), h('span', { class: 'soon' }, 'Próximamente')),
-    h('div', { class: 'empty' }, icon(iconName, 34), text));
+  // --- Para imprimir hoy (Documentos): solo aparece si hay algo pendiente ---
+  const printBody = h('ul', { class: 'dc-mini-list' });
+  const printCard = h('section', { class: 'card', 'aria-labelledby': 'hoy-imprimir-t', hidden: true },
+    h('div', { class: 'card-head' },
+      h('h2', { class: 'card-title', id: 'hoy-imprimir-t' }, 'Para imprimir hoy'),
+      h('a', { class: 'link-btn', href: '#/documentos?tab=imprimir' }, 'Ver cola')),
+    printBody);
+  function paintPrint() {
+    const docs = Object.fromEntries(store.list('documentos').map((d) => [d.id, d]));
+    const due = dueNow(store.list('impresiones'), todayISO()).filter((i) => docs[i.documentoId])
+      .sort((a, b) => (a.fecha || '').localeCompare(b.fecha || '') || (a.createdAt || 0) - (b.createdAt || 0));
+    printCard.hidden = !due.length;
+    if (!due.length) { printBody.replaceChildren(); return; }
+    const rows = due.slice(0, 3).map((it) => {
+      const d = docs[it.documentoId];
+      const printable = canPrint(d);
+      return h('li', { class: 'dc-mini' },
+        h('div', { class: 'dc-mini-text' },
+          h('a', { class: 'dc-mini-title', href: `#/documentos?doc=${d.id}`, style: { color: 'inherit', textDecoration: 'none' } }, d.titulo),
+          h('span', { class: 'dc-mini-sub' }, `${it.copias || 1} ${(it.copias || 1) === 1 ? 'copia' : 'copias'}${it.dobleCara ? ' · doble cara' : ''}${it.fecha < todayISO() ? ' · atrasado' : ''}`)),
+        h('button', {
+          type: 'button', class: 'btn btn-sm', 'aria-label': `Imprimir ${d.titulo}`,
+          onclick: async (e) => {
+            e.currentTarget.disabled = true;
+            const m = await import('./documentos/common.js');
+            await m.printItem(it);
+            paintPrint();
+          },
+        }, icon(printable ? 'printer' : 'external', 15), printable ? 'Imprimir' : 'Abrir'));
+    });
+    printBody.replaceChildren(...rows, ...(due.length > 3 ? [h('li', { class: 'dc-mini-more' }, `y ${due.length - 3} más en la cola`)] : []));
+  }
+
+  // --- Tutoría: reuniones de hoy, reuniones sin cerrar y revisiones de medidas (solo si hay algo) ---
+  const tutBody = h('div');
+  const tutCard = h('section', { class: 'card', 'aria-labelledby': 'hoy-tutoria-t', hidden: true },
+    h('div', { class: 'card-head' },
+      h('h2', { class: 'card-title', id: 'hoy-tutoria-t' }, 'Tutoría'),
+      h('a', { class: 'link-btn', href: '#/tutoria' }, 'Abrir')),
+    tutBody);
+  function paintTutoria() {
+    const today = todayISO();
+    const byId = Object.fromEntries(store.list('students').map((x) => [x.id, x]));
+    const names = (r) => {
+      const n = (r.studentIds || []).map((id) => byId[id]?.nombre).filter(Boolean);
+      return n.length ? n.slice(0, 3).join(', ') + (n.length > 3 ? ` y ${n.length - 3} más` : '') : (TIPOS_REUNION[r.tipo] || 'Reunión');
+    };
+    const { proximas, sinCerrar } = splitReuniones(store.list('reuniones'), today);
+    const hoy = proximas.filter((r) => r.fecha === today);
+    const due = reviewsDue(store.list('medidas'), today);
+    const sections = [];
+    const MAX = 3;
+    const more = (n) => (n > MAX ? h('li', { class: 'au-tut-more' }, `y ${n - MAX} más`) : null);
+    if (hoy.length) {
+      sections.push(h('div', { class: 'au-tut-group' }, h('div', { class: 'section-label' }, 'Reuniones de hoy'),
+        h('ul', { class: 'au-tut-list' }, ...hoy.slice(0, MAX).map((r) => h('li', {}, h('a', { class: 'au-tut-item', href: `#/tutoria?reunion=${r.id}` },
+          h('span', { class: 'au-tut-time' }, r.hora || '—'),
+          h('span', { class: 'au-tut-main' }, h('span', { class: 'au-tut-title' }, names(r)), h('span', { class: 'au-tut-meta' }, TIPOS_REUNION[r.tipo] || 'Reunión')))))), more(hoy.length)));
+    }
+    if (sinCerrar.length) {
+      sections.push(h('div', { class: 'au-tut-group' }, h('div', { class: 'section-label alert' }, 'Sin cerrar'),
+        h('ul', { class: 'au-tut-list' }, ...sinCerrar.slice(0, MAX).map((r) => h('li', {}, h('a', { class: 'au-tut-item', href: `#/tutoria?reunion=${r.id}` },
+          h('span', { class: 'au-tut-main' }, h('span', { class: 'au-tut-title' }, names(r)), h('span', { class: 'au-tut-meta' }, `${relativeDay(r.fecha)}${r.hora ? ` · ${r.hora}` : ''}`)),
+          h('span', { class: 'au-tut-act' }, 'Anotar resumen'))))), more(sinCerrar.length)));
+    }
+    if (due.length) {
+      sections.push(h('div', { class: 'au-tut-group' }, h('div', { class: 'section-label' }, 'Revisión de medidas'),
+        h('ul', { class: 'au-tut-list' }, ...due.slice(0, MAX).map((m) => h('li', {}, h('a', { class: 'au-tut-item', href: '#/tutoria?tab=diversidad' },
+          h('span', { class: 'au-tut-main' }, h('span', { class: 'au-tut-title' }, byId[m.studentId]?.nombre || 'Alumno/a'),
+            h('span', { class: 'au-tut-meta' }, `${(MEDIDAS[m.tipo]?.label || 'Medida').replace(/ \(.*$/, '')} · ${m.revision < today ? 'revisión vencida' : m.revision === today ? 'revisión hoy' : `revisión ${relativeDay(m.revision).toLowerCase()}`}`)))))), more(due.length)));
+    }
+    tutCard.hidden = !sections.length;
+    tutBody.replaceChildren(...sections);
+  }
 
   container.replaceChildren(
     h('header', { class: 'page-head' },
       h('div', {},
         h('div', { class: 'eyebrow' }, longDate(), ' · ', tasksCount),
-        h('h1', { class: 'page-title' }, firstName ? `${greeting()}, ${firstName}` : greeting())),
+        h('div', { class: 'au-hoy-title' },
+          h('h1', { class: 'page-title' }, firstName ? `${greeting()}, ${firstName}` : greeting()),
+          h('a', { class: 'btn btn-sm au-hoy-link', href: '#/aula', 'aria-label': 'Abrir En clase: herramientas del aula' }, icon('aula', 17), 'En clase'))),
       composer),
     h('div', { class: 'today-grid' },
-      h('div', { class: 'today-col' }, scheduleCard),
+      h('div', { class: 'today-col' }, scheduleCard, tutCard),
       h('div', { class: 'today-col' },
         tasksCard,
-        soonCard('Para imprimir hoy', 'printer', 'Aquí aparecerán las fichas y documentos que programes para imprimir cada día.'))),
+        printCard)),
   );
 
-  const paintAll = () => { paintTasks(); paintSchedule(); };
+  const paintAll = () => { paintTasks(); paintSchedule(); paintPrint(); paintTutoria(); };
   paintAll();
-  const unsubs = ['tasks', 'schedule', 'events', 'groups', 'sesiones', 'attendance', 'programas'].map((c) => store.subscribe(c, c === 'tasks' ? paintTasks : paintSchedule));
+  const unsubs = ['tasks', 'schedule', 'events', 'groups', 'sesiones', 'attendance', 'programas', 'documentos'].map((c) => store.subscribe(c, c === 'tasks' ? paintTasks : paintSchedule));
+  const unsubTut = ['reuniones', 'medidas', 'students'].map((c) => store.subscribe(c, paintTutoria));
+  const unsubPrint = ['impresiones', 'documentos'].map((c) => store.subscribe(c, paintPrint));
   const tick = setInterval(paintAll, 60_000); // sesión en curso y cambio de día
-  return () => { unsubs.forEach((u) => u()); clearInterval(tick); };
+  return () => { unsubs.forEach((u) => u()); unsubTut.forEach((u) => u()); unsubPrint.forEach((u) => u()); clearInterval(tick); };
 }
