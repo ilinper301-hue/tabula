@@ -36,10 +36,10 @@ Este repositorio contiene **solo código**. Los datos del alumnado nunca se sube
 
 ## Activar la sincronización (Firebase)
 
-1. **Configuración**: Firebase console → ⚙ Configuración del proyecto → Tus apps → app web (créala si no existe) → copia el objeto `firebaseConfig` en `js/firebase-config.js`.
+1. **Configuración**: ya está en `js/firebase-config.js` (proyecto `mis-apps-educativas`, compartido con Barri y Lectori).
 2. **Acceso**: Authentication → Método de acceso → habilita **Google** (docentes) y **Anónimo** (para que los compañeros respondan encuestas sin cuenta).
 3. **Dominio**: Authentication → Configuración → Dominios autorizados → añade `TU_USUARIO.github.io`.
-4. **Reglas**: Firestore Database → Reglas → añade el bloque de Tabula de `firestore.rules` **sin borrar** las reglas de las otras apps.
+4. **Reglas**: Firestore Database → Reglas → pega el contenido completo de `firestore.rules` (incluye Barri, Lectori y Tabula) y publica.
    ⚠️ Si tus reglas actuales tienen algo como `match /{document=**} { allow read, write: if true; }`, cualquiera podría leer los datos de Tabula: hay que cambiarlo antes de usarla con datos reales.
 5. **Ubicación de los datos (RGPD)**: comprueba en Firestore → Configuración que la base de datos está en una región europea (p. ej. `eur3` o `europe-southwest1`).
 
