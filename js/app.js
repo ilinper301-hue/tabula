@@ -126,6 +126,19 @@ store.subscribe('settings', () => renderNav(parseHash().id));
 
 // Tema según sistema si el usuario no ha elegido
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => applyTheme());
+export const ACCENTS = [
+  ['terracota', 'Terracota', '#AE5630'], ['azul', 'Azul', '#3E5C76'], ['verde', 'Verde', '#4F6B4A'],
+  ['morado', 'Morado', '#6B4E7A'], ['petroleo', 'Petróleo', '#2E6A6A'], ['grafito', 'Grafito', '#3D3C38'],
+];
+export function applyAccent() {
+  const a = store.getSetting('accent', 'terracota');
+  if (a && a !== 'terracota' && ACCENTS.some(([k]) => k === a)) document.documentElement.dataset.accent = a;
+  else delete document.documentElement.dataset.accent;
+}
+// El color se sincroniza entre dispositivos: se reaplica si llega de la nube
+store.subscribe('settings', applyAccent);
+applyAccent();
+
 export function applyTheme() {
   const t = store.getSetting('theme', 'system');
   const dark = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);

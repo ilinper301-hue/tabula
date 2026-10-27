@@ -1,6 +1,6 @@
 // Paso 1 · Bienvenida y nombre (ambos campos opcionales)
 import { store } from '../../store.js';
-import { h } from '../../ui.js';
+import { h, googleButton } from '../../ui.js';
 import { field, getDraft, setDraft } from './common.js';
 import { getSyncState, signIn } from '../../sync.js';
 
@@ -28,13 +28,13 @@ export function stepPerfil(ctx) {
     // Quien ya usa Tabula en otro dispositivo no necesita el asistente: entra y recupera sus datos
     getSyncState().enabled ? h('div', { class: 'bv-signin' },
       h('span', {}, '¿Ya usas Tabula en otro dispositivo?'),
-      h('button', { type: 'button', class: 'btn', onclick: async () => {
+      googleButton(async () => {
         try {
           await signIn();
           store.setSetting('onboarding', { ...(store.getSetting('onboarding', {}) || {}), skipped: true });
           location.hash = '#/hoy';
         } catch {}
-      } }, 'Iniciar sesión con Google')) : null,
+      })) : null,
     h('button', { type: 'submit', class: 'sr-only', tabindex: '-1' }, 'Siguiente'));
 
   return {

@@ -1,8 +1,8 @@
 // Tabula · Ajustes: perfil, apariencia y copia de seguridad
 
 import { store } from '../store.js';
-import { h, icon, toast } from '../ui.js';
-import { applyTheme } from '../app.js';
+import { h, icon, toast, googleButton } from '../ui.js';
+import { applyTheme, applyAccent, ACCENTS } from '../app.js';
 import { getSyncState, onSyncChange, signIn, signOutAndClear, SYNC_LABELS } from '../sync.js';
 import {
   isLockEnabled, setPin, verifyPin, disableLock, isValidPin, lockTimeout, setLockTimeout, TIMEOUTS,
@@ -31,6 +31,17 @@ export function render(container) {
         e.currentTarget.parentElement.querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b === e.currentTarget)));
       },
     }, label));
+
+  // --- Color de la app ---
+  const curAccent = store.getSetting('accent', 'terracota');
+  const swatches = h('div', { class: 'swatches', role: 'radiogroup', 'aria-label': 'Color de la app' },
+    ...ACCENTS.map(([key, label, hex]) => h('button', {
+      type: 'button', class: 'swatch', role: 'radio', 'aria-checked': String(key === curAccent),
+      onclick: (e) => {
+        store.setSetting('accent', key); applyAccent();
+        swatches.querySelectorAll('.swatch').forEach((b) => b.setAttribute('aria-checked', String(b === e.currentTarget)));
+      },
+    }, h('span', { class: 'swatch-dot', style: { background: hex } }, icon('check', 16)), label)));
 
   // --- Evaluación: valores por defecto para cuadernos nuevos ---
   const evDef = store.getSetting('evaluacionDefaults', { escala: 'numerica', modo: 'porcentajes', final: 'continua' });
@@ -83,7 +94,7 @@ export function render(container) {
       parts.push(
         h('p', { class: 'settings-text' }, 'Inicia sesión con tu cuenta de Google para tener tus datos en todos tus dispositivos. Lo que ya tengas en este dispositivo se subirá a tu cuenta.'),
         h('div', { class: 'settings-actions' },
-          h('button', { class: 'btn btn-primary', disabled: st.status === 'loading', onclick: () => signIn().catch(() => {}) }, 'Iniciar sesión con Google')));
+          googleButton(() => signIn().catch(() => {}), { disabled: st.status === 'loading' })));
     } else {
       const confirmOut = h('div', { class: 'confirm-box', hidden: true },
         h('p', {}, 'Al cerrar sesión se borrarán los datos de este dispositivo. Seguirán guardados en tu cuenta.'),
@@ -185,7 +196,9 @@ export function render(container) {
         h('div', { class: 'field' }, h('label', { for: 'aj-centro' }, 'Grupo y centro'), centro)),
       h('section', { class: 'card' },
         h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Apariencia')),
-        h('div', { class: 'segmented', role: 'tablist', 'aria-label': 'Tema' }, ...themeBtns)),
+        h('div', { class: 'field' }, h('span', { class: 'field-label' }, 'Modo'),
+          h('div', { class: 'segmented', role: 'tablist', 'aria-label': 'Tema' }, ...themeBtns)),
+        h('div', { class: 'field', style: { marginBottom: '0' } }, h('span', { class: 'field-label' }, 'Color'), swatches)),
       h('section', { class: 'card' },
         h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Evaluación')),
         h('p', { class: 'settings-text' }, 'Configuración que tendrán los cuadernos nuevos. Cada cuaderno puede cambiarla después.'),

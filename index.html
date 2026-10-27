@@ -32,6 +32,8 @@
       var t = JSON.parse(localStorage.getItem('tabula:v1:set:theme') || '"system"');
       var dark = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
       if (dark) document.documentElement.dataset.theme = 'dark';
+      var ac = JSON.parse(localStorage.getItem('tabula:v1:set:accent') || '"terracota"');
+      if (ac && ac !== 'terracota') document.documentElement.dataset.accent = ac;
       // Si hay bloqueo, se oculta el contenido desde el primer instante
       var lk = JSON.parse(localStorage.getItem('tabula:v1:set:lock') || 'null');
       if (lk && lk.enabled) document.documentElement.classList.add('is-locked');
