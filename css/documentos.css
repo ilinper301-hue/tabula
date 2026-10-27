@@ -289,3 +289,35 @@
 }
 @media (prefers-reduced-motion: reduce) { .dc-spinner { animation: none; } .dc-card { transition: none; } }
 @media print { .dc-drop { display: none !important; } }
+
+/* ---------- Fichas con Claude ---------- */
+.dc-cl { display: flex; flex-direction: column; gap: 14px; }
+.dc-cl-steps { display: flex; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.dc-cl-steps span { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 5px; border-radius: 999px; background: var(--surface-2); }
+.dc-cl-steps b, .dc-cl-howto b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+.dc-cl-input { width: 100%; min-height: 120px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+.dc-cl-tools { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: -4px; }
+.dc-cl-preview { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; justify-content: center; overflow: hidden; }
+.dc-cl-page { width: 100%; max-width: 420px; aspect-ratio: 210 / 297; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 6px 18px rgba(0,0,0,.08); border-radius: 4px; overflow: hidden; position: relative; }
+.dc-cl-frame { position: absolute; top: 0; left: 0; width: 794px; height: 1123px; border: 0; transform-origin: 0 0; pointer-events: none; background: #fff; }
+.dc-cl-info { margin: -6px 0 0; font-size: 13px; color: var(--muted); }
+.dc-cl-info:empty { display: none; }
+.dc-cl-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.dc-cl-help { display: flex; flex-direction: column; gap: 14px; }
+.dc-cl-lead { margin: 0; color: var(--muted); }
+.dc-cl-howto { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.dc-cl-howto li { display: flex; gap: 12px; align-items: flex-start; }
+.dc-cl-howto li b { margin-top: 1px; }
+.dc-cl-howto strong { display: block; font-weight: 600; }
+.dc-cl-howto span { display: block; color: var(--muted); font-size: 14px; }
+.dc-cl-pre { margin: 0; white-space: pre-wrap; font-size: 12.5px; line-height: 1.55; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; max-height: 260px; overflow: auto; }
+.dc-cl-help > .btn { align-self: flex-start; }
+.dc-cl-note { margin: 0; font-size: 13px; color: var(--muted); }
+.dc-k-ficha { --k-bg: var(--t3-bg); --k-fg: var(--t3-fg); }
+
+.dc-head-actions .btn { white-space: nowrap; }
+@media (max-width: 680px) {
+  .dc-head-actions { gap: 8px; }
+  .dc-head-actions .btn[aria-label="Añadir enlace"] .dc-btn-text { display: none; }
+  .dc-head-actions .btn[aria-label="Añadir enlace"] { flex: 0 0 auto; padding-inline: 13px; }
+}

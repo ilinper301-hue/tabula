@@ -302,6 +302,7 @@ a { color: var(--accent-text); }
     display: flex; align-items: center; justify-content: space-between;
     padding: calc(12px + env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) 0 max(18px, env(safe-area-inset-left));
   }
+  .mobile-brand[hidden] { display: none; }
   .mobile-brand .brand { padding: 4px 0; }
   .view { padding: 22px 18px calc(var(--nav-h) + 40px); }
   .page-title { font-size: 30px; }

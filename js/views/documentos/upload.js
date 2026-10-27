@@ -5,7 +5,7 @@ import { saveFile, makeThumbnail, MAX_FILE_MB } from '../../files.js';
 import { titleFromFilename } from '../../documents.js';
 import { plural } from './common.js';
 
-export const ACCEPT = '.pdf,.png,.jpg,.jpeg,.gif,.webp,.heic,.doc,.docx,.odt,.rtf,.txt,.xls,.xlsx,.ods,.csv,.ppt,.pptx,.odp,application/pdf,image/*';
+export const ACCEPT = '.pdf,.html,.htm,.png,.jpg,.jpeg,.gif,.webp,.heic,.doc,.docx,.odt,.rtf,.txt,.xls,.xlsx,.ods,.csv,.ppt,.pptx,.odp,application/pdf,image/*';
 
 /**
  * Guarda archivos como documentos nuevos, uno a uno.
@@ -22,6 +22,14 @@ export async function uploadFiles(files, opts = {}, onStatus = () => {}) {
     try {
       if (!file.size) throw new Error('El archivo está vacío');
       if (file.size > MAX_FILE_MB * 1024 * 1024) throw new Error(`pesa más de ${MAX_FILE_MB} MB`);
+      if (file.type === 'text/html' || /\.html?$/i.test(file.name)) {
+        // Fichas en HTML (p. ej. descargadas de Claude): se limpian antes de guardarlas
+        const { saveFicha } = await import('./claude.js');
+        const { guessTitle } = await import('../../fichas.js');
+        const html = await file.text();
+        created.push(await saveFicha(html, guessTitle(html) || titleFromFilename(file.name), opts));
+        continue;
+      }
       const saved = await saveFile(file);
       const th = await makeThumbnail(file, saved.tipo);
       const doc = store.add('documentos', {

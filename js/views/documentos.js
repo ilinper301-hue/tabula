@@ -14,6 +14,7 @@ import { mountQueue, liveQueue } from './documentos/queue.js';
 import { openDocDetail } from './documentos/detail.js';
 import { pickFiles, uploadFiles, openLinkSheet } from './documentos/upload.js';
 import { setHash } from './documentos/common.js';
+import { openPasteSheet, importShared } from './documentos/claude.js';
 
 let disposePrev = null; // evita escuchas duplicadas si la vista se pinta dos veces seguidas
 
@@ -72,7 +73,8 @@ export function render(container, params = new URLSearchParams()) {
     h('header', { class: 'page-head dc-head' },
       h('div', {}, h('div', { class: 'eyebrow' }, 'Fichas, exámenes y recursos'), h('h1', { class: 'page-title' }, 'Documentos')),
       h('div', { class: 'dc-head-actions' },
-        h('button', { type: 'button', class: 'btn', onclick: addLink }, icon('link', 16), h('span', { class: 'dc-btn-text' }, 'Añadir enlace')),
+        h('button', { type: 'button', class: 'btn', onclick: () => openPasteSheet({ carpeta: libState.carpeta || '', onSaved: () => { if (tab !== 'biblioteca') showTab('biblioteca'); } }), 'aria-label': 'Pegar de Claude', title: 'Pegar una ficha hecha con Claude' }, icon('sparkle', 16), h('span', { class: 'dc-btn-text' }, 'Pegar de Claude')),
+        h('button', { type: 'button', class: 'btn', onclick: addLink, 'aria-label': 'Añadir enlace' }, icon('link', 16), h('span', { class: 'dc-btn-text' }, 'Añadir enlace')),
         h('button', { type: 'button', class: 'btn btn-primary', onclick: chooseFiles }, icon('upload', 16), 'Subir'))),
     tabs, status, panel);
 
@@ -98,6 +100,10 @@ export function render(container, params = new URLSearchParams()) {
   paintBadge();
   const unsubs = ['impresiones', 'documentos'].map((c) => store.subscribe(c, paintBadge));
   if (params.get('doc') && store.get('documentos', params.get('doc'))) openDoc(params.get('doc'));
+  // Recibido con «Compartir → Tabula» (Android)
+  // (se mira siempre: si la app se cerró a medias, lo pendiente se importa la próxima vez)
+  if (params.get('compartido')) setHash({});
+  importShared({ upload, carpeta: libState.carpeta || '' });
 
   const dispose = () => {
     if (disposePrev === dispose) disposePrev = null;

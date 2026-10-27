@@ -9,6 +9,7 @@
 
 export const KINDS = {
   pdf: { label: 'PDF', print: true },
+  ficha: { label: 'Ficha', print: true },
   imagen: { label: 'Imagen', print: true },
   texto: { label: 'Documento', print: false },
   hoja: { label: 'Hoja de cálculo', print: false },
@@ -23,6 +24,7 @@ export function kindOf(doc) {
   const n = (doc.nombreArchivo || doc.titulo || '').toLowerCase();
   if (!doc.fileId && doc.enlace) return 'enlace';
   if (t === 'application/pdf' || n.endsWith('.pdf')) return 'pdf';
+  if (t === 'text/html' || /\.html?$/.test(n)) return 'ficha';
   if (t.startsWith('image/') || /\.(png|jpe?g|gif|webp|heic)$/.test(n)) return 'imagen';
   if (/word|opendocument\.text|rtf|text\/plain/.test(t) || /\.(docx?|odt|rtf|txt)$/.test(n)) return 'texto';
   if (/sheet|excel|csv/.test(t) || /\.(xlsx?|ods|csv)$/.test(n)) return 'hoja';

@@ -4,8 +4,8 @@ import { h, icon, toast, todayISO, relativeDay, fromISO, toISO } from '../../ui.
 import { KINDS, kindOf, canPrint, formatSize } from '../../documents.js';
 import { getFile, printBlob, openBlob, downloadBlob } from '../../files.js';
 
-export const KIND_ICON = { pdf: 'documentos', imagen: 'image', texto: 'documentos', hoja: 'table', presentacion: 'slides', enlace: 'link', otro: 'documentos' };
-export const KIND_SHORT = { pdf: 'PDF', imagen: 'Imagen', texto: 'Texto', hoja: 'Hoja', presentacion: 'Diapos', enlace: 'Enlace', otro: 'Archivo' };
+export const KIND_ICON = { ficha: 'sparkle', pdf: 'documentos', imagen: 'image', texto: 'documentos', hoja: 'table', presentacion: 'slides', enlace: 'link', otro: 'documentos' };
+export const KIND_SHORT = { ficha: 'Ficha', pdf: 'PDF', imagen: 'Imagen', texto: 'Texto', hoja: 'Hoja', presentacion: 'Diapos', enlace: 'Enlace', otro: 'Archivo' };
 
 export const docsById = () => Object.fromEntries(store.list('documentos').map((d) => [d.id, d]));
 export const getDoc = (id) => store.get('documentos', id);
@@ -50,6 +50,7 @@ export const weekdayLong = (iso) => {
 const mimeOf = (doc, blob) => {
   const k = kindOf(doc);
   if (k === 'pdf') return 'application/pdf';
+  if (k === 'ficha') return 'text/html';
   if (k === 'imagen') return (blob.type || doc.tipo || '').startsWith('image/') ? (blob.type || doc.tipo) : 'image/png';
   return blob.type || doc.tipo || '';
 };

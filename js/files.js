@@ -18,11 +18,12 @@ let dbp = null;
 function idb() {
   if (dbp) return dbp;
   dbp = new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
+    const req = indexedDB.open(DB_NAME, 2);
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains('blobs')) db.createObjectStore('blobs');
       if (!db.objectStoreNames.contains('pending')) db.createObjectStore('pending'); // subidas a la nube pendientes
+      if (!db.objectStoreNames.contains('shared')) db.createObjectStore('shared', { autoIncrement: true }); // recibido con «Compartir» (sw.js)
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -240,6 +241,7 @@ export function downloadBlob(blob, nombre = 'archivo') {
 export async function printBlob(blob, tipo, { titulo = 'Documento' } = {}) {
   const isPdf = tipo === 'application/pdf';
   const isImg = (tipo || '').startsWith('image/');
+  if (tipo === 'text/html') return printHtml(await blob.text());
   if (!isPdf && !isImg) return 'unsupported';
   if (isPdf && isIOS()) { openBlob(blob, titulo); return 'opened'; }
 
@@ -267,4 +269,42 @@ export async function printBlob(blob, tipo, { titulo = 'Documento' } = {}) {
   });
   done();
   return 'printed';
+}
+
+/**
+ * Imprime una ficha HTML en un marco aislado: sin scripts (sandbox sin allow-scripts).
+ * @returns 'printed'
+ */
+export async function printHtml(html) {
+  const frame = document.createElement('iframe');
+  frame.setAttribute('aria-hidden', 'true');
+  frame.setAttribute('sandbox', 'allow-same-origin allow-modals');
+  frame.style.cssText = 'position:fixed;right:0;bottom:0;width:794px;height:1123px;border:0;visibility:hidden';
+  await new Promise((resolve) => {
+    frame.onload = () => setTimeout(() => {
+      try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (e) { console.warn(e); }
+      resolve();
+    }, 300);
+    frame.srcdoc = html;
+    document.body.append(frame);
+  });
+  setTimeout(() => frame.remove(), 60_000);
+  return 'printed';
+}
+
+/** Archivos y textos recibidos con «Compartir → Tabula» (Android): [{ key, file? , title?, text?, url? }]. */
+export async function listShared() {
+  try {
+    const db = await idb();
+    return await new Promise((resolve, reject) => {
+      const out = [];
+      const req = db.transaction('shared', 'readonly').objectStore('shared').openCursor();
+      req.onsuccess = () => { const c = req.result; if (c) { out.push({ key: c.key, ...c.value }); c.continue(); } else resolve(out); };
+      req.onerror = () => reject(req.error);
+    });
+  } catch { return []; }
+}
+/** Borra lo recibido ya importado (solo después de guardarlo, para no perder nada si se cierra la app a medias). */
+export async function removeShared(keys) {
+  try { await tx('shared', 'readwrite', (s) => { keys.forEach((k) => s.delete(k)); }); } catch {}
 }
