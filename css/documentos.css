@@ -321,3 +321,10 @@
   .dc-head-actions .btn[aria-label="Añadir enlace"] .dc-btn-text { display: none; }
   .dc-head-actions .btn[aria-label="Añadir enlace"] { flex: 0 0 auto; padding-inline: 13px; }
 }
+.dc-cl-pdf { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px dashed var(--border-strong); border-radius: 12px; }
+.dc-cl-pdf-ic { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--t1-bg); color: var(--t1-fg); flex-shrink: 0; }
+.dc-cl-pdf-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.dc-cl-pdf-tx span { color: var(--muted); font-size: 13px; }
+.dc-cl-pdf .btn { flex-shrink: 0; }
+@media (max-width: 480px) { .dc-cl-pdf { flex-wrap: wrap; } .dc-cl-pdf .btn { width: 100%; } }
+.dc-cl-preview[hidden] { display: none; }

@@ -49,8 +49,8 @@ export function openPasteSheet(opts = {}) {
   area.addEventListener('input', () => { pastedHtml = ''; refresh(); });
   area.addEventListener('paste', (e) => {
     const cd = e.clipboardData;
-    const img = cd && [...cd.files || []].find((f) => f.type.startsWith('image/'));
-    if (img) { e.preventDefault(); toast('Es una imagen: usa «Subir» para guardarla'); return; }
+    const files = cd ? [...(cd.files || [])] : [];
+    if (files.length) { e.preventDefault(); saveFiles(files); return; }
     const html = cd && cd.getData('text/html');
     if (html && !/```/.test(cd.getData('text/plain') || '')) pastedHtml = html;
     setTimeout(refresh, 0);
@@ -62,6 +62,23 @@ export function openPasteSheet(opts = {}) {
       catch { area.focus(); toast('Mantén pulsado el cuadro y elige «Pegar»'); }
     },
   }, icon('download', 14), 'Pegar') : null;
+
+  // PDF, imágenes o archivos (p. ej. el PDF que Claude deja descargar): se guardan tal cual
+  const saveFiles = async (files) => {
+    if (!files.length) return;
+    const { uploadFiles } = await import('./upload.js');
+    const created = await uploadFiles(files, { carpeta: opts.carpeta || '' }, (t) => { info.textContent = t || ''; });
+    if (created.length) { close(); opts.onSaved && opts.onSaved(created[0]); }
+  };
+  const pickPdf = async () => {
+    const { pickFiles } = await import('./upload.js');
+    saveFiles(await pickFiles());
+  };
+  const pdfCard = h('div', { class: 'dc-cl-pdf' },
+    h('span', { class: 'dc-cl-pdf-ic', 'aria-hidden': 'true' }, icon('documentos', 20)),
+    h('div', { class: 'dc-cl-pdf-tx' }, h('strong', {}, '¿Claude te ha dado un PDF?'),
+      h('span', {}, 'Descárgalo y elígelo aquí: está en Archivos (iPad) o en Descargas (Android y ordenador).')),
+    h('button', { type: 'button', class: 'btn btn-sm', onclick: pickPdf }, icon('upload', 14), 'Elegir archivo'));
 
   const submit = async (e) => {
     e.preventDefault();
@@ -85,6 +102,7 @@ export function openPasteSheet(opts = {}) {
     h('div', { class: 'dc-cl-row' }, area),
     h('div', { class: 'dc-cl-tools' }, pasteBtn,
       h('button', { type: 'button', class: 'link-btn', onclick: () => openClaudeHelp() }, '¿Cómo pedir fichas a Claude?')),
+    pdfCard,
     previewWrap, info,
     h('label', { class: 'field' }, h('span', { class: 'field-label' }, 'Título'), title),
     h('div', { class: 'dc-cl-actions' }, h('button', { type: 'button', class: 'btn', onclick: () => close() }, 'Cancelar'), saveBtn));
@@ -112,8 +130,8 @@ export function openClaudeHelp() {
     h('ol', { class: 'dc-cl-howto' },
       step(1, 'Crea un Proyecto en Claude', 'Por ejemplo «Fichas de clase». En sus instrucciones, pega el texto de abajo. Solo se hace una vez.'),
       step(2, 'Pide la ficha', '«Ficha de sumas llevando para 1.º, 8 ejercicios con dibujos», «Comprensión lectora sobre el otoño con 5 preguntas»…'),
-      step(3, 'Copia el bloque de código', 'Claude te dará la ficha en un bloque HTML. Pulsa «Copiar».'),
-      step(4, 'Pégala en Tabula', 'Documentos → «Pegar de Claude». En Android también puedes usar Compartir → Tabula.')),
+      step(3, 'Copia el bloque de código', 'Claude te dará la ficha en un bloque HTML. Pulsa «Copiar». Si te la da en PDF, descárgala: también vale.'),
+      step(4, 'Llévala a Tabula', 'Documentos → «Pegar de Claude»: pega el código o pulsa «Elegir archivo» para el PDF descargado. En Android también puedes usar Compartir → Tabula.')),
     h('h3', { class: 'section-label' }, 'Instrucciones del Proyecto'),
     pre, copy,
     h('p', { class: 'dc-cl-note' }, 'Consejo: no escribas nombres de alumnos en Claude; para adaptar una ficha basta con decir «para un alumno con dificultades en lectura».')));

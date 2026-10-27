@@ -91,6 +91,15 @@ export function render(container, params = new URLSearchParams()) {
     e.preventDefault(); dragDepth = 0; drop.classList.remove('show');
     upload([...e.dataTransfer.files]);
   };
+  // Pegar archivos copiados (p. ej. un PDF copiado en la app Archivos) en cualquier parte de la vista
+  const onPaste = (e) => {
+    if (document.querySelector('.overlay')) return; // dentro de una hoja abierta decide la hoja
+    const files = e.clipboardData ? [...(e.clipboardData.files || [])] : [];
+    if (!files.length) return;
+    e.preventDefault();
+    upload(files);
+  };
+  window.addEventListener('paste', onPaste);
   window.addEventListener('dragenter', onEnter);
   window.addEventListener('dragover', onOver);
   window.addEventListener('dragleave', onLeave);
@@ -109,6 +118,7 @@ export function render(container, params = new URLSearchParams()) {
     if (disposePrev === dispose) disposePrev = null;
     mounted && mounted.destroy();
     unsubs.forEach((u) => u());
+    window.removeEventListener('paste', onPaste);
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((ev, i) => window.removeEventListener(ev, [onEnter, onOver, onLeave, onDrop][i]));
     drop.remove();
   };
