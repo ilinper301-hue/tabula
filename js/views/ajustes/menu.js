@@ -55,7 +55,7 @@ export function openBarSheet({ onSaved } = {}) {
       preview,
       h('p', { class: 'bar-hint', role: 'status' }, missing ? `Elige ${missing === 1 ? 'una sección más' : `${missing} secciones más`}.` : 'Toca una sección para quitarla o usa las flechas para ordenarla.'),
       chosen,
-      avail.length ? h('h3', { class: 'section-label bar-pool-title' }, 'Secciones disponibles') : null,
+      avail.length ? h('h3', { class: 'section-label bar-pool-title' }, 'Secciones disponibles') : '',
       pool,
       h('div', { class: 'bar-actions' },
         h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => { sel = [...DEFAULT_MOBILE]; paint(); } }, 'Restablecer'),

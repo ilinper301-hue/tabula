@@ -266,6 +266,7 @@ a { color: var(--accent-text); }
   position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px); z-index: 60;
   background: #262624; color: #F2F0EA; padding: 10px 12px 10px 16px; border-radius: 12px;
   display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow-lg); font-size: 14px;
+  width: max-content; max-width: calc(100vw - 32px);
   opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }

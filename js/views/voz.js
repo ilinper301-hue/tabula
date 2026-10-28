@@ -17,7 +17,7 @@ function activeStudents() {
 
 export function openVoz() {
   if (closeSheet) return closeSheet;
-  let rec = null, listening = false, finalText = '';
+  let rec = null, listening = false;
 
   const area = h('textarea', {
     class: 'input vz-text', id: 'vz-texto', rows: '6', 'aria-label': 'Lo que has dictado',
@@ -36,32 +36,52 @@ export function openVoz() {
     status.textContent = listening ? 'Te escucho… di varias cosas seguidas si quieres.' : '';
   }
 
-  function start() {
-    finalText = area.value.trim() ? `${area.value.trim()}. ` : '';
+  // Frase a frase (continuous = false) y reinicio automático mientras se quiera seguir: en Android, el modo
+  // continuo repite la frase cada vez que crece («Hola», «Hola qué», «Hola qué tal»…).
+  let phrase = '', silences = 0;
+  function commit() {
+    const t = phrase.trim().replace(/[.\s]+$/, '');
+    phrase = '';
+    if (!t) return;
+    const prev = area.value.trim().replace(/[.\s]+$/, '');
+    area.value = `${prev ? `${prev}. ` : ''}${t.charAt(0).toUpperCase()}${t.slice(1)}.`;
+  }
+  function listen() {
     rec = new Recognition();
-    rec.lang = 'es-ES'; rec.continuous = true; rec.interimResults = true;
+    rec.lang = 'es-ES'; rec.continuous = false; rec.interimResults = true; rec.maxAlternatives = 1;
     rec.onresult = (e) => {
-      let tmp = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript.trim();
-        if (e.results[i].isFinal) finalText += `${t.charAt(0).toUpperCase()}${t.slice(1)}. `;
-        else tmp += `${t} `;
-      }
-      area.value = finalText.trim();
-      interim.textContent = tmp.trim();
+      // El último resultado es siempre la versión más completa de la frase
+      const r = e.results[e.results.length - 1];
+      phrase = r[0].transcript;
+      silences = 0;
+      interim.textContent = r.isFinal ? '' : phrase.trim();
     };
     rec.onerror = (e) => {
-      status.textContent = e.error === 'not-allowed' || e.error === 'service-not-allowed'
+      if (e.error === 'no-speech') { silences++; return; }
+      if (e.error === 'aborted') return;
+      listening = false;
+      status.dataset.msg = e.error === 'not-allowed' || e.error === 'service-not-allowed'
         ? 'No hay permiso para usar el micrófono. Actívalo en los ajustes del navegador.'
-        : e.error === 'no-speech' ? 'No se ha oído nada. Vuelve a intentarlo.' : 'El dictado se ha cortado. Vuelve a pulsar «Hablar».';
+        : 'El dictado se ha cortado. Vuelve a pulsar «Hablar».';
     };
-    rec.onend = () => { listening = false; interim.textContent = ''; const msg = status.textContent; paintMic(); if (msg && !/escucho/.test(msg)) status.textContent = msg; };
-    try { rec.start(); listening = true; paintMic(); } catch (e) { console.warn(e); }
+    rec.onend = () => {
+      commit();
+      interim.textContent = '';
+      if (listening && silences < 3) { try { listen(); return; } catch (err) { console.warn(err); } }
+      listening = false; paintMic();
+      if (status.dataset.msg) { status.textContent = status.dataset.msg; delete status.dataset.msg; }
+      else if (silences >= 3) status.textContent = 'Me he parado porque no oía nada. Pulsa «Hablar» para seguir.';
+    };
+    rec.start();
   }
-  function stop() { try { rec && rec.stop(); } catch {} listening = false; paintMic(); }
+  function start() {
+    silences = 0; phrase = ''; delete status.dataset.msg;
+    try { listening = true; listen(); paintMic(); } catch (e) { listening = false; console.warn(e); paintMic(); }
+  }
+  function stop() { listening = false; try { rec && rec.stop(); } catch {} paintMic(); }
 
   async function send() {
-    if (listening) stop();
+    if (listening) { stop(); commit(); }
     const text = area.value.trim();
     if (!text) { toast('Dicta o escribe algo primero'); return; }
     const items = interpretDictation(text, { students: activeStudents(), today: todayISO() });
