@@ -70,7 +70,9 @@ export function render(container) {
     h('div', { class: 'card-head' },
       h('h2', { class: 'card-title', id: 'hoy-horario-t' }, 'Horario de hoy'),
       h('a', { class: 'link-btn', href: '#/calendario?vista=semana' }, 'Semana')),
-    scheduleBody);
+    scheduleBody,
+    h('div', { class: 'su-hoy-foot' },
+      h('button', { type: 'button', class: 'btn btn-sm btn-ghost su-hoy-btn', onclick: () => import('./sustituto.js').then((m) => m.openSustituto()) }, icon('note', 16), 'Plan para el sustituto')));
 
   // Botón «Anotar» para sesiones «otro» que corresponden a un programa (o contienen «coord»)
   function programButton(s) {

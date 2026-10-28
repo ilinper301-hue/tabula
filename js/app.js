@@ -6,6 +6,11 @@ import { initSync, getSyncState, onSyncChange, SYNC_LABELS } from './sync.js';
 import './plan-sync.js';
 import { initLock, setForgotHandler, resetLock } from './lock.js';
 import { signOutAndClear } from './sync.js';
+import { SECTIONS, AJUSTES, NAV_BLOCKS, normalizeMobileNav } from './nav-model.js';
+import { openSearch, initSearch, searchHint } from './views/search-ui.js';
+
+// Datos del dispositivo (IndexedDB) cargados antes de pintar nada
+await store.ready();
 
 // Módulos de la app. `fase` indica cuándo se construye cada uno.
 const ROUTES = [
@@ -48,44 +53,60 @@ function pendingCount() {
 function renderNav(activeId) {
   const profile = store.getSetting('profile', { nombre: '', centro: '' });
   const count = pendingCount();
-  const link = (r) => h('a', {
-    class: 'nav-link', href: `#/${r.id}`, title: r.label,
-    'aria-current': r.id === activeId ? 'page' : null,
-  }, icon(r.icon, 19), h('span', { class: 'label' }, r.label),
-  r.count && count ? h('span', { class: 'count' }, String(count)) : null);
+  const link = (id) => {
+    const r = SECTIONS[id];
+    return h('a', {
+      class: 'nav-link', href: `#/${id}`, title: r.label,
+      'aria-current': id === activeId ? 'page' : null,
+    }, icon(r.icon, 19), h('span', { class: 'label' }, r.label),
+    r.count && count ? h('span', { class: 'count', 'aria-label': `${count} pendientes` }, String(count)) : null);
+  };
 
   const sync = getSyncState();
   const displayName = profile.nombre || (sync.user && sync.user.name) || '';
   const initials = (displayName || 'Tú').split(/\s+/).map((p) => p[0]).join('').slice(0, 2).toUpperCase();
   const sub = sync.enabled ? SYNC_LABELS[sync.status] : (profile.centro || 'Ajustes');
 
+  const blocks = NAV_BLOCKS.map((b) => h('div', { class: 'nav-block', role: 'group', 'aria-labelledby': `navb-${b.id}` },
+    h('div', { class: 'nav-label', id: `navb-${b.id}` }, b.label),
+    ...b.items.map(link)));
+
   sidebar.replaceChildren(
     h('a', { class: 'brand', href: '#/hoy', 'aria-label': 'Tabula, ir a Hoy' }, logoLockup({ size: 34 })),
-    ...ROUTES.map(link),
-    h('div', { class: 'side-spacer' }),
-    h('a', {
-      class: 'nav-link', href: '#/ajustes', title: 'Ajustes',
-      'aria-current': activeId === 'ajustes' ? 'page' : null,
-    },
-    h('span', { class: 'avatar', 'aria-hidden': 'true' }, initials),
-    h('span', { class: 'label user-label' },
-      h('span', { class: 'user-name' }, displayName || 'Mi perfil'),
-      h('span', { class: `user-sub sync-${sync.status}` }, sub))),
+    h('button', { type: 'button', class: 'side-search', title: 'Buscar', 'aria-label': 'Buscar', 'aria-haspopup': 'dialog', onclick: (e) => openSearch({ from: e.currentTarget }) },
+      icon('search', 17), h('span', { class: 'label' }, 'Buscar…'), h('kbd', { class: 'label' }, searchHint())),
+    h('div', { class: 'side-scroll' }, ...blocks),
+    h('div', { class: 'side-foot' },
+      h('a', {
+        class: 'nav-link', href: '#/ajustes', title: AJUSTES.label,
+        'aria-current': activeId === 'ajustes' ? 'page' : null,
+      },
+      h('span', { class: 'avatar', 'aria-hidden': 'true' }, initials),
+      h('span', { class: 'label user-label' },
+        h('span', { class: 'user-name' }, displayName || 'Mi perfil'),
+        h('span', { class: `user-sub sync-${sync.status}` }, sub)))),
   );
 
   const mobileBrand = document.getElementById('mobile-brand');
   if (mobileBrand && !mobileBrand.firstChild) {
-    mobileBrand.append(h('a', { href: '#/hoy', class: 'brand', 'aria-label': 'Tabula, ir a Hoy' }, logoLockup({ size: 30 })));
+    mobileBrand.append(
+      h('a', { href: '#/hoy', class: 'brand', 'aria-label': 'Tabula, ir a Hoy' }, logoLockup({ size: 30 })),
+      h('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Buscar', 'aria-haspopup': 'dialog', onclick: (e) => openSearch({ from: e.currentTarget }) }, icon('search', 22)));
   }
   // En el móvil, el logotipo encabeza la pantalla principal (Hoy)
   if (mobileBrand) mobileBrand.hidden = activeId !== 'hoy';
 
-  const mob = ROUTES.filter((r) => r.mobile);
-  const moreActive = !mob.some((r) => r.id === activeId);
+  const mob = normalizeMobileNav(store.getSetting('navMovil', null));
+  const moreActive = !mob.includes(activeId);
   bottomNav.replaceChildren(
-    ...mob.map((r) => h('a', { href: `#/${r.id}`, 'aria-current': r.id === activeId ? 'page' : null },
-      icon(r.icon, 22), r.label)),
-    h('a', { href: '#/mas', 'aria-current': moreActive ? 'page' : null }, icon('mas', 22), 'Más'),
+    ...mob.map((id) => {
+      const r = SECTIONS[id];
+      return h('a', { href: `#/${id}`, 'aria-current': id === activeId ? 'page' : null },
+        h('span', { class: 'bn-icon' }, icon(r.icon, 22),
+          r.count && count ? h('span', { class: 'bn-badge', 'aria-label': `${count} pendientes` }, count > 99 ? '99+' : String(count)) : null),
+        r.label);
+    }),
+    h('a', { href: '#/mas', 'aria-current': moreActive ? 'page' : null }, h('span', { class: 'bn-icon' }, icon('mas', 22)), 'Más'),
   );
 }
 
@@ -124,6 +145,8 @@ async function navigate() {
   if (parseHash().id !== id) return;
   viewEl.replaceChildren();
   cleanup = mod.render(viewEl, params) || null;
+  // Guía rápida (si está activada)
+  import('./guide.js').then((g) => { if (parseHash().id === id) g.mountGuide(id, viewEl, params); }).catch(() => {});
   if (currentId !== id) { window.scrollTo(0, 0); currentId = id; }
 }
 
@@ -167,9 +190,9 @@ setForgotHandler((card) => {
     box.append(
       h('p', {}, 'Sin cuenta conectada, la única forma de entrar es borrar todos los datos de este dispositivo. Se perderán, salvo que tengas una copia de seguridad. Escribe BORRAR para confirmar.'),
       h('label', { class: 'sr-only', for: 'lock-borrar' }, 'Escribe BORRAR para confirmar'), input,
-      h('button', { class: 'btn btn-danger', style: { marginTop: '10px' }, onclick: () => {
+      h('button', { class: 'btn btn-danger', style: { marginTop: '10px' }, onclick: async () => {
         if (input.value.trim().toUpperCase() !== 'BORRAR') { input.focus(); return; }
-        resetLock(); store._clearLocal(); location.reload();
+        resetLock(); await store._clearLocal(); location.reload();
       } }, 'Borrar datos de este dispositivo'));
   }
   card.append(box);
@@ -182,9 +205,25 @@ if (!location.hash || location.hash === '#/' || location.hash === '#/hoy') {
   if (needsOnboarding() && !store.getSetting('syncUid')) location.hash = '#/bienvenida';
 }
 
+initSearch();
 navigate();
 onSyncChange(() => renderNav(parseHash().id));
 initSync();
+
+// Recordatorio de copia de seguridad: sin cuenta conectada y más de 30 días sin copia (como mucho, una vez por semana)
+setTimeout(async () => {
+  try {
+    if (store.getSetting('syncUid') || !store._hasLocalData()) return;
+    const { daysSinceBackup } = await import('./backup.js');
+    const d = daysSinceBackup();
+    const last = store.getSetting('backup:aviso', 0);
+    if ((d === null || d > 30) && Date.now() - last > 7 * 86400000) {
+      store.setSetting('backup:aviso', Date.now());
+      const { toast } = await import('./ui.js');
+      toast(d === null ? 'Aún no tienes copia de seguridad de tus datos' : `Tu última copia es de hace ${d} días`, { label: 'Hacer copia', run: () => { location.hash = '#/ajustes'; } });
+    }
+  } catch {}
+}, 4000);
 
 // Encuestas: recibir respuestas en tiempo real y avisar
 import('./surveys.js').then((m) => m.initSurveys()).catch(() => {});

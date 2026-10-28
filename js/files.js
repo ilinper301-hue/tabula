@@ -308,3 +308,10 @@ export async function listShared() {
 export async function removeShared(keys) {
   try { await tx('shared', 'readwrite', (s) => { keys.forEach((k) => s.delete(k)); }); } catch {}
 }
+
+/** Guarda en el dispositivo un archivo restaurado de una copia y lo deja pendiente de subir a la nube. */
+export async function putLocalFile(fileId, blob, meta = {}) {
+  await tx('blobs', 'readwrite', (s) => s.put(blob, fileId));
+  await tx('pending', 'readwrite', (s) => s.put({ nombre: meta.nombre || '', tipo: meta.tipo || blob.type || '', tamano: blob.size }, fileId));
+  uploadPending().catch(() => {});
+}

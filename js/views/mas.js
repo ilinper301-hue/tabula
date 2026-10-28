@@ -1,25 +1,31 @@
-// Tabula · "Más": acceso en el móvil a las secciones que no caben en la barra inferior
+// Tabula · «Más»: menú completo en el móvil (mismos bloques que la barra lateral)
 
 import { h, icon } from '../ui.js';
+import { SECTIONS, AJUSTES, NAV_BLOCKS } from '../nav-model.js';
+import { openSearch } from './search-ui.js';
+import { openBarSheet } from './ajustes/menu.js';
 
-const ITEMS = [
-  { id: 'aula', label: 'En clase', icon: 'aula', desc: 'Temporizador, al azar, grupos y ruido' },
-  { id: 'tutoria', label: 'Tutoría', icon: 'tutoria', desc: 'Familias, reuniones y atención a la diversidad' },
-  { id: 'cuaderno', label: 'Cuaderno', icon: 'cuaderno', desc: 'Notas y evaluación' },
-  { id: 'planificacion', label: 'Planificación', icon: 'planificacion', desc: 'Situaciones de aprendizaje y sesiones' },
-  { id: 'programas', label: 'Planes y programas', icon: 'programas', desc: 'Diario de coordinación y memorias' },
-  { id: 'encuestas', label: 'Encuestas', icon: 'encuestas', desc: 'Pregunta a tus compañeros con un enlace' },
-  { id: 'documentos', label: 'Documentos', icon: 'documentos', desc: 'Fichas, archivos y cola de impresión' },
-  { id: 'ajustes', label: 'Ajustes', icon: 'ajustes', desc: 'Perfil, cuenta, evaluación y copias' },
-];
+const item = (id, r) => h('a', { class: 'more-item', href: `#/${id}` },
+  h('span', { class: 'more-icon' }, icon(r.icon, 20)),
+  h('span', { class: 'more-text' }, h('span', { class: 'more-label' }, r.label), h('span', { class: 'more-desc' }, r.desc)),
+  icon('chevronRight', 18, 'more-chevron'));
 
 export function render(container) {
   container.replaceChildren(
-    h('header', { class: 'page-head' }, h('div', {}, h('h1', { class: 'page-title' }, 'Más'))),
-    h('nav', { class: 'card more-list', 'aria-label': 'Más secciones' },
-      ...ITEMS.map((it) => h('a', { class: 'more-item', href: `#/${it.id}` },
-        h('span', { class: 'more-icon' }, icon(it.icon, 20)),
-        h('span', { class: 'more-text' }, h('span', { class: 'more-label' }, it.label), h('span', { class: 'more-desc' }, it.desc)),
-        icon('chevronRight', 18, 'more-chevron')))),
+    h('header', { class: 'page-head' },
+      h('div', {}, h('h1', { class: 'page-title' }, 'Más')),
+      h('button', { type: 'button', class: 'icon-btn more-search', 'aria-label': 'Buscar', 'aria-haspopup': 'dialog', onclick: (e) => openSearch({ from: e.currentTarget }) }, icon('search', 22))),
+    h('nav', { class: 'more-blocks', 'aria-label': 'Más secciones' },
+      ...NAV_BLOCKS.map((b) => h('section', { class: 'more-block', 'aria-labelledby': `more-${b.id}` },
+        h('h2', { class: 'section-label', id: `more-${b.id}` }, b.label),
+        h('div', { class: 'card more-list' }, ...b.items.map((id) => item(id, SECTIONS[id]))))),
+      h('section', { class: 'more-block', 'aria-labelledby': 'more-ajustes' },
+        h('h2', { class: 'section-label', id: 'more-ajustes' }, 'Tabula'),
+        h('div', { class: 'card more-list' },
+          item(AJUSTES.id, AJUSTES),
+          h('button', { type: 'button', class: 'more-item more-action', onclick: (e) => openBarSheet({ onSaved: () => e.currentTarget && e.currentTarget.focus() }) },
+            h('span', { class: 'more-icon' }, icon('sidebar', 20)),
+            h('span', { class: 'more-text' }, h('span', { class: 'more-label' }, 'Personalizar barra'), h('span', { class: 'more-desc' }, 'Elige los 4 accesos de la barra inferior')),
+            icon('chevronRight', 18, 'more-chevron'))))),
   );
 }

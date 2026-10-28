@@ -10,6 +10,8 @@ import {
 } from '../lock.js';
 import { calendarioEscolarCard } from './ajustes/calendario-escolar.js';
 import { nuevoCursoCard } from './ajustes/nuevo-curso.js';
+import { guiaCard } from './ajustes/guia.js';
+import { menuCard } from './ajustes/menu.js';
 
 export function render(container) {
   const profile = store.getSetting('profile', { nombre: '', centro: '' });
@@ -60,15 +62,28 @@ export function render(container) {
         },
       }, text))));
 
-  // --- Copia de seguridad ---
-  const exportData = () => {
-    const blob = new Blob([store.exportAll()], { type: 'application/json' });
-    const a = h('a', { href: URL.createObjectURL(blob), download: `tabula-copia-${new Date().toISOString().slice(0, 10)}.json` });
-    document.body.append(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    toast('Copia descargada');
+  // --- Copia de seguridad (datos + archivos en .zip) ---
+  const backupStatus = h('p', { class: 'settings-text', role: 'status', 'aria-live': 'polite' });
+  const paintBackupStatus = (txt) => {
+    if (txt) { backupStatus.textContent = txt; return; }
+    import('../backup.js').then(({ daysSinceBackup }) => {
+      const d = daysSinceBackup();
+      backupStatus.textContent = d === null ? 'Todavía no has descargado ninguna copia.' : d === 0 ? 'Última copia: hoy.' : `Última copia: hace ${d} ${d === 1 ? 'día' : 'días'}.`;
+    });
   };
-  const fileInput = h('input', { type: 'file', accept: 'application/json,.json', class: 'sr-only', id: 'aj-import' });
+  paintBackupStatus();
+  const exportData = async () => {
+    try {
+      const { createBackup } = await import('../backup.js');
+      const { blob, nombre, archivos, faltan } = await createBackup((t) => paintBackupStatus(t));
+      const a = h('a', { href: URL.createObjectURL(blob), download: nombre });
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      toast(faltan ? `Copia descargada (${faltan} ${faltan === 1 ? 'archivo no estaba' : 'archivos no estaban'} en este dispositivo)` : `Copia descargada${archivos ? ` con ${archivos} ${archivos === 1 ? 'archivo' : 'archivos'}` : ''}`);
+      paintBackupStatus();
+    } catch (e) { console.warn(e); toast('No se pudo crear la copia'); paintBackupStatus(); }
+  };
+  const fileInput = h('input', { type: 'file', accept: '.zip,application/zip,application/json,.json', class: 'sr-only', id: 'aj-import' });
   const importBox = h('div', { class: 'confirm-box', hidden: true });
   fileInput.addEventListener('change', () => {
     const f = fileInput.files[0];
@@ -78,8 +93,12 @@ export function render(container) {
       h('p', {}, `¿Restaurar «${f.name}»? Se sustituirán los datos actuales${getSyncState().user ? ' (también en la nube)' : ''}.`),
       h('div', { class: 'settings-actions' },
         h('button', { class: 'btn btn-primary', onclick: async () => {
-          try { store.importAll(await f.text()); toast('Copia restaurada'); setTimeout(() => location.reload(), 600); }
-          catch (e) { toast(e.message || 'No se pudo leer el archivo'); }
+          try {
+            const { restoreBackup } = await import('../backup.js');
+            const r = await restoreBackup(f, (t) => paintBackupStatus(t));
+            toast(r.archivos ? `Copia restaurada con ${r.archivos} archivos` : 'Copia restaurada');
+            setTimeout(() => location.reload(), 700);
+          } catch (e) { toast(e.message || 'No se pudo leer el archivo'); paintBackupStatus(); }
         } }, 'Restaurar'),
         h('button', { class: 'btn btn-ghost', onclick: () => { importBox.hidden = true; fileInput.value = ''; } }, 'Cancelar')));
     importBox.hidden = false;
@@ -208,8 +227,10 @@ export function render(container) {
         evSeg('escala', 'Forma de calificar', [['numerica', 'Notas (0–10)'], ['niveles', 'Niveles (IN–SB)']]),
         evSeg('modo', 'Cálculo de la nota', [['porcentajes', 'Por porcentajes'], ['criterios', 'Por criterios (Séneca)']]),
         evSeg('final', 'Nota final', [['continua', 'Evaluación continua'], ['media', 'Media de evaluaciones']])),
+      menuCard(),
       calEsc.el,
       nuevoCursoCard(),
+      guiaCard(),
       h('section', { class: 'card' },
         h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Bloqueo')),
         lockBody),
@@ -218,7 +239,8 @@ export function render(container) {
         syncBody),
       h('section', { class: 'card' },
         h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Copia de seguridad')),
-        h('p', { class: 'settings-text' }, 'Descarga una copia de todos tus datos en un archivo. Guárdala de vez en cuando aunque uses la sincronización.'),
+        h('p', { class: 'settings-text' }, 'Descarga en un solo archivo (.zip) todos tus datos y los archivos de Documentos. Guárdala de vez en cuando aunque uses la sincronización.'),
+        backupStatus,
         h('div', { class: 'settings-actions' },
           h('button', { class: 'btn', onclick: exportData }, icon('download', 18), 'Descargar copia'),
           h('button', { class: 'btn', onclick: () => fileInput.click() }, icon('upload', 18), 'Restaurar copia'), fileInput),

@@ -1,0 +1,113 @@
+/* Tabula · «Mañana falto» (plan para el sustituto) y Guía rápida.
+   Solo usa las variables de app.css (claro y oscuro). */
+
+/* ---------- Plan para el sustituto ---------- */
+.sheet.su-sheet { width: min(760px, 100%); }
+.su-wrap { display: flex; flex-direction: column; gap: 22px; padding-bottom: 4px; min-width: 0; }
+.su-lead { margin: 0; color: var(--muted); font-size: 14px; }
+.su-section { min-width: 0; }
+.su-section > .section-label { margin-bottom: 10px; }
+.su-hint { display: block; margin: 4px 0 0; font-size: 12.5px; color: var(--muted); font-weight: 400; line-height: 1.4; }
+.su-note { margin: 8px 0 0; font-size: 13px; color: var(--accent-text); }
+
+/* Cuándo */
+.su-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.su-chip {
+  min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--border-strong);
+  background: var(--surface); color: var(--text-2); cursor: pointer; font-weight: 500;
+}
+.su-chip:hover { background: var(--hover); }
+.su-chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent-text); font-weight: 600; }
+.su-date-row { margin-top: 10px; max-width: 240px; }
+.su-range { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+.su-range .field-label { font-size: 13px; font-weight: 500; color: var(--text-2); }
+.su-range .segmented button { min-width: 38px; padding: 0 12px; }
+.su-range .segmented button[aria-pressed="true"] { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: var(--shadow-sm); }
+.su-summary { margin: 12px 0 0; font-family: var(--font-serif); font-size: 18px; color: var(--text); }
+
+/* Días y franjas */
+.su-days { display: flex; flex-direction: column; gap: 20px; }
+.su-day-title { margin: 0 0 8px; font-family: var(--font-serif); font-weight: 500; font-size: 18px; }
+.su-events { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 8px 12px; border-radius: var(--r-md); background: var(--accent-soft); color: var(--accent-text); font-size: 13px; }
+.su-slots { display: flex; flex-direction: column; gap: 8px; }
+.su-slot { border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); padding: 12px 14px; }
+.su-slot.is-break { background: var(--surface-2); padding-block: 8px; }
+.su-slot.is-off { opacity: .6; }
+.su-slot-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.su-time { width: 44px; flex-shrink: 0; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.su-time span { display: block; font-size: 11px; opacity: .75; }
+.su-slot-title { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.su-slot.is-break .su-slot-title strong { font-weight: 400; color: var(--muted); }
+.su-slot-tags { font-size: 12.5px; color: var(--muted); }
+.su-inc { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text-2); }
+.su-inc .check { margin: 0; }
+.su-inc span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.su-slot-body { margin-top: 10px; padding-left: 56px; display: flex; flex-direction: column; gap: 6px; }
+.su-slot-body[hidden] { display: none; }
+.su-lbl { font-size: 12px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); }
+.su-que { min-height: 72px; }
+.su-ses { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 12.5px; color: var(--t6-fg); }
+.su-extra { margin: 0; font-size: 12.5px; color: var(--muted); }
+.su-docs { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+.su-docs .su-inc { min-height: 34px; }
+.su-docs .su-inc span { position: static; width: auto; height: auto; overflow: visible; clip: auto; white-space: normal; }
+.su-empty { padding: 16px; border-radius: var(--r-md); background: var(--surface-2); color: var(--muted); font-size: 14px; text-align: center; }
+
+/* Alumnado, normas */
+.su-groups { display: flex; flex-direction: column; gap: 14px; }
+.su-group { padding: 18px; }
+.su-med { margin: 0; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--border); align-items: flex-start; }
+.su-med strong, .su-aus strong { display: block; font-weight: 500; }
+.su-apoyo { list-style: none; margin: 12px 0 0; padding: 10px 14px; border-radius: var(--r-md); background: var(--t4-bg); color: var(--t4-fg); font-size: 13.5px; display: flex; flex-direction: column; gap: 4px; }
+.su-resp { margin: 8px 0 0; font-size: 13.5px; color: var(--text-2); }
+.su-normas-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.su-normas-head label { font-size: 13px; font-weight: 500; color: var(--text-2); }
+.su-normas { min-height: 150px; line-height: 1.5; }
+
+/* Documentos, opciones, acciones */
+.su-queue { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.su-queue-info { font-size: 13px; color: var(--muted); }
+.su-aus { margin: 0; }
+.su-actions {
+  position: sticky; bottom: -24px; margin: 0 -24px -24px; padding: 14px 24px calc(14px + env(safe-area-inset-bottom));
+  display: flex; flex-wrap: wrap; gap: 10px; background: var(--bg); border-top: 1px solid var(--border); z-index: 2;
+}
+.su-actions .btn { flex: 1 1 180px; min-height: 44px; }
+
+@media (max-width: 680px) {
+  .su-slot-body { padding-left: 0; }
+  .su-actions { margin-inline: -24px; }
+}
+
+/* Botón de la tarjeta Horario de Hoy */
+.su-hoy-foot { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--divider); display: flex; }
+.su-hoy-foot .btn { color: var(--text-2); }
+
+/* ---------- Guía rápida ---------- */
+.gd-tip {
+  display: flex; gap: 14px; align-items: flex-start; margin: 0 0 22px; padding: 16px 18px;
+  background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: var(--r-lg);
+}
+.gd-ic { width: 34px; height: 34px; border-radius: 50%; background: var(--surface); color: var(--accent-text); display: grid; place-items: center; flex-shrink: 0; border: 1px solid var(--accent-line); }
+.gd-main { min-width: 0; flex: 1; }
+.gd-eyebrow { font-size: 11.5px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--accent-text); }
+.gd-text { margin: 2px 0 8px; font-family: var(--font-serif); font-size: 18px; line-height: 1.3; color: var(--text); }
+.gd-how { margin: 0 0 12px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--text-2); }
+.gd-how li { position: relative; padding-left: 16px; }
+.gd-how li::before { content: ''; position: absolute; left: 3px; top: .62em; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+.gd-how strong { font-weight: 600; color: var(--text); }
+.gd-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; }
+.gd-ok { border-color: var(--accent-line); color: var(--accent-text); }
+.gd-off { color: var(--muted); font-size: 13px; }
+@media (max-width: 680px) {
+  .gd-tip { padding: 14px; gap: 10px; margin-bottom: 18px; }
+  .gd-ic { width: 30px; height: 30px; }
+  .gd-text { font-size: 17px; }
+}
+
+/* ---------- Ajustes · Guía rápida y datos de ejemplo ---------- */
+.gd-card .switch-row { margin-bottom: 8px; }
+.gd-card .gd-sub { display: block; font-size: 13px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+.gd-card hr { border: 0; border-top: 1px solid var(--divider); margin: 16px 0; }
+.gd-demo-title { margin: 0 0 4px; font-weight: 600; font-size: 15px; }
+.gd-demo-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 3px 9px; border-radius: 99px; background: var(--t3-bg); color: var(--t3-fg); margin-left: 8px; font-weight: 500; vertical-align: 1px; }

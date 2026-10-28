@@ -449,6 +449,9 @@ function dayDetail(iso, snap, close) {
     h('span', { class: 'cal-bar' }), h('span', { class: 'cal-row-main' }, h('span', { class: 'cal-row-title' }, t.title || t.text || 'Tarea')))));
   if (!evs.length && !sess.length && !tasks.length) wrap.append(h('p', { class: 'cal-muted' }, 'No hay nada previsto este día.'));
   wrap.append(h('button', { type: 'button', class: 'btn full', onclick: () => { close(); openEventEditor(null, { fecha: iso }); } }, icon('plus', 18), 'Añadir evento'));
+  if (isoDia(iso) <= 5) {
+    wrap.append(h('button', { type: 'button', class: 'btn full', style: { marginTop: '8px' }, onclick: () => { close(); import('./sustituto.js').then((m) => m.openSustituto({ fecha: iso })); } }, icon('note', 18), 'Plan para el sustituto'));
+  }
   return wrap;
 }
 

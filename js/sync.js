@@ -122,7 +122,7 @@ export async function signOutAndClear() {
   if (!auth) return;
   detach();
   await fb.auth.signOut(auth);
-  store._clearLocal();
+  await store._clearLocal();
   try { await (await import('./files.js')).clearLocalFiles(); } catch {}
   // Se recarga para vaciar también la caché interna de Firestore
   try { await fb.fs.terminate(db); await fb.fs.clearIndexedDbPersistence(db); } catch {}
