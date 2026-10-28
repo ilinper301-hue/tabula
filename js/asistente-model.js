@@ -42,7 +42,9 @@ export function matchStudents(grupos, query) {
   for (const g of grupos || []) {
     for (const a of g.alumnos || []) {
       const nom = norm(a.nombre), ape = norm(a.apellidos), full = `${nom} ${ape}`;
-      if (!words.every((w) => full.split(' ').some((p) => p.startsWith(w)))) continue;
+      // «j.» es una inicial (lectura del asistente): vale cualquier palabra que empiece por esa letra
+      const parts = full.split(' ');
+      if (!words.every((w) => parts.some((p) => p.startsWith(w) || (/^[a-z]\.$/.test(p) && w[0] === p[0])))) continue;
       const score = (nom === words.join(' ') ? 0 : nom.startsWith(words[0]) ? 1 : 2);
       out.push({ id: a.id, nombre: a.nombre, apellidos: a.apellidos, groupId: g.id, grupo: g.nombre, score });
     }
@@ -115,9 +117,24 @@ export function readyToAccept(item) {
   return true;
 }
 
+/** Iniciales de un texto: «Jesús María» → «J. M.» */
+const initials = (t) => String(t || '').trim().split(/[\s-]+/).filter(Boolean).map((w) => `${w[0].toUpperCase()}.`).join(' ');
+
 /**
- * Documento de lectura para el asistente: SOLO grupos con nombre y apellidos, tareas pendientes y horas de eventos.
- * Nada de fichas, notas, medidas, contactos ni observaciones.
+ * Alumnado del grupo SOLO con iniciales («J.» + «G. M.»): el nombre completo nunca sale de Tabula.
+ * Si dos coinciden en el grupo, se añade su número de lista para distinguirlos.
+ */
+export function initialsList(alumnos) {
+  const rows = alumnos.map((s, i) => ({ id: s.id, nombre: initials(s.nombre), apellidos: initials(s.apellidos), n: i + 1 }));
+  const key = (r) => `${r.nombre} ${r.apellidos}`;
+  const count = new Map();
+  rows.forEach((r) => count.set(key(r), (count.get(key(r)) || 0) + 1));
+  return rows.map((r) => ({ id: r.id, nombre: r.nombre, apellidos: count.get(key(r)) > 1 ? `${r.apellidos} (n.º ${r.n})`.trim() : r.apellidos }));
+}
+
+/**
+ * Documento de lectura para el asistente: SOLO grupos con las iniciales del alumnado, tareas pendientes y horas de eventos.
+ * Nada de nombres completos, fichas, notas, medidas, contactos ni observaciones.
  */
 export function buildLectura({ groups, students, tasks, events, today, dias = 60 }) {
   const lim = new Date(`${today}T00:00:00`); lim.setDate(lim.getDate() + dias);
@@ -126,9 +143,7 @@ export function buildLectura({ groups, students, tasks, events, today, dias = 60
   return {
     grupos: activos.map((g) => ({
       id: g.id, nombre: g.nombre || '',
-      alumnos: students.filter((s) => s.groupId === g.id)
-        .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
-        .map((s) => ({ id: s.id, nombre: s.nombre || '', apellidos: s.apellidos || '' })),
+      alumnos: initialsList(students.filter((s) => s.groupId === g.id).sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))),
     })),
     pendientes: tasks.filter((t) => !t.done)
       .map((t) => ({ titulo: String(t.title || '').slice(0, 200), fecha: t.due || null, hora: t.time || null }))
@@ -149,7 +164,8 @@ export function overlaps(eventos, fecha, hora, margen = 45) {
 /** Registros que se crean al aceptar un apunte (marcados como del asistente). */
 export function toRecords(item, now = Date.now(), today = null) {
   const hoy = today || (() => { const t = new Date(now); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; })();
-  const marca = { asistente: { registradoEn: item.recibidoEn || now, dispositivo: item.dispositivo || '', aceptadoEn: now } };
+  // Lo dictado por el propio docente (origen 'voz') no lleva la marca del asistente
+  const marca = item.origen === 'voz' ? {} : { asistente: { registradoEn: item.recibidoEn || now, dispositivo: item.dispositivo || '', aceptadoEn: now } };
   const d = item.datos;
   if (item.tipo === 'tarea') {
     return { tasks: [{ title: d.titulo, notes: d.notas || '', due: d.fecha || null, time: d.hora || null, priority: 0, tags: [], subtasks: [], done: false, doneAt: null, ...marca }] };

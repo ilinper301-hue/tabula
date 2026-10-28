@@ -68,7 +68,7 @@ service cloud.firestore {
     //   asistente/{llave}                    concesión: dueño, activa, caducidad   (solo el dueño)
     //   asistente/{llave}/dispositivos/{uid} solicitud y aprobación de cada dispositivo
     //   asistente/{llave}/buzon/{id}         apuntes nuevos: el asistente SOLO puede crearlos
-    //   asistente/{llave}/lectura/actual     grupos + nombres, pendientes y horas (lo escribe el dueño)
+    //   asistente/{llave}/lectura/actual     grupos + iniciales del alumnado, pendientes y horas (lo escribe el dueño)
     // Nada de esto da acceso a apps/tabula/users/{uid}: esa regla sigue siendo solo del dueño.
     match /apps/tabula/asistente/{llave} {
       function concesion() {

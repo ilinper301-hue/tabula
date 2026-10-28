@@ -192,3 +192,21 @@
 .cal-row .chip.as-mark { margin-left: auto; flex-shrink: 0; }
 .chip[hidden] { display: none; }
 .bj-resolve .bj-k { flex: none; padding: 0; }
+
+/* ---------- Dictado por voz ---------- */
+.bj-switch { margin-left: auto; }
+.vz { display: flex; flex-direction: column; gap: 14px; }
+.vz-mic-row { display: flex; align-items: center; gap: 16px; }
+.vz-mic { width: 84px; height: 84px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--accent-line); background: var(--accent-soft); color: var(--accent-text);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 600 12px/1 inherit; cursor: pointer; }
+.vz-mic.is-on { background: var(--accent); color: var(--surface); border-color: var(--accent); animation: vz-pulse 1.4s ease-in-out infinite; }
+@keyframes vz-pulse { 0%, 100% { box-shadow: 0 0 0 0 var(--accent-line); } 50% { box-shadow: 0 0 0 10px transparent; } }
+@media (prefers-reduced-motion: reduce) { .vz-mic.is-on { animation: none; } }
+.vz-status { margin: 0; font-size: 14px; color: var(--muted); }
+.vz-text { min-height: 140px; resize: vertical; }
+.vz-interim { margin: -8px 0 0; min-height: 1.2em; font-size: 14px; color: var(--muted); font-style: italic; }
+.vz-note, .vz-privacy { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: 13px; color: var(--muted); }
+.vz-note .icon, .vz-privacy .icon { flex-shrink: 0; margin-top: 2px; }
+.vz-help summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+.vz-help ul { margin: 8px 0 0; padding-left: 18px; font-size: 14px; display: grid; gap: 6px; }
+.vz-actions { justify-content: flex-end; }

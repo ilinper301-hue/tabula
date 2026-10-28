@@ -1,6 +1,6 @@
 // Tabula · página del asistente (asistente.html#<llave>)
 // Sesión anónima + dispositivo aprobado por el docente. Solo puede AÑADIR apuntes a la bandeja
-// y leer una lista mínima (nombres del alumnado, pendientes y horas de eventos).
+// y leer una lista mínima (iniciales del alumnado, pendientes y horas de eventos).
 
 import { h, icon, logoMark, toast, todayISO, relativeDay, addDaysISO, MESES, fromISO } from './ui.js';
 import { readKey, forgetKey, connect } from './asistente-client.js';
@@ -117,7 +117,7 @@ function picker({ id, multi = false, max = 6 }) {
   let chosen = [];         // alumnos elegidos en modo múltiple
   const box = h('input', {
     class: 'input', id, name: id, type: 'text', autocomplete: 'off', role: 'combobox', 'aria-autocomplete': 'list', 'aria-expanded': 'false',
-    'aria-controls': `${id}-lista`, 'aria-describedby': `${id}-ayuda`, placeholder: multi ? 'Escribe un nombre y elígelo de la lista' : 'Escribe un nombre',
+    'aria-controls': `${id}-lista`, 'aria-describedby': `${id}-ayuda`, placeholder: multi ? 'Escribe el nombre o las iniciales y elígelo' : 'Escribe el nombre o las iniciales',
   });
   const list = h('ul', { class: 'as-results', id: `${id}-lista`, role: 'listbox', 'aria-label': 'Alumnado encontrado', hidden: true });
   const chips = h('div', { class: 'as-chosen', id: `${id}-elegidos`, 'aria-label': 'Alumnado elegido' });

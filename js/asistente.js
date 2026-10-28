@@ -104,7 +104,7 @@ export async function removeDevice(id) {
   await c.fb.fs.deleteDoc(refs(c, cfg.key).dispositivo(id));
 }
 
-/** Publica la lectura mínima (grupos + nombres, pendientes, horas de eventos). */
+/** Publica la lectura mínima (grupos + iniciales del alumnado, pendientes, horas de eventos). */
 export async function publishLectura() {
   const c = cloud(); const cfg = getConfig();
   if (!c || !cfg?.key) return;

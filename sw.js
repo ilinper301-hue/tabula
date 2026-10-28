@@ -1,6 +1,6 @@
 // Tabula · service worker: permite abrir la app sin conexión.
 // Estrategia: red primero para archivos propios (siempre la última versión), caché si no hay red.
-const CACHE = 'tabula-v19';
+const CACHE = 'tabula-v20';
 const CORE = [
   './', './index.html', './manifest.webmanifest', './css/app.css', './css/tareas.css', './css/calendario.css', './css/grupos.css', './css/cuaderno.css', './css/planificacion.css', './css/bienvenida.css', './css/anecdotario.css', './css/programas.css', './css/encuestas.css', './css/encuesta-public.css', './css/documentos.css',
   './js/app.js', './js/store.js', './js/ui.js', './js/tasks-model.js', './js/school.js', './js/grading.js', './js/planning.js', './js/plan-sync.js', './js/observations.js', './js/lock.js', './js/timetable.js', './js/programs.js', './js/surveys.js', './js/sync.js', './js/files.js', './js/documents.js', './js/firebase-config.js', './js/curriculo.js', './js/data/criterios-andalucia.js',
@@ -9,7 +9,7 @@ const CORE = [
   './css/aula.css', './css/tutoria.css', './js/calendario-escolar.js', './js/competencias.js', './js/informes.js', './js/quick-eval.js', './js/tutoria.js', './js/views/ajustes/calendario-escolar.js', './js/views/ajustes/nuevo-curso.js', './js/views/aula.js', './js/fichas.js', './js/views/documentos/claude.js', './js/views/aula/azar.js', './js/views/aula/common.js', './js/views/aula/equipos.js', './js/views/aula/evaluar-tab.js', './js/views/aula/evaluar.js', './js/views/aula/responsables.js', './js/views/aula/semaforo.js', './js/views/aula/timer.js', './js/views/cuaderno/informes-common.js', './js/views/cuaderno/informes-data.js', './js/views/cuaderno/informes-familias.js', './js/views/cuaderno/informes-perfil.js', './js/views/cuaderno/informes-print.js', './js/views/cuaderno/informes-seneca.js', './js/views/cuaderno/informes.js', './js/views/tutoria.js', './js/views/tutoria/acta.js', './js/views/tutoria/common.js', './js/views/tutoria/data.js', './js/views/tutoria/diversidad.js', './js/views/tutoria/familias.js', './js/views/tutoria/ficha.js', './js/views/tutoria/grupos-section.js', './js/views/tutoria/medida-sheet.js', './js/views/tutoria/reunion-sheet.js', './js/views/tutoria/reuniones.js',
   './css/extra.css', './js/backup.js', './js/guide.js', './js/nav-model.js', './js/search.js', './js/sustituto.js', './js/views/ajustes/demo.js', './js/views/ajustes/guia.js', './js/views/ajustes/menu.js', './js/views/search-ui.js', './js/views/sustituto.js',
   './js/views/planificacion/prog-model.js', './js/views/planificacion/prog-print.js', './js/views/planificacion/prog-sheet.js', './js/views/planificacion/programacion.js',
-  './asistente.html', './css/asistente.css', './js/asistente-client.js', './js/asistente-mark.js', './js/asistente-model.js', './js/asistente-page.js', './js/asistente.js', './js/views/ajustes/asistente.js', './js/views/bandeja.js',
+  './asistente.html', './css/asistente.css', './js/asistente-client.js', './js/asistente-mark.js', './js/asistente-model.js', './js/asistente-page.js', './js/asistente.js', './js/views/ajustes/asistente.js', './js/views/bandeja.js', './js/voz-model.js', './js/views/voz.js',
 ];
 
 self.addEventListener('install', (e) => {
