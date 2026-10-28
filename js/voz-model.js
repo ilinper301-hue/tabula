@@ -9,6 +9,19 @@ import { normalizeItem } from './asistente-model.js';
 /** Minúsculas y sin acentos. */
 const fold = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 const words = (s) => fold(s).split(/[^a-z0-9ñ]+/).filter(Boolean);
+/** Cómo suena una palabra: el dictado escribe «Christian», «Cristián» o «Kristian» para el mismo nombre. */
+export const sound = (w) => fold(w).replace(/ph/g, 'f').replace(/ch/g, 'c').replace(/h/g, '').replace(/qu/g, 'c').replace(/[kz]/g, 'c')
+  .replace(/ll/g, 'i').replace(/y/g, 'i').replace(/v/g, 'b').replace(/w/g, 'u').replace(/(.)\1+/g, '$1');
+const sounds = (s) => words(s).map(sound);
+
+// «Cristian ha hecho…», «Lucía no sabe…»: nombre al principio + verbo en tercera persona → habla de un alumno
+const NO_NOMBRE = new Set(['hoy', 'manana', 'ayer', 'el', 'la', 'los', 'las', 'esto', 'eso', 'todo', 'todos', 'nadie', 'alguien', 'clase', 'grupo', 'tengo', 'hay', 'se', 'no', 'ya', 'que', 'mi', 'su', 'un', 'una', 'este', 'esta']);
+const NOMBRE_VERBO = /^\s*([A-ZÁÉÍÓÚÑ][\p{L}]+)\s+(?:ha|han|no|se|esta|está|estuvo|estaba|sabe|tiene|hoy|lleva|sigue|vuelve|siempre|nunca|ya|trabaja|lee|escribe|habla|molesta|pega|hizo|fue|participa|necesita|mejora|olvida|trae|falta)\b/u;
+/** Nombre con el que empieza la frase si parece hablar de un alumno, o null. */
+export function nameLead(seg) {
+  const m = String(seg || '').match(NOMBRE_VERBO);
+  return m && !NO_NOMBRE.has(fold(m[1])) ? m[1] : null;
+}
 const has = (t, re) => re.test(fold(t));
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
@@ -17,7 +30,7 @@ const TAREA_VERBO = /^(?:llamar|enviar|mandar|preparar|corregir|imprimir|hacer|r
 const REUNION = /\b(?:tutoria|reunion|entrevista|cita|he hablado|hemos hablado|ha venido|han venido|llamada)\b/;
 const FAMILIA = /\b(?:familia|madre|padre|padres|abuela|abuelo|tutora? legal|mama|papa)\b/;
 const EVENTO = /\b(?:evento|claustro|excursion|salida|reunion|consejo escolar|ciclo|etcp|evaluacion|formacion|jornada|fiesta|festival|cita|medico|visita|charla|taller|guardia|equipo docente|actuacion|funcion|simulacro)\b/;
-const POSITIVA = /\b(?:bien|genial|muy bien|estupendo|excelente|fenomenal|ayudado|ayuda|mejorado|mejora|participa|participado|esfuerzo|se ha esforzado|felicitar|ha trabajado|atento|atenta|bonito|positivo|generoso|generosa|amable)\b/;
+const POSITIVA = /\b(?:bien|genial|muy bien|estupendo|excelente|fenomenal|ayudado|ayuda|mejorado|mejora|participa|participado|esfuerzo|se ha esforzado|felicitar|ha trabajado|atento|atenta|bonito|bonita|precioso|preciosa|perfecto|perfecta|muy bueno|muy buena|orgulloso|orgullosa|positivo|generoso|generosa|amable)\b/;
 const NEGATIVA = /\b(?:mal|no ha traido|no trae|no ha hecho|no hace|pegado|pega|molesta|molestado|insultado|insulta|distraido|distraida|olvidado|olvida|peleado|pelea|regaño|regañar|grita|gritado|negativo|llegado tarde|llega tarde|sin deberes|no atiende|desobedece|faltado al respeto|roto)\b/;
 const OBS_INI = /^(?:observacion(?:es)?|anecdota|nota)(?:\s+(?:de|para|sobre))?\b[\s:,]*/;
 const QUITAR_INI = /^(?:apunta(?:me)?|anota(?:me)?|recuerdame|recordar|tarea|pendiente|evento|observacion|tutoria|y|tambien|ademas)\b[\s:,]*(?:que\s+)?/;
@@ -48,15 +61,15 @@ function stripLead(seg) {
  * @returns { ids: [id], ambiguos: [texto] }   ambiguos = nombres que coinciden con varios alumnos
  */
 export function findStudents(seg, students) {
-  const w = words(seg);
+  const w = sounds(seg);
   const at = (seq) => { for (let i = 0; i + seq.length <= w.length; i++) if (seq.every((x, j) => w[i + j] === x)) return i; return -1; };
   const byName = new Map();   // «lucia» → [{ s, strong }]
   for (const s of students) {
-    const n = words(s.nombre);
+    const n = sounds(s.nombre);
     if (!n.length) continue;
     const i = at(n);
     if (i < 0) continue;
-    const ap = words(s.apellidos)[0];
+    const ap = sounds(s.apellidos)[0];
     const strong = !!ap && w[i + n.length] === ap;
     const k = n.join(' ');
     if (!byName.has(k)) byName.set(k, []);
@@ -71,7 +84,7 @@ export function findStudents(seg, students) {
     const strong = c.filter((x) => x.strong);
     const pick = strong.length ? strong : c;
     if (pick.length === 1) ids.push(pick[0].s.id);
-    else ambiguos.push(cap(k));
+    else ambiguos.push(pick[0].s.nombre);   // el nombre tal como está en la lista, no su «sonido»
   }
   return { ids, ambiguos };
 }
@@ -79,7 +92,7 @@ export function findStudents(seg, students) {
 /** Decide el tipo de una frase. */
 export function classify(seg, found) {
   const f = fold(seg).trim();
-  const named = found.ids.length + found.ambiguos.length > 0;
+  const named = found.ids.length + found.ambiguos.length > 0 || !!nameLead(seg);
   if (/^tarea\b/.test(f)) return 'tarea';
   if (/^evento\b/.test(f)) return 'evento';
   if (/^(?:tutoria|reunion con (?:la |el |los )?(?:familia|madre|padre|padres))\b/.test(f)) return 'reunion';
@@ -113,7 +126,7 @@ export function interpretDictation(text, { students, today, now = new Date() }) 
     const p = parseQuickInput(body, now);
     // En un colegio, «a las 5» es por la tarde: de 1 a 7 sin «de la mañana» se pasa a 13–19 h
     if (p.time && +p.time.slice(0, 2) >= 1 && +p.time.slice(0, 2) <= 7 && !has(seg, /\b(?:de la manana|de la madrugada)\b/)) p.time = `${+p.time.slice(0, 2) + 12}${p.time.slice(2)}`;
-    const alumnoTexto = found.ambiguos.join(', ');
+    const alumnoTexto = found.ambiguos.join(', ') || (found.ids.length ? '' : nameLead(seg) || '');
 
     if (tipo === 'tarea') push('tarea', { titulo: cap(p.title), fecha: p.due, hora: p.time });
     else if (tipo === 'evento') push('evento', { titulo: cap(p.title.replace(/^evento\s*:?\s*/i, '')), fecha: p.due, hora: p.time });
