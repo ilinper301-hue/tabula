@@ -48,8 +48,8 @@ export function mountDiversidad(panel, { groupId }) {
       sum.length
         ? h('div', { class: 'tu-chips', role: 'list', 'aria-label': 'Alumnado con cada medida' }, sum.map((x) => h('span', { class: `chip ${tagClass(x.tipo)} tu-chip-big`, role: 'listitem' },
           x.label.replace(/\s*\(.*\)$/, ''), h('b', {}, String(x.alumnos)))))
-        : null,
-      dues.length ? h('p', { class: 'tu-alert' }, icon('flag', 16), `${plural(dues.length, 'revisión próxima o vencida', 'revisiones próximas o vencidas')}.`) : null);
+        : '',
+      dues.length ? h('p', { class: 'tu-alert' }, icon('flag', 16), `${plural(dues.length, 'revisión próxima o vencida', 'revisiones próximas o vencidas')}.`) : '');
 
     const bySt = students.map((s) => ({ s, ms: all.filter((m) => m.studentId === s.id && (verFinalizadas || m.estado === 'activa')) })).filter((x) => x.ms.length);
     if (!bySt.length) {
