@@ -12,7 +12,7 @@ import { dueNow } from '../documents.js';
 import { mountLibrary, libState } from './documentos/library.js';
 import { mountQueue, liveQueue } from './documentos/queue.js';
 import { openDocDetail } from './documentos/detail.js';
-import { pickFiles, uploadFiles, openLinkSheet } from './documentos/upload.js';
+import { pickFiles, uploadFiles, openLinkSheet, addFromDrive } from './documentos/upload.js';
 import { setHash } from './documentos/common.js';
 import { openPasteSheet, importShared } from './documentos/claude.js';
 
@@ -33,6 +33,7 @@ export function render(container, params = new URLSearchParams()) {
     await uploadFiles(files, { carpeta: libState.carpeta || '' }, setStatus);
   };
   const chooseFiles = async () => upload(await pickFiles());
+  const fromDrive = async () => { const c = await addFromDrive({ carpeta: libState.carpeta || '' }, setStatus); if (c.length && tab !== 'biblioteca') showTab('biblioteca'); };
   const addLink = () => openLinkSheet({ carpeta: libState.carpeta || '', onAdded: () => { if (tab !== 'biblioteca') showTab('biblioteca'); } });
 
   const openDoc = (id) => { setHash({ tab: tab === 'imprimir' ? 'imprimir' : '', doc: id }); openDocDetail(id, { onClose: () => setHash({ tab: tab === 'imprimir' ? 'imprimir' : '' }) }); };
@@ -74,6 +75,7 @@ export function render(container, params = new URLSearchParams()) {
       h('div', {}, h('div', { class: 'eyebrow' }, 'Fichas, exámenes y recursos'), h('h1', { class: 'page-title' }, 'Documentos')),
       h('div', { class: 'dc-head-actions' },
         h('button', { type: 'button', class: 'btn', onclick: () => openPasteSheet({ carpeta: libState.carpeta || '', onSaved: () => { if (tab !== 'biblioteca') showTab('biblioteca'); } }), 'aria-label': 'Pegar de Claude', title: 'Pegar una ficha hecha con Claude' }, icon('sparkle', 16), h('span', { class: 'dc-btn-text' }, 'Pegar de Claude')),
+        h('button', { type: 'button', class: 'btn', onclick: fromDrive, 'aria-label': 'Añadir desde Google Drive', title: 'Elegir archivos de tu Google Drive' }, icon('drive', 16), h('span', { class: 'dc-btn-text' }, 'Drive')),
         h('button', { type: 'button', class: 'btn', onclick: addLink, 'aria-label': 'Añadir enlace' }, icon('link', 16), h('span', { class: 'dc-btn-text' }, 'Añadir enlace')),
         h('button', { type: 'button', class: 'btn btn-primary', onclick: chooseFiles }, icon('upload', 16), 'Subir'))),
     tabs, status, panel);

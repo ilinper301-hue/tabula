@@ -73,6 +73,7 @@ const P = {
   slides: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8"/>',
   minus: '<path d="M5 12h14"/>',
   mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/>',
+  drive: '<path d="M8.5 3.5h7l6 10.5-3.5 6h-12L2.5 14z"/><path d="m8.5 3.5 6 10.5h7M2.5 14h12l-3.5 6"/>',
   square: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
 };
 
