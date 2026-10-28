@@ -164,7 +164,8 @@ export function overlaps(eventos, fecha, hora, margen = 45) {
 /** Registros que se crean al aceptar un apunte (marcados como del asistente). */
 export function toRecords(item, now = Date.now(), today = null) {
   const hoy = today || (() => { const t = new Date(now); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; })();
-  const marca = { asistente: { registradoEn: item.recibidoEn || now, dispositivo: item.dispositivo || '', aceptadoEn: now } };
+  // Lo dictado por el propio docente (origen 'voz') no lleva la marca del asistente
+  const marca = item.origen === 'voz' ? {} : { asistente: { registradoEn: item.recibidoEn || now, dispositivo: item.dispositivo || '', aceptadoEn: now } };
   const d = item.datos;
   if (item.tipo === 'tarea') {
     return { tasks: [{ title: d.titulo, notes: d.notas || '', due: d.fecha || null, time: d.hora || null, priority: 0, tags: [], subtasks: [], done: false, doneAt: null, ...marca }] };

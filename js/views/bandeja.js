@@ -193,7 +193,7 @@ export function openBandeja() {
 
   function card(item) {
     const needsPupil = item.tipo === 'observacion' || item.tipo === 'reunion';
-    const holder = h('article', { class: 'bj-card', dataset: { id: item.id, tipo: item.tipo }, 'aria-label': `${TIPOS[item.tipo]}: apunte del asistente` });
+    const holder = h('article', { class: 'bj-card', dataset: { id: item.id, tipo: item.tipo }, 'aria-label': `${TIPOS[item.tipo]}: ${item.origen === 'voz' ? 'dictado por ti' : 'apunte del asistente'}` });
     const repaintCard = () => { holder.replaceWith(card(item)); };
     const d = draftOf(item);
     const ready = isReady(item, d);
@@ -219,7 +219,17 @@ export function openBandeja() {
     holder.append(...[
       h('div', { class: 'bj-head' },
         h('span', { class: `chip ${TIPO_CHIP[item.tipo]}` }, TIPOS[item.tipo]),
-        h('span', { class: 'bj-by' }, `Registrado por el asistente · ${item.dispositivo || 'Asistente'} · ${item.recibidoEn ? stamp(item.recibidoEn) : ''}`)),
+        h('span', { class: 'bj-by' }, `${item.origen === 'voz' ? 'Dictado por ti' : `Registrado por el asistente · ${item.dispositivo || 'Asistente'}`} · ${item.recibidoEn ? stamp(item.recibidoEn) : ''}`),
+        // Tarea y evento comparten campos: si se entendió mal, se cambia con un toque
+        item.tipo === 'tarea' || item.tipo === 'evento'
+          ? h('button', { type: 'button', class: 'btn btn-sm btn-ghost bj-switch', onclick: () => {
+            const tipo = item.tipo === 'tarea' ? 'evento' : 'tarea';
+            const datos = { horaFin: null, ...draftOf(item) };
+            drafts.delete(item.id);
+            if (tipo === 'evento' && !datos.fecha) editing.add(item.id);   // un evento necesita fecha
+            store.update('bandejaAsistente', item.id, { tipo, datos });
+          } }, `Pasar a ${item.tipo === 'tarea' ? 'evento' : 'tarea'}`)
+          : null),
       body,
       dudas.length ? h('ul', { class: 'bj-dudas', role: 'note' }, dudas.map((t) => h('li', {}, icon('clock', 14), t))) : null,
       resolver,
@@ -237,7 +247,7 @@ export function openBandeja() {
   function paint() {
     const items = pendingInbox();
     const ready = items.filter((it) => isReady(it, draftOf(it)));
-    const parts = [h('p', { class: 'bj-lead' }, 'Lo que envía tu asistente espera aquí. No se guarda nada hasta que lo aceptes.')];
+    const parts = [h('p', { class: 'bj-lead' }, 'Lo que dictas o envía tu asistente espera aquí. No se guarda nada hasta que lo aceptes.')];
     if (!items.length) {
       parts.push(h('div', { class: 'empty' }, icon('note', 36), h('strong', {}, 'No hay apuntes pendientes'), 'Cuando tu asistente envíe algo, aparecerá aquí.'));
     } else {
@@ -263,7 +273,7 @@ export function openBandeja() {
     if (root.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) && pendingInbox().length === root.querySelectorAll('.bj-card').length) return;
     paint();
   }));
-  closeSheet = openSheet('Bandeja del asistente', root, {
+  closeSheet = openSheet('Bandeja de revisión', root, {
     className: 'as-sheet',
     onClose: () => { subs.forEach((u) => u()); closeSheet = null; },
   });
@@ -281,8 +291,8 @@ export function mountHoyCard(slot) {
     if (n) {
       rows.push(h('div', { class: 'hy-as-row' },
         h('div', { class: 'hy-as-text' },
-          h('strong', {}, `Bandeja del asistente · ${plural(n, 'apunte', 'apuntes')}`),
-          h('span', {}, 'Revisa lo que ha enviado y decide qué se guarda.')),
+          h('strong', {}, `Bandeja de revisión · ${plural(n, 'apunte', 'apuntes')}`),
+          h('span', {}, 'Revisa lo dictado o enviado y decide qué se guarda.')),
         h('button', { type: 'button', class: 'btn btn-sm btn-primary', id: 'hoy-asistente-bandeja', onclick: () => openBandeja() }, 'Revisar')));
     }
     if (dev) {
