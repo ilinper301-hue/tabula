@@ -54,10 +54,18 @@ export async function pickFromDrive() {
   await new Promise((resolve) => gapi.load('picker', resolve));
   const P = google.picker;
   return new Promise((resolve) => {
-    const view = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
-    new P.PickerBuilder()
-      .addView(view)
+    // Pestañas: Mi unidad (con sus carpetas, como en Drive), la última carpeta usada, compartidos y unidades compartidas
+    let last = null;
+    try { last = localStorage.getItem('tabula.driveCarpeta'); } catch {}
+    const list = () => new P.DocsView(P.ViewId.DOCS).setMode(P.DocsViewMode.LIST);
+    const folder = (parent, label) => list().setParent(parent).setIncludeFolders(true).setSelectFolderEnabled(false).setLabel(label);
+    const builder = new P.PickerBuilder().addView(folder('root', 'Mi unidad'));
+    if (last && last !== 'root') builder.addView(folder(last, 'Última carpeta'));
+    builder
+      .addView(list().setOwnedByMe(false).setLabel('Compartido conmigo'))
+      .addView(list().setEnableDrives(true).setIncludeFolders(true).setLabel('Unidades compartidas'))
       .enableFeature(P.Feature.MULTISELECT_ENABLED)
+      .enableFeature(P.Feature.SUPPORT_DRIVES)
       .setOAuthToken(tk)
       .setDeveloperKey(googleDrive.apiKey || firebaseConfig.apiKey)
       .setAppId(googleDrive.appId || firebaseConfig.messagingSenderId)
@@ -67,7 +75,11 @@ export async function pickFromDrive() {
         const action = data[P.Response.ACTION];
         if (action === P.Action.CANCEL) resolve([]);
         if (action !== P.Action.PICKED) return;
-        resolve((data[P.Response.DOCUMENTS] || []).map((d) => ({
+        const docs = data[P.Response.DOCUMENTS] || [];
+        // La próxima vez, el selector se abre en la carpeta de la que se eligió
+        const parent = docs[0]?.[P.Document.PARENT_ID];
+        if (parent) { try { localStorage.setItem('tabula.driveCarpeta', parent); } catch {} }
+        resolve(docs.map((d) => ({
           id: d[P.Document.ID], nombre: d[P.Document.NAME] || 'Archivo de Drive', tipo: d[P.Document.MIME_TYPE] || '',
           url: d[P.Document.URL] || `https://drive.google.com/file/d/${d[P.Document.ID]}/view`, tamano: Number(d.sizeBytes) || 0,
         })));
