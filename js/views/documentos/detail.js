@@ -120,7 +120,9 @@ export function openDocDetail(docId, { onClose } = {}) {
   const actions = h('div', { class: 'dc-actions' },
     isLink ? null : printBtn, queueBtn,
     h('button', { type: 'button', class: 'btn', onclick: () => openDoc(getDoc(docId) || first) }, icon('external', 16), isLink ? 'Abrir enlace' : 'Abrir'),
-    isLink ? null : h('button', { type: 'button', class: 'btn', onclick: () => downloadDoc(getDoc(docId) || first) }, icon('download', 16), 'Descargar'));
+    isLink ? null : h('button', { type: 'button', class: 'btn', onclick: () => downloadDoc(getDoc(docId) || first) }, icon('download', 16), 'Descargar'),
+    // Copia traída de Drive: el original sigue allí
+    !isLink && first.driveId && first.enlace ? h('a', { class: 'btn', href: first.enlace, target: '_blank', rel: 'noopener' }, icon('drive', 16), 'Ver en Drive') : null);
 
   const del = h('button', {
     type: 'button', class: 'btn btn-ghost btn-danger', onclick: () => {

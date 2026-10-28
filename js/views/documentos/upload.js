@@ -55,6 +55,42 @@ export async function uploadFiles(files, opts = {}, onStatus = () => {}) {
   return created;
 }
 
+/**
+ * Añade archivos elegidos en Google Drive. PDF, imágenes y demás archivos se descargan como copia en Tabula
+ * (para imprimir y abrir sin conexión) y guardan el enlace al original; Docs, Hojas y Presentaciones quedan como enlace.
+ */
+export async function addFromDrive(opts = {}, onStatus = () => {}) {
+  const { pickFromDrive, downloadFromDrive, isGoogleNative } = await import('../../drive.js');
+  let picked;
+  try { picked = await pickFromDrive(); } catch (e) { toast(e.message || 'No se pudo abrir Drive'); return []; }
+  const known = new Set(store.list('documentos').map((d) => d.driveId).filter(Boolean));
+  const fresh = picked.filter((f) => !known.has(f.id));
+  if (picked.length && !fresh.length) { toast(picked.length === 1 ? 'Ese archivo ya está en Documentos' : 'Esos archivos ya están en Documentos'); return []; }
+  const created = [], failed = [];
+  for (let i = 0; i < fresh.length; i++) {
+    const f = fresh[i];
+    const base = { carpeta: opts.carpeta || '', etiquetas: [], notas: '', favorito: false, driveId: f.id };
+    onStatus(fresh.length > 1 ? `Trayendo de Drive ${i + 1} de ${fresh.length}: ${f.nombre}` : `Trayendo ${f.nombre} de Drive…`);
+    if (isGoogleNative(f.tipo) || f.tamano > MAX_FILE_MB * 1024 * 1024) {
+      created.push(store.add('documentos', { ...base, titulo: titleFromFilename(f.nombre), enlace: f.url, nombreArchivo: '', tipo: f.tipo, tamano: 0 }));
+      continue;
+    }
+    try {
+      const file = await downloadFromDrive(f);
+      const [doc] = await uploadFiles([file], opts, () => {});
+      if (doc) created.push(store.update('documentos', doc.id, { driveId: f.id, enlace: f.url }) || doc);
+    } catch (e) {
+      console.warn('Tabula: Drive', f.nombre, e);
+      // Si no se puede traer la copia, al menos queda el enlace al original
+      created.push(store.add('documentos', { ...base, titulo: titleFromFilename(f.nombre), enlace: f.url, nombreArchivo: '', tipo: f.tipo, tamano: 0 }));
+      failed.push(f.nombre);
+    }
+  }
+  onStatus(null);
+  if (created.length) toast(failed.length ? `Añadidos de Drive: ${created.length}. ${failed.length === 1 ? `«${failed[0]}» quedó solo como enlace` : `${failed.length} quedaron solo como enlace`}.` : created.length === 1 ? `«${created[0].titulo}» añadido desde Drive` : `${created.length} documentos añadidos desde Drive`);
+  return created;
+}
+
 /** Abre el selector de archivos del sistema y devuelve los elegidos. */
 export function pickFiles({ multiple = true } = {}) {
   return new Promise((resolve) => {

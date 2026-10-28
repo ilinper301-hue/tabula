@@ -13,3 +13,9 @@ export const firebaseConfig = {
 
 /** Versión del SDK de Firebase (se carga desde el CDN oficial de Google). */
 export const FIREBASE_SDK = '12.19.0';
+
+/**
+ * Google Drive (Documentos → «Drive»). clientId: ID de cliente OAuth web del proyecto (Firebase → Authentication →
+ * Google → Configuración del SDK web). apiKey y appId vacíos = los de firebaseConfig (clave web y número del proyecto).
+ */
+export const googleDrive = { clientId: '', apiKey: '', appId: '' };
