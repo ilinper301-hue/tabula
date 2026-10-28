@@ -13,7 +13,7 @@ const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
 const CAN = [
   'Puede añadir tareas, eventos, observaciones y tutorías.',
-  'Lee solo los nombres del alumnado, tus pendientes y las horas de tus eventos.',
+  'Del alumnado solo ve las iniciales (J. G. M.), nunca el nombre completo. También ve tus pendientes y las horas de tus eventos.',
   'No puede borrar ni cambiar nada, ni ver notas, medidas o datos de familias.',
   'Todo lo que envía pasa primero por tu bandeja: tú decides qué se guarda.',
 ];
