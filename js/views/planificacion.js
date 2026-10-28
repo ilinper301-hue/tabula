@@ -18,6 +18,7 @@ import {
 import { renderOverview } from './planificacion/overview.js';
 import { renderDetail } from './planificacion/detail.js';
 import { openNewSituacionSheet, openAreaPicker } from './planificacion/sheets.js';
+import { renderProgramacion, viewTabs } from './planificacion/programacion.js';
 
 export { openSessionSheet } from './planificacion/session-sheet.js';
 
@@ -25,6 +26,8 @@ export { openSessionSheet } from './planificacion/session-sheet.js';
 const last = { groupId: null, area: null };
 
 export function render(container, params = new URLSearchParams()) {
+  // Tercera vista: «Programación» (semana y mes). Sin `vista`, todo sigue como antes.
+  if (params.get('vista') === 'programacion') return renderProgramacion(container, params);
   container.classList.add('plan-view');
   const st = { groupId: null, area: null, sitId: null };
 
@@ -52,8 +55,9 @@ export function render(container, params = new URLSearchParams()) {
     return h('header', { class: 'page-head' },
       h('div', {}, h('div', { class: 'eyebrow' }, group ? `${group.nombre} · ${areaShort(st.area)} · curso ${group.cursoEscolar || currentSchoolYear()}` : `Curso ${currentSchoolYear()}`),
         h('h1', { class: 'page-title' }, 'Planificación')),
-      group ? h('button', { type: 'button', class: 'btn btn-primary pl-new', onclick: newSituacion },
-        icon('plus', 16), h('span', {}, 'Nueva situación de aprendizaje')) : null);
+      h('div', { class: 'pr-head-actions' }, viewTabs('situaciones', { grupo: st.groupId }),
+        group ? h('button', { type: 'button', class: 'btn btn-primary pl-new', onclick: newSituacion },
+          icon('plus', 16), h('span', {}, 'Nueva situación de aprendizaje')) : null));
   }
 
   function newSituacion() {

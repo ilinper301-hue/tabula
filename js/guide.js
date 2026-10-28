@@ -68,6 +68,7 @@ export const GUIDE_TIPS = {
       ['Crear una situación', 'elige grupo y área y pulsa «Nueva situación».'],
       ['Programarla', 'usa «Programar en el horario» para colocar las sesiones.'],
       ['Si falta una clase', 'marca la sesión como no realizada y se reajusta el resto.'],
+      ['Ver la semana', 'la pestaña «Programación» muestra el horario con cada sesión, por semana o por mes.'],
     ],
   },
   documentos: {
