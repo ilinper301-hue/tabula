@@ -210,10 +210,15 @@ navigate();
 onSyncChange(() => renderNav(parseHash().id));
 initSync();
 
+// Acceso de asistente (solo hace algo si se ha activado en Ajustes)
+import('./asistente.js').then((m) => m.initAssistant()).catch(() => {});
+
 // Recordatorio de copia de seguridad: sin cuenta conectada y más de 30 días sin copia (como mucho, una vez por semana)
-setTimeout(async () => {
+const backupReminder = async (intento = 0) => {
   try {
     if (store.getSetting('syncUid') || !store._hasLocalData()) return;
+    // No pisar otro aviso (p. ej. un «Deshacer»): se espera a que no haya ninguno visible
+    if (document.querySelector('#toast.show') || document.querySelector('.overlay')) { if (intento < 10) setTimeout(() => backupReminder(intento + 1), 8000); return; }
     const { daysSinceBackup } = await import('./backup.js');
     const d = daysSinceBackup();
     const last = store.getSetting('backup:aviso', 0);
@@ -223,7 +228,8 @@ setTimeout(async () => {
       toast(d === null ? 'Aún no tienes copia de seguridad de tus datos' : `Tu última copia es de hace ${d} días`, { label: 'Hacer copia', run: () => { location.hash = '#/ajustes'; } });
     }
   } catch {}
-}, 4000);
+};
+setTimeout(backupReminder, 6000);
 
 // Encuestas: recibir respuestas en tiempo real y avisar
 import('./surveys.js').then((m) => m.initSurveys()).catch(() => {});

@@ -4,6 +4,7 @@ import { store } from '../../store.js';
 import { h, icon, openSheet, toast, todayISO } from '../../ui.js';
 import { listName, areaShort, areaColor } from '../../school.js';
 import { OBS_TYPES, getTags, listObservations, tally } from '../../observations.js';
+import { asistenteChip } from '../../asistente-mark.js';
 import { plural, TYPE_ORDER, signBadge, whenLabel, monthLabel } from './common.js';
 
 const FILTERS = [['', 'Todas'], ['positiva', 'Positivas'], ['negativa', 'A mejorar'], ['neutra', 'Notas']];
@@ -45,7 +46,8 @@ export function renderStudentObservations(container, studentId) {
         h('span', { class: 'ao-item-body' },
           h('span', { class: 'ao-item-top' },
             o.etiqueta ? h('strong', { class: 'ao-item-tag' }, o.etiqueta) : h('strong', { class: 'ao-item-tag ao-item-plain' }, OBS_TYPES[o.tipo].label),
-            o.area ? h('span', { class: `chip ${areaColor(o.area)}` }, areaShort(o.area)) : null),
+            o.area ? h('span', { class: `chip ${areaColor(o.area)}` }, areaShort(o.area)) : null,
+            asistenteChip(o)),
           o.texto ? h('span', { class: 'ao-item-text' }, o.texto) : null,
           h('span', { class: 'ao-item-meta' }, whenLabel(o)))),
       h('button', { type: 'button', class: 'icon-btn ao-item-del', 'aria-label': 'Eliminar observación', title: 'Eliminar', onclick: del }, icon('trash', 18)));

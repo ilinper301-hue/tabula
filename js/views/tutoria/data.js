@@ -23,7 +23,7 @@ export function syncEvent(reunionId) {
     const data = {
       titulo: reunionEventTitle(r, studentsOf(r.groupId)), fecha: r.fecha, fechaFin: null, hora: r.hora || null,
       tipo: r.tipo === 'familia' ? 'tutoria' : 'reunion', groupId: r.groupId, notas: r.motivo || '',
-      origen: 'tutoria', reunionId: r.id,
+      origen: 'tutoria', reunionId: r.id, ...(r.asistente ? { asistente: r.asistente } : {}),
     };
     if (existing) store.update('events', existing.id, data);
     else {

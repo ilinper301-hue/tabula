@@ -3,6 +3,7 @@ import { store } from '../../store.js';
 import { h, icon, todayISO, fromISO, MESES } from '../../ui.js';
 import { getStudents } from '../../school.js';
 import { splitReuniones, pendingAgreements, reunionEventTitle, MODALIDADES } from '../../tutoria.js';
+import { asistenteChip } from '../../asistente-mark.js';
 import { byId, shortDate, pill } from './common.js';
 import { getReuniones, toggleAgreement } from './data.js';
 import { openReunion } from './reunion-sheet.js';
@@ -27,6 +28,7 @@ export function mountReuniones(panel, { groupId }) {
           h('span', { class: 'tu-row-title' }, reunionEventTitle(r, students)),
           sub ? h('span', { class: 'tu-row-sub' }, sub) : null),
         h('span', { class: 'tu-row-end' },
+          asistenteChip(r),
           r.estado === 'cancelada' ? pill('Cancelada', 't5') : null,
           (r.acuerdos || []).length ? pill(`${done}/${r.acuerdos.length} ${r.acuerdos.length === 1 ? 'acuerdo' : 'acuerdos'}`, done === r.acuerdos.length ? 't3' : 't2', 'check') : null)),
       cerrar ? h('button', { type: 'button', class: 'btn btn-sm', onclick: () => openReunion({ groupId, reunionId: r.id, cerrar: true }) }, '¿Cómo fue?') : null);

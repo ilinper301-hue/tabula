@@ -6,6 +6,7 @@ import { TIPOS_REUNION, MODALIDADES, INICIATIVA } from '../../tutoria.js';
 import { field, segmented, studentPicker, wideSheet, todayISO, sheet } from './common.js';
 import { saveReunion, deleteReunion } from './data.js';
 import { printActa } from './acta.js';
+import { asistenteChip, asistenteDetail } from '../../asistente-mark.js';
 
 const options = (map, cur) => Object.entries(map).map(([k, v]) => h('option', { value: k, selected: k === cur }, v));
 
@@ -105,6 +106,7 @@ export function openReunion({ groupId, reunionId = null, defaults = {}, cerrar =
   } }, icon('trash', 16), 'Eliminar');
 
   const form = h('form', { class: 'tu-form', onsubmit: save, novalidate: true },
+    existing && existing.asistente ? h('div', { class: 'as-mark-row' }, asistenteChip(existing), h('span', {}, asistenteDetail(existing.asistente))) : null,
     h('div', { class: 'tu-two' }, field('Tipo', tipo), field('Fecha', fecha)),
     h('div', { class: 'field' }, h('span', { class: 'field-label' }, 'Alumnado'), picker.el),
     h('div', { class: 'tu-three' }, field('Hora (opcional)', hora), field('Modalidad', modalidad), field('Convocada por', iniciativa)),

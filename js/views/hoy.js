@@ -268,6 +268,11 @@ export function render(container) {
     tutBody.replaceChildren(...sections);
   }
 
+  // --- Bandeja del asistente: solo aparece si hay apuntes por revisar o un dispositivo pendiente ---
+  const asistenteSlot = h('div', { class: 'hy-as-slot' });
+  let alive = true, asistenteOff = null;
+  import('./bandeja.js').then((m) => { if (alive) asistenteOff = m.mountHoyCard(asistenteSlot); }).catch(() => {});
+
   container.replaceChildren(
     h('header', { class: 'page-head' },
       h('div', {},
@@ -276,6 +281,7 @@ export function render(container) {
           h('h1', { class: 'page-title' }, firstName ? `${greeting()}, ${firstName}` : greeting()),
           h('a', { class: 'btn btn-sm au-hoy-link', href: '#/aula', 'aria-label': 'Abrir En clase: herramientas del aula' }, icon('aula', 17), 'En clase'))),
       composer),
+    asistenteSlot,
     h('div', { class: 'today-grid' },
       h('div', { class: 'today-col' }, scheduleCard, tutCard),
       h('div', { class: 'today-col' },
@@ -289,5 +295,5 @@ export function render(container) {
   const unsubTut = ['reuniones', 'medidas', 'students'].map((c) => store.subscribe(c, paintTutoria));
   const unsubPrint = ['impresiones', 'documentos'].map((c) => store.subscribe(c, paintPrint));
   const tick = setInterval(paintAll, 60_000); // sesión en curso y cambio de día
-  return () => { unsubs.forEach((u) => u()); unsubTut.forEach((u) => u()); unsubPrint.forEach((u) => u()); clearInterval(tick); };
+  return () => { alive = false; if (asistenteOff) asistenteOff(); unsubs.forEach((u) => u()); unsubTut.forEach((u) => u()); unsubPrint.forEach((u) => u()); clearInterval(tick); };
 }

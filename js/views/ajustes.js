@@ -12,6 +12,7 @@ import { calendarioEscolarCard } from './ajustes/calendario-escolar.js';
 import { nuevoCursoCard } from './ajustes/nuevo-curso.js';
 import { guiaCard } from './ajustes/guia.js';
 import { menuCard } from './ajustes/menu.js';
+import { asistenteCard } from './ajustes/asistente.js';
 
 export function render(container) {
   const profile = store.getSetting('profile', { nombre: '', centro: '' });
@@ -209,6 +210,7 @@ export function render(container) {
   const unsubLock = onLockConfigChange(() => { if (!lockMode) paintLock(); });
 
   const calEsc = calendarioEscolarCard();
+  const asis = asistenteCard();
   container.replaceChildren(
     h('header', { class: 'page-head' }, h('div', {}, h('h1', { class: 'page-title' }, 'Ajustes'))),
     h('div', { class: 'settings' },
@@ -234,9 +236,10 @@ export function render(container) {
       h('section', { class: 'card' },
         h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Bloqueo')),
         lockBody),
-      h('section', { class: 'card' },
+      h('section', { class: 'card', id: 'ajustes-cuenta' },
         h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Cuenta y sincronización')),
         syncBody),
+      asis.el,
       h('section', { class: 'card' },
         h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Copia de seguridad')),
         h('p', { class: 'settings-text' }, 'Descarga en un solo archivo (.zip) todos tus datos y los archivos de Documentos. Guárdala de vez en cuando aunque uses la sincronización.'),
@@ -246,5 +249,5 @@ export function render(container) {
           h('button', { class: 'btn', onclick: () => fileInput.click() }, icon('upload', 18), 'Restaurar copia'), fileInput),
         importBox)),
   );
-  return () => { unsubSync(); unsubLock(); calEsc.destroy(); };
+  return () => { unsubSync(); unsubLock(); calEsc.destroy(); asis.destroy(); };
 }

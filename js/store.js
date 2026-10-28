@@ -11,7 +11,7 @@ const listeners = new Map();  // colección -> Set<fn>
 /** Colecciones que se sincronizan con la nube. */
 export const SYNC_COLLECTIONS = ['tasks', 'groups', 'students', 'schedule', 'events', 'attendance',
   'gradebooks', 'activities', 'grades', 'situaciones', 'sesiones', 'observaciones',
-  'programas', 'diarioPrograma', 'encuestas', 'encuestaRespuestas', 'documentos', 'impresiones', 'reuniones', 'medidas', 'informes'];
+  'programas', 'diarioPrograma', 'encuestas', 'encuestaRespuestas', 'documentos', 'impresiones', 'reuniones', 'medidas', 'informes', 'bandejaAsistente'];
 /** Ajustes que se quedan solo en este dispositivo. */
 const LOCAL_ONLY_SETTINGS = new Set(['theme', 'syncUid', 'lock', 'onboarding']);
 /** Claves de localStorage que no son colecciones. */
@@ -214,7 +214,7 @@ export const store = {
       const k = localStorage.key(i);
       if (!k || !k.startsWith(PREFIX)) continue;
       const key = k.slice(PREFIX.length);
-      if (key.startsWith('set:') && !['set:lock', 'set:syncUid'].includes(key)) out[key] = localStorage.getItem(k);
+      if (key.startsWith('set:') && !['set:lock', 'set:syncUid', 'set:asistente'].includes(key)) out[key] = localStorage.getItem(k);
     }
     for (const [col, items] of cache) if (items.length || SYNC_COLLECTIONS.includes(col)) out[col] = JSON.stringify(items);
     for (const col of SYNC_COLLECTIONS) if (!(col in out)) out[col] = JSON.stringify(read(col));
@@ -225,7 +225,7 @@ export const store = {
     const parsed = JSON.parse(json);
     if (parsed.app !== 'tabula') throw new Error('El archivo no es una copia de Tabula');
     for (const [k, v] of Object.entries(parsed.data || {})) {
-      if (['set:lock', 'lockFails', 'dirty', 'set:syncUid'].includes(k)) continue;
+      if (['set:lock', 'lockFails', 'dirty', 'set:syncUid', 'set:asistente'].includes(k)) continue;
       if (k.startsWith('set:')) { try { localStorage.setItem(PREFIX + k, v); } catch {} continue; }
       let items = [];
       try { items = JSON.parse(v) || []; } catch { items = []; }

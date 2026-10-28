@@ -36,14 +36,17 @@ function addedMessage(t) {
 export function render(container, params = new URLSearchParams()) {
   const vista = VISTAS.some(([k]) => k === params.get('vista')) ? params.get('vista') : 'hoy';
   const tagFilter = (params.get('tag') || '').toLowerCase() || null;
+  const asisFilter = params.get('asistente') === '1';
 
   /** Cambia vista/etiqueta a través del hash (el router vuelve a pintar). */
   const go = (patch) => {
     const p = new URLSearchParams();
     const v = patch.vista ?? vista;
     const tg = 'tag' in patch ? patch.tag : tagFilter;
+    const as = 'asistente' in patch ? patch.asistente : asisFilter;
     p.set('vista', v);
     if (tg) p.set('tag', tg);
+    if (as) p.set('asistente', '1');
     location.hash = `#/tareas?${p}`;
   };
 
@@ -101,7 +104,8 @@ export function render(container, params = new URLSearchParams()) {
     const today = todayISO();
     const all = store.list('tasks');
     const tags = allTags();
-    const byTag = (t) => !tagFilter || (t.tags || []).includes(tagFilter);
+    const byTag = (t) => (!tagFilter || (t.tags || []).includes(tagFilter)) && (!asisFilter || !!t.asistente);
+    const anyAsis = asisFilter || all.some((t) => t.asistente);
     const visible = all.filter(byTag);
     const pending = visible.filter((t) => !t.done);
     const overdue = pending.filter(isOverdue);
@@ -113,8 +117,12 @@ export function render(container, params = new URLSearchParams()) {
 
     // Filtro por etiqueta
     const tagNames = tagFilter && !tags.includes(tagFilter) ? [...tags, tagFilter] : tags;
-    const tagRow = tagNames.length
+    const tagRow = tagNames.length || anyAsis
       ? h('div', { class: 'tag-filter', role: 'group', 'aria-label': 'Filtrar por etiqueta' },
+          anyAsis ? h('button', {
+            type: 'button', class: `tag-toggle${asisFilter ? ' on' : ''}`, 'aria-pressed': String(asisFilter), id: 'tareas-filtro-asistente',
+            onclick: () => go({ asistente: !asisFilter }),
+          }, 'Del asistente') : null,
           tagNames.map((t) => h('button', {
             type: 'button', class: `tag-toggle${t === tagFilter ? ' on' : ''}`, 'aria-pressed': String(t === tagFilter),
             onclick: () => go({ tag: t === tagFilter ? null : t }),
@@ -152,6 +160,7 @@ export function render(container, params = new URLSearchParams()) {
       emptyTitle = 'Todavía no hay tareas';
       emptyHint = 'Escribe la primera en la caja de arriba.';
     }
+    if (asisFilter && !tagFilter) { emptyTitle = 'Sin tareas del asistente'; emptyHint = 'Quita el filtro para ver el resto.'; }
     if (tagFilter) { emptyTitle = `Sin tareas con #${tagFilter}`; emptyHint = 'Quita el filtro para ver el resto.'; }
 
     const main = groups.length

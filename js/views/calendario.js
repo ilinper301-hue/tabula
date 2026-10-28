@@ -9,6 +9,7 @@ import {
 import { buildFranjas, applyFranjas, fillFranja } from '../timetable.js';
 import { getPrograms } from '../programs.js';
 import { calendarBanner } from './ajustes/calendario-escolar.js';
+import { asistenteChip, asistenteDetail } from '../asistente-mark.js';
 
 const VISTAS = [['semana', 'Semana'], ['mes', 'Mes'], ['horario', 'Horario']];
 const HOUR_PX = 64;                                   // alto de una hora en la rejilla semanal
@@ -416,7 +417,7 @@ export function render(container, params = new URLSearchParams()) {
 function eventChip(ev, { time = true } = {}) {
   const t = time && ev.hora && !isMultiDay(ev) ? `${ev.hora} ` : '';
   return h('button', {
-    type: 'button', class: `cal-chip ${evColor(ev)}`, title: `${ev.titulo} · ${eventSub(ev)}`,
+    type: 'button', class: `cal-chip ${evColor(ev)}`, title: `${ev.titulo} · ${eventSub(ev)}${ev.asistente ? ` · ${asistenteDetail(ev.asistente)}` : ''}`,
     onclick: (e) => { e.stopPropagation(); openEventEditor(ev); },
   }, t ? h('b', {}, t) : null, ev.titulo);
 }
@@ -424,7 +425,8 @@ function eventChip(ev, { time = true } = {}) {
 function eventRow(ev) {
   return h('button', { type: 'button', class: `cal-row ${evColor(ev)}`, onclick: () => openEventEditor(ev) },
     h('span', { class: 'cal-bar' }),
-    h('span', { class: 'cal-row-main' }, h('span', { class: 'cal-row-title' }, ev.titulo), h('span', { class: 'cal-row-sub' }, eventSub(ev))));
+    h('span', { class: 'cal-row-main' }, h('span', { class: 'cal-row-title' }, ev.titulo), h('span', { class: 'cal-row-sub' }, eventSub(ev))),
+    asistenteChip(ev));
 }
 
 function sessionRow(s, dim = false) {
@@ -544,6 +546,7 @@ function openEventEditor(ev, defaults = {}) {
   };
 
   const form = h('form', { class: 'cal-sheet cal-form', onsubmit: save, novalidate: true },
+    asistenteChip(base) ? h('div', { class: 'as-mark-row' }, asistenteChip(base), h('span', {}, asistenteDetail(base.asistente))) : null,
     field('Título', titulo), field('Tipo', tipo),
     h('div', { class: 'cal-two' }, field('Fecha', fechaIn), finField),
     multi.el,

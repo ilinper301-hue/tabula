@@ -1,5 +1,6 @@
 // Tabula · módulo Tareas · modelo, análisis de texto rápido, fila reutilizable y editor
 import { store, uid } from './store.js';
+import { asistenteChip } from './asistente-mark.js';
 import {
   h, icon, toast, openSheet, todayISO, addDaysISO, relativeDay, toISO, tagClass,
 } from './ui.js';
@@ -201,6 +202,8 @@ export function taskRow(task, { compact = false, showDate = true } = {}) {
     meta.push(h('span', { class: 'task-subs', title: `${subsDone} de ${subs.length} subtareas` }, icon('check', 13), `${subsDone}/${subs.length}`));
   }
   (task.tags || []).forEach((t) => meta.push(h('span', { class: `chip ${tagClass(t)}` }, t)));
+  const mark = asistenteChip(task);
+  if (mark) meta.push(mark);
 
   const firstNote = !compact && task.notes ? task.notes.split('\n').find((l) => l.trim()) : '';
 

@@ -61,6 +61,98 @@ service cloud.firestore {
         allow delete: if request.auth != null && request.auth.uid == survey().ownerUid;
       }
     }
+
+    // ---------- Tabula · acceso de asistente ----------
+    // Llave propia de Tabula (no de Google). Quien la usa entra con una sesión anónima y,
+    // además, su dispositivo tiene que estar APROBADO por el docente.
+    //   asistente/{llave}                    concesión: dueño, activa, caducidad   (solo el dueño)
+    //   asistente/{llave}/dispositivos/{uid} solicitud y aprobación de cada dispositivo
+    //   asistente/{llave}/buzon/{id}         apuntes nuevos: el asistente SOLO puede crearlos
+    //   asistente/{llave}/lectura/actual     grupos + nombres, pendientes y horas (lo escribe el dueño)
+    // Nada de esto da acceso a apps/tabula/users/{uid}: esa regla sigue siendo solo del dueño.
+    match /apps/tabula/asistente/{llave} {
+      function concesion() {
+        return get(/databases/$(database)/documents/apps/tabula/asistente/$(llave)).data;
+      }
+      function esGoogle() {
+        return request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      }
+      function esDueno() {
+        return esGoogle() && request.auth.uid == concesion().ownerUid;
+      }
+      function vigente() {
+        let c = concesion();
+        return c.activo == true && request.time < c.expira;
+      }
+      function aprobado() {
+        return request.auth != null
+          && get(/databases/$(database)/documents/apps/tabula/asistente/$(llave)/dispositivos/$(request.auth.uid)).data.estado == 'aprobado';
+      }
+      function texto(d, k, max) {
+        return !(k in d) || d[k] == null || (d[k] is string && d[k].size() <= max);
+      }
+      function lista(d, k, max) {
+        return !(k in d) || (d[k] is list && d[k].size() <= max);
+      }
+      function apunteValido(a) {
+        let d = a.datos;
+        return a.keys().hasOnly(['tipo', 'datos', 'por', 'creado'])
+          && a.por == request.auth.uid
+          && a.creado == request.time
+          && d is map
+          && texto(d, 'fecha', 10) && texto(d, 'hora', 5) && texto(d, 'horaFin', 5)
+          && texto(d, 'alumnoTexto', 80) && texto(d, 'groupId', 40) && texto(d, 'studentId', 40)
+          && (
+            (a.tipo == 'tarea' && d.keys().hasOnly(['titulo', 'fecha', 'hora', 'notas'])
+              && d.titulo is string && d.titulo.size() > 0 && d.titulo.size() <= 200 && texto(d, 'notas', 1000))
+            || (a.tipo == 'evento' && d.keys().hasOnly(['titulo', 'fecha', 'hora', 'horaFin', 'notas'])
+              && d.titulo is string && d.titulo.size() > 0 && d.titulo.size() <= 200 && d.fecha is string && texto(d, 'notas', 1000))
+            || (a.tipo == 'observacion' && d.keys().hasOnly(['studentId', 'groupId', 'alumnoTexto', 'tipo', 'texto', 'fecha'])
+              && d.texto is string && d.texto.size() > 0 && d.texto.size() <= 2000
+              && (!('tipo' in d) || d.tipo in ['positiva', 'negativa', 'neutra']))
+            || (a.tipo == 'reunion' && d.keys().hasOnly(['studentIds', 'groupId', 'alumnoTexto', 'fecha', 'hora', 'modalidad', 'asistentes', 'motivo', 'resumen', 'acuerdos'])
+              && d.fecha is string && lista(d, 'studentIds', 6) && lista(d, 'acuerdos', 20)
+              && texto(d, 'modalidad', 20) && texto(d, 'asistentes', 300) && texto(d, 'motivo', 500) && texto(d, 'resumen', 3000))
+          );
+      }
+
+      // La concesión: solo su dueño (cuenta de Google) la crea, ve, renueva o borra
+      allow create: if esGoogle() && llave.size() >= 40
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['ownerUid', 'activo', 'expira', 'creado'])
+        && request.resource.data.activo is bool && request.resource.data.expira is timestamp
+        && request.resource.data.expira <= request.time + duration.value(91, 'd');
+      allow read, delete: if esGoogle() && request.auth.uid == resource.data.ownerUid;
+      allow update: if esGoogle() && request.auth.uid == resource.data.ownerUid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.keys().hasOnly(['ownerUid', 'activo', 'expira', 'creado'])
+        && request.resource.data.expira <= request.time + duration.value(91, 'd');
+
+      match /dispositivos/{dispositivo} {
+        // El dispositivo pide acceso (queda pendiente) y puede consultar su propio estado
+        allow create: if request.auth != null && request.auth.uid == dispositivo && vigente()
+          && request.resource.data.keys().hasOnly(['estado', 'nombre', 'creado'])
+          && request.resource.data.estado == 'pendiente'
+          && request.resource.data.nombre is string && request.resource.data.nombre.size() <= 40
+          && request.resource.data.creado == request.time;
+        allow get: if (request.auth != null && request.auth.uid == dispositivo && vigente()) || esDueno();
+        // Solo el dueño aprueba, lista o retira dispositivos
+        allow list, delete: if esDueno();
+        allow update: if esDueno() && request.resource.data.estado in ['pendiente', 'aprobado']
+          && request.resource.data.keys().hasOnly(['estado', 'nombre', 'creado']);
+      }
+
+      match /buzon/{apunte} {
+        // El asistente solo puede AÑADIR apuntes; nunca leerlos, cambiarlos ni borrarlos
+        allow create: if vigente() && aprobado() && apunteValido(request.resource.data);
+        allow read, delete: if esDueno();
+      }
+
+      match /lectura/{doc} {
+        allow read: if (vigente() && aprobado()) || esDueno();
+        allow write: if esDueno();
+      }
+    }
     // ---------- fin Tabula ----------
 
   }
