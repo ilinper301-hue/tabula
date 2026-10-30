@@ -249,3 +249,51 @@ body.has-entrada { overflow: hidden; }
 .cd-none { color: var(--muted); }
 .cd-privacy { display: flex; gap: 8px; align-items: flex-start; margin: 20px 0 0; font-size: 13px; color: var(--muted); }
 .cd-privacy .icon { flex-shrink: 0; margin-top: 2px; }
+
+/* ---------- Hoy: diseño despejado ---------- */
+.hy { max-width: 1080px; }
+.hy-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.hy-head .page-title { margin: 4px 0 0; }
+.hy-aula { flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); color: var(--text-2); }
+.hy-aula:hover { color: var(--text); border-color: var(--border-strong); }
+.hy-composer { margin-bottom: 28px; max-width: 640px; }
+.hy-mic { flex-shrink: 0; width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; }
+.hy-mic:hover, .hy-mic:focus-visible { background: var(--hover); color: var(--accent-text); }
+
+/* «Ahora»: lo que toca, en grande */
+.hy-now-slot:not(:empty) { margin-bottom: 34px; }
+.hy-now { padding: 22px 24px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); }
+.hy-now.is-live { background: var(--accent-soft); border-color: var(--accent-line); }
+.hy-now-when { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: .02em; color: var(--accent-text); }
+.hy-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); }
+.hy-now-title { font-family: var(--font-serif); font-size: 32px; line-height: 1.15; font-weight: 500; margin: 8px 0 4px; }
+.hy-now-sub { color: var(--text-2); font-size: 15px; }
+.hy-now-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.hy-now-actions:empty { display: none; }
+.hy-now-actions .btn { text-decoration: none; }
+.hy-now-done { color: var(--accent-text); }
+
+/* Secciones sin tarjeta: título pequeño, espacio y líneas finas */
+.hy-grid { gap: 40px; }
+.hy-grid .today-col { gap: 34px; }
+.hy-sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 8px; margin-bottom: 4px; border-bottom: 1px solid var(--divider); }
+.hy-sec-title { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.hy-quiet { margin: 12px 0 0; color: var(--muted); font-size: 15px; }
+.hy-quiet a { color: var(--accent-text); }
+.hy .sched-row { min-height: 46px; padding: 6px 8px; }
+.hy .sched-row.is-now { background: transparent; border-color: transparent; }
+.hy .sched-row.is-now .sched-title, .hy .sched-row.is-now .sched-time { color: var(--accent-text); }
+.hy .su-hoy-foot { border-top: 0; margin-top: 4px; padding-top: 0; }
+
+@media (max-width: 680px) {
+  .hy-head { margin-bottom: 14px; }
+  .hy-composer { margin-bottom: 22px; }
+  .hy-now { padding: 18px; }
+  .hy-now-title { font-size: 28px; }
+  .hy-now-slot:not(:empty) { margin-bottom: 28px; }
+  .hy-grid { gap: 30px; }
+}
+.hy-head.page-head { flex-wrap: nowrap; margin-bottom: 18px; }
+@media (max-width: 680px) {
+  .hy-grid .today-col:last-child { order: -1; }   /* en el móvil, las tareas antes que el horario */
+}
