@@ -11,8 +11,9 @@ import { loadGroupData } from './informes-data.js';
 import { mountPerfil } from './informes-perfil.js';
 import { mountSeneca } from './informes-seneca.js';
 import { mountFamilias } from './informes-familias.js';
+import { mountJunta } from './informes-junta.js';
 
-const TABS = [['perfil', 'Perfil competencial'], ['seneca', 'Séneca'], ['familias', 'Familias']];
+const TABS = [['perfil', 'Perfil competencial'], ['seneca', 'Séneca'], ['familias', 'Familias'], ['junta', 'Junta']];
 const last = { groupId: null, ev: null, tab: null };
 
 export function renderInformes(container, params = new URLSearchParams()) {
@@ -70,6 +71,7 @@ export function renderInformes(container, params = new URLSearchParams()) {
     const content = h('div', { class: 'cb-inf-body' });
     if (st.tab === 'perfil') mountPerfil(content, data, ctrl);
     else if (st.tab === 'seneca') mountSeneca(content, data);
+    else if (st.tab === 'junta') mountJunta(content, data);
     else mountFamilias(content, data, ctrl);
     body.replaceChildren(content);
   }

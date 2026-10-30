@@ -8,6 +8,7 @@ import { matchProgramForSession, isCoordSession } from './programas/common.js';
 import { dueNow, canPrint } from '../documents.js';
 import { splitReuniones, reviewsDue, TIPOS_REUNION, MEDIDAS } from '../tutoria.js';
 import { parseQuickInput, createTask, sortTasks, taskRow, isOverdue } from '../tasks-model.js';
+import { quietStudents } from '../observations.js';
 
 export function render(container) {
   const profile = store.getSetting('profile', { nombre: '' });
@@ -289,6 +290,24 @@ export function render(container) {
     tutBody.replaceChildren(...sections);
   }
 
+  // --- Sin observar: alumnado sin anotaciones en 3 semanas (solo si se usa el anecdotario) ---
+  const quietBody = h('div');
+  const quietCard = h('section', { class: 'hy-sec', 'aria-labelledby': 'hoy-quiet-t', hidden: true },
+    h('div', { class: 'hy-sec-head' }, h('h2', { class: 'hy-sec-title', id: 'hoy-quiet-t' }, 'Sin observar')), quietBody);
+  function paintQuiet() {
+    const groups = store.list('groups').filter((g) => !g.archivado);
+    const active = new Set(groups.map((g) => g.id));
+    const quiet = quietStudents(store.list('students').filter((x) => active.has(x.groupId)), store.list('observaciones'), todayISO());
+    quietCard.hidden = !quiet.length;
+    if (!quiet.length) { quietBody.replaceChildren(); return; }
+    const byGroup = groups.map((g) => ({ g, list: quiet.filter((q) => q.student.groupId === g.id) })).filter((x) => x.list.length);
+    quietBody.replaceChildren(
+      h('p', { class: 'hy-quiet' }, quiet.length === 1 ? 'Lleva más de 3 semanas sin ninguna observación:' : `${quiet.length} llevan más de 3 semanas sin ninguna observación:`),
+      ...byGroup.map(({ g, list }) => h('a', { class: 'hy-quiet-row', href: `#/grupos?id=${g.id}&tab=observaciones` },
+        h('span', { class: 'hy-quiet-names' }, list.slice(0, 6).map((q) => q.student.nombre).join(', ') + (list.length > 6 ? ` y ${list.length - 6} más` : '')),
+        byGroup.length > 1 ? h('span', { class: 'hy-quiet-group' }, g.nombre) : '')));
+  }
+
   // --- Bandeja del asistente: solo aparece si hay apuntes por revisar o un dispositivo pendiente ---
   const asistenteSlot = h('div', { class: 'hy-as-slot' });
   let alive = true, asistenteOff = null;
@@ -305,12 +324,13 @@ export function render(container) {
     nowSlot,
     h('div', { class: 'today-grid hy-grid' },
       h('div', { class: 'today-col' }, scheduleCard, tutCard),
-      h('div', { class: 'today-col' }, tasksCard, printCard))));
+      h('div', { class: 'today-col' }, tasksCard, printCard, quietCard))));
 
-  const paintAll = () => { paintTasks(); paintSchedule(); paintPrint(); paintTutoria(); };
+  const paintAll = () => { paintTasks(); paintSchedule(); paintPrint(); paintTutoria(); paintQuiet(); };
   paintAll();
   const unsubs = ['tasks', 'schedule', 'events', 'groups', 'sesiones', 'attendance', 'programas', 'documentos'].map((c) => store.subscribe(c, c === 'tasks' ? paintTasks : paintSchedule));
   const unsubTut = ['reuniones', 'medidas', 'students'].map((c) => store.subscribe(c, paintTutoria));
+  unsubTut.push(store.subscribe('observaciones', paintQuiet));
   const unsubPrint = ['impresiones', 'documentos'].map((c) => store.subscribe(c, paintPrint));
   const tick = setInterval(paintAll, 60_000); // sesión en curso y cambio de día
   return () => { alive = false; if (asistenteOff) asistenteOff(); unsubs.forEach((u) => u()); unsubTut.forEach((u) => u()); unsubPrint.forEach((u) => u()); clearInterval(tick); };
