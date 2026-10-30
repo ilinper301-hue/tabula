@@ -2,7 +2,7 @@
 import { store } from '../../store.js';
 import { h, toast } from '../../ui.js';
 import { AREAS, areaShort, areaColor, DIAS_LECTIVOS } from '../../school.js';
-import { buildFranjas, applyFranjas } from '../../timetable.js';
+import { buildFranjas, applyFranjas, TRAMOS, RECREOS } from '../../timetable.js';
 import { field, errorBox, getDraft, setDraft } from './common.js';
 
 const DIAS_ABBR = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
@@ -65,8 +65,8 @@ export function stepHorario(ctx) {
     class: 'input bv-input', type: 'time', value: cfg.inicio,
     oninput: (e) => { cfg.inicio = e.target.value; refresh(); },
   });
-  const durOpts = [45, 60].includes(cfg.duracion) ? [45, 60] : [45, 60, cfg.duracion];
-  const recOpts = [20, 30, 45].includes(cfg.recreoDuracion) ? [20, 30, 45] : [20, 30, 45, cfg.recreoDuracion];
+  const durOpts = TRAMOS.includes(cfg.duracion) ? TRAMOS : [...TRAMOS, cfg.duracion];
+  const recOpts = RECREOS.includes(cfg.recreoDuracion) ? RECREOS : [...RECREOS, cfg.recreoDuracion];
 
   const preview = h('div', { class: 'bv-franjas', 'aria-live': 'polite' });
   const error = errorBox();

@@ -10,6 +10,7 @@ import { buildLectura, matchStudents, normalizeItem } from '../js/asistente-mode
 import { normalizeMobileNav, DEFAULT_MOBILE } from '../js/nav-model.js';
 import { buildItems } from '../js/search.js';
 import { crc32 } from '../js/backup.js';
+import { buildFranjas, TRAMOS } from '../js/timetable.js';
 
 const HOY = new Date(2026, 9, 28);   // miércoles 28 oct 2026
 const hoy = '2026-10-28';
@@ -134,4 +135,11 @@ test('buscador: los códigos se encuentran por nombre, nunca por el código', ()
 
 test('copia de seguridad: CRC32 del .zip', () => {
   assert.equal(crc32(new TextEncoder().encode('123456789')).toString(16), 'cbf43926');
+});
+
+test('horario: tramos de 15, 30, 45 y 60 minutos', () => {
+  assert.deepEqual(TRAMOS, [15, 30, 45, 60]);
+  const f = buildFranjas({ inicio: '09:00', duracion: 15, sesiones: 3, recreoTras: 2, recreoDuracion: 15 });
+  assert.deepEqual(f.map((x) => `${x.inicio}-${x.fin} ${x.tipo}`), ['09:00-09:15 clase', '09:15-09:30 clase', '09:30-09:45 recreo', '09:45-10:00 clase']);
+  assert.equal(buildFranjas({ inicio: '09:00', duracion: 30, sesiones: 2, recreoTras: 0 }).at(-1).fin, '10:00');
 });

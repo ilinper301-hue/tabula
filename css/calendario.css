@@ -63,7 +63,7 @@
   position: absolute; left: 3px; right: 3px; padding: 4px 7px 3px 8px; border: 0; border-radius: 8px; text-align: left; cursor: pointer;
   background: var(--c-bg); color: var(--c-fg); overflow: hidden;
   display: flex; flex-direction: column; gap: 1px; line-height: 1.25; font-size: 12px;
-  box-shadow: inset 3px 0 0 var(--c-fg), inset 0 0 0 1px color-mix(in srgb, var(--c-fg) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-fg) 14%, transparent);
 }
 .cal-block:hover { filter: brightness(.96); }
 .cal-block.neutral { --c-bg: var(--hover); --c-fg: var(--muted); }
@@ -164,7 +164,7 @@
 }
 .cal-hcell.empty { align-items: center; opacity: .75; }
 .cal-hcell.empty:hover { opacity: 1; border-color: var(--accent); color: var(--accent-text); background: var(--accent-soft); }
-.cal-hcell.filled { border: 0; background: var(--c-bg); color: var(--c-fg); box-shadow: inset 3px 0 0 var(--c-fg), inset 0 0 0 1px color-mix(in srgb, var(--c-fg) 14%, transparent); }
+.cal-hcell.filled { border: 0; background: var(--c-bg); color: var(--c-fg); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-fg) 14%, transparent); }
 .cal-hcell.filled.neutral { --c-bg: var(--hover); --c-fg: var(--muted); }
 .cal-hcell.filled:hover { filter: brightness(.96); }
 .cal-hcell b { font-size: 13px; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -230,3 +230,6 @@
 .cal-block.compact .cal-block-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cal-block.compact .cal-block-sub { flex-shrink: 0; }
 .cal-apoyo { font-weight: 600; }
+/* Tramos muy cortos (15 min): una sola línea pequeña con el título */
+.cal-block.tiny { font-size: 11px; line-height: 1; padding: 0 6px; min-height: 0; border-radius: 5px; }
+.cal-block.tiny .cal-block-time, .cal-block.tiny .cal-block-sub { display: none; }

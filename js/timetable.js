@@ -7,6 +7,10 @@ const pad = (n) => String(n).padStart(2, '0');
 /** "HH:MM" a partir de minutos desde medianoche. */
 export const fmtMin = (m) => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
 
+/** Duraciones que se ofrecen al crear el horario (minutos). */
+export const TRAMOS = [15, 30, 45, 60];
+export const RECREOS = [15, 20, 30, 45];
+
 /**
  * Calcula las franjas de una jornada: sesiones consecutivas con un recreo opcional.
  * @param {{inicio?:string, duracion?:number, sesiones?:number, recreoTras?:number, recreoDuracion?:number}} opts
