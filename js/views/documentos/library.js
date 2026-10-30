@@ -4,6 +4,8 @@ import { h, icon } from '../../ui.js';
 import { filterDocs, facets, kindOf, KINDS } from '../../documents.js';
 import { getGroups, getGroup } from '../../school.js';
 import { thumb, metaLine } from './common.js';
+import { pendingFileIds, uploadPending, onPendingChange } from '../../files.js';
+import { cloud, onSyncChange } from '../../sync.js';
 
 export const libState = { q: '', carpeta: '', etiqueta: '', kind: '', groupId: '', favoritos: false, sort: 'recientes' };
 
@@ -106,9 +108,27 @@ export function mountLibrary(ctx) {
     if (focusedFav) gridBox.querySelector(`[data-fav="${focusedFav}"]`)?.focus();
   }
 
-  const el = h('div', { class: 'dc-library' }, toolbar, pills, count, gridBox);
-  const repaint = () => { paintPills(); paintGrid(); };
+  // Archivos de este dispositivo que aún no están en la cuenta (otros dispositivos no podrían abrirlos)
+  const pendingBox = h('div', { class: 'dc-pending', role: 'status', hidden: true });
+  let uploadingNow = false;
+  async function paintPending() {
+    const ids = new Set(await pendingFileIds());
+    const n = store.list('documentos').filter((d) => d.fileId && ids.has(d.fileId)).length;
+    pendingBox.hidden = !n || !store.getSetting('syncUid');
+    if (pendingBox.hidden) return;
+    pendingBox.replaceChildren(icon('upload', 16),
+      h('span', {}, uploadingNow ? `Subiendo ${n === 1 ? '1 archivo' : `${n} archivos`} a tu cuenta…`
+        : `${n === 1 ? '1 archivo aún no está' : `${n} archivos aún no están`} en tu cuenta: en otros dispositivos no se podrán abrir.`),
+      uploadingNow || !cloud() ? '' : h('button', { type: 'button', class: 'btn btn-sm', onclick: async () => {
+        uploadingNow = true; paintPending();
+        try { await uploadPending(); } finally { uploadingNow = false; paintPending(); }
+      } }, 'Subir ahora'));
+  }
+
+  const el = h('div', { class: 'dc-library' }, pendingBox, toolbar, pills, count, gridBox);
+  const repaint = () => { paintPills(); paintGrid(); paintPending(); };
   repaint();
-  const unsub = [store.subscribe('documentos', repaint), store.subscribe('groups', paintPills)];
+  uploadPending().catch(() => {});
+  const unsub = [store.subscribe('documentos', repaint), store.subscribe('groups', paintPills), onPendingChange(paintPending), onSyncChange(paintPending)];
   return { el, destroy: () => unsub.forEach((u) => u()) };
 }

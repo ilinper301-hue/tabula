@@ -3,6 +3,7 @@ import { store } from '../../store.js';
 import { h, icon, toast, todayISO, relativeDay, fromISO, toISO } from '../../ui.js';
 import { KINDS, kindOf, canPrint, formatSize } from '../../documents.js';
 import { getFile, printBlob, openBlob, downloadBlob } from '../../files.js';
+import { cloud } from '../../sync.js';
 
 export const KIND_ICON = { ficha: 'sparkle', pdf: 'documentos', imagen: 'image', texto: 'documentos', hoja: 'table', presentacion: 'slides', enlace: 'link', otro: 'documentos' };
 export const KIND_SHORT = { ficha: 'Ficha', pdf: 'PDF', imagen: 'Imagen', texto: 'Texto', hoja: 'Hoja', presentacion: 'Diapos', enlace: 'Enlace', otro: 'Archivo' };
@@ -60,7 +61,11 @@ export async function fetchBlob(doc) {
   if (!doc.fileId) { toast('Este documento no tiene archivo'); return null; }
   try {
     const blob = await getFile(doc.fileId, (p) => toast(`Descargando archivo… ${Math.round(p * 100)} %`));
-    if (!blob) toast('No se encuentra el archivo en este dispositivo ni en tu cuenta');
+    if (!blob) {
+      toast(!cloud()
+        ? 'Este archivo no está en este dispositivo. Inicia sesión (Ajustes) para traerlo desde tu cuenta.'
+        : 'Este archivo aún no ha llegado a tu cuenta. Abre Tabula con conexión en el dispositivo donde lo añadiste para que termine de subirse.');
+    }
     return blob;
   } catch (e) {
     console.warn(e);

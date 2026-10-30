@@ -332,3 +332,6 @@
 .dc-cl-pdf .btn { flex-shrink: 0; }
 @media (max-width: 480px) { .dc-cl-pdf { flex-wrap: wrap; } .dc-cl-pdf .btn { width: 100%; } }
 .dc-cl-preview[hidden] { display: none; }
+.dc-pending { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; margin-bottom: 14px; border-radius: 12px; background: var(--accent-soft); border: 1px solid var(--accent-line); font-size: 14px; }
+.dc-pending[hidden] { display: none; }
+.dc-pending > span { flex: 1; min-width: 200px; }
