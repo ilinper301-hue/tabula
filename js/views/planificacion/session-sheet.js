@@ -137,7 +137,7 @@ export function openSessionSheet(sessionId) {
           const undo = applyChanges([{ id: sessionId, fecha: null, scheduleId: null }], { [sessionId]: { fija: false } });
           toast('Fecha quitada', { label: 'Deshacer', run: undo });
         },
-      }, 'Quitar fecha') : null);
+      }, 'Quitar fecha') : '');
     paintSlots();
   }
 

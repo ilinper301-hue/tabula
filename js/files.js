@@ -171,7 +171,9 @@ export function uploadPending() {
 }
 
 // Al volver a la app (p. ej. tras cerrarla en mitad de una subida) se continúa lo pendiente
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') uploadPending().catch(() => {}); });
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') uploadPending().catch(() => {}); });
+}
 
 /** Vacía los archivos del dispositivo (al cerrar sesión). */
 export async function clearLocalFiles() {

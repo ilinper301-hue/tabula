@@ -39,6 +39,16 @@ asistente.html        Página del asistente (apuntes hacia la bandeja)
 encuesta.html         Página pública para responder encuestas
 ```
 
+## Pruebas
+
+```
+node --test tests/*.test.mjs
+```
+
+Comprueban la lógica (notas, dictado, asistente, borradores de informes, buscador…) y la estructura (sintaxis,
+caché sin conexión de `sw.js`, iconos del manifest y que nunca se pinte «null» en la interfaz). GitHub las
+ejecuta solas en cada cambio (`.github/workflows/pruebas.yml`).
+
 ## Privacidad
 
 Este repositorio contiene **solo código**. Los datos del alumnado nunca se suben aquí.
