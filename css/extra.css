@@ -297,3 +297,8 @@ body.has-entrada { overflow: hidden; }
 @media (max-width: 680px) {
   .hy-grid .today-col:last-child { order: -1; }   /* en el móvil, las tareas antes que el horario */
 }
+
+/* ---------- Apps amigas ---------- */
+.nav-app-ico { width: 19px; height: 19px; border-radius: 5px; flex-shrink: 0; object-fit: cover; }
+.nav-app .nav-app-ext { margin-left: auto; color: var(--muted); display: inline-flex; }
+.more-app-ico { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; object-fit: cover; }

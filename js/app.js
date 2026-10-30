@@ -6,7 +6,7 @@ import { initSync, getSyncState, onSyncChange, SYNC_LABELS } from './sync.js';
 import './plan-sync.js';
 import { initLock, setForgotHandler, resetLock } from './lock.js';
 import { signOutAndClear } from './sync.js';
-import { SECTIONS, AJUSTES, NAV_BLOCKS, normalizeMobileNav } from './nav-model.js';
+import { SECTIONS, AJUSTES, NAV_BLOCKS, APPS_AMIGAS, normalizeMobileNav } from './nav-model.js';
 import { openSearch, initSearch, searchHint } from './views/search-ui.js';
 
 // Datos del dispositivo (IndexedDB) cargados antes de pintar nada
@@ -71,6 +71,12 @@ function renderNav(activeId) {
   const blocks = NAV_BLOCKS.map((b) => h('div', { class: 'nav-block', role: 'group', 'aria-labelledby': `navb-${b.id}` },
     h('div', { class: 'nav-label', id: `navb-${b.id}` }, b.label),
     ...b.items.map(link)));
+  // Apps amigas: enlaces externos al final del menú
+  blocks.push(h('div', { class: 'nav-block', role: 'group', 'aria-labelledby': 'navb-apps' },
+    h('div', { class: 'nav-label', id: 'navb-apps' }, 'Apps amigas'),
+    ...APPS_AMIGAS.map((a) => h('a', { class: 'nav-link nav-app', href: a.url, target: '_blank', rel: 'noopener', title: `${a.nombre}: ${a.desc}` },
+      h('img', { class: 'nav-app-ico', src: a.icono, alt: '', width: 19, height: 19 }), h('span', { class: 'label' }, a.nombre),
+      h('span', { class: 'label nav-app-ext', 'aria-hidden': 'true' }, icon('external', 13))))));
 
   sidebar.replaceChildren(
     h('a', { class: 'brand', href: '#/hoy', 'aria-label': 'Tabula, ir a Hoy' }, logoLockup({ size: 34 })),

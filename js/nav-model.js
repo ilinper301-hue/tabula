@@ -25,6 +25,13 @@ export const NAV_BLOCKS = [
   { id: 'centro', label: 'Centro', items: ['documentos', 'codigos', 'programas', 'encuestas'] },
 ];
 
+/** Apps hermanas de Tabula (se abren en otra pestaña). */
+export const APPS_AMIGAS = [
+  { id: 'barri', nombre: 'Barri', desc: 'Mates con barras (modelo de Singapur)', url: 'https://ilinper301-hue.github.io/Barri/', icono: 'icons/apps/barri.png' },
+  { id: 'lectori', nombre: 'Lectori', desc: 'Aprender a leer con el método fonológico', url: 'https://ilinper301-hue.github.io/Lectori/', icono: 'icons/apps/lectori.png' },
+  { id: 'fori', nombre: 'Fori', desc: 'Pizarra y asamblea para la PDI', url: 'https://ilinper301-hue.github.io/Fori/', icono: 'icons/apps/fori.png' },
+];
+
 export const DEFAULT_MOBILE = ['hoy', 'tareas', 'calendario', 'grupos'];
 export const MOBILE_SLOTS = 4;
 
