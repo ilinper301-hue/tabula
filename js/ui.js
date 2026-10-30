@@ -125,13 +125,11 @@ export function greeting(d = new Date()) {
 
 // ---------- Logotipo de Tabula ----------
 // Icono: círculo crema con una T que deja ver el fondo de franjas diagonales y sale por abajo.
-let logoSeq = 0;
-/** Icono de Tabula como <svg> (tamaño en px). Decorativo por defecto. */
+/** Icono de Tabula como <svg> (tamaño en px). Decorativo por defecto. Mismo dibujo que icons/icon.svg. */
 export function logoMark(size = 32, { label = null } = {}) {
-  const id = `tblogo${++logoSeq}`;
   const a = label ? `role="img" aria-label="${label}"` : 'aria-hidden="true"';
   const t = document.createElement('template');
-  t.innerHTML = `<svg class="logo-mark" ${a} width="${size}" height="${size}" viewBox="0 0 512 512"><defs><linearGradient id="${id}b" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4CC6F5"/><stop offset="1" stop-color="#3A7BF0"/></linearGradient><linearGradient id="${id}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#DCE7FB"/></linearGradient></defs><rect width="512" height="512" rx="112" fill="#0B2559"/><rect x="92" y="88" width="328" height="108" rx="54" fill="url(#${id}b)"/><rect x="202" y="168" width="108" height="244" rx="54" fill="url(#${id}s)"/></svg>`;
+  t.innerHTML = `<svg class="logo-mark" ${a} width="${size}" height="${size}" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#2B4257"/><rect x="96" y="118" width="320" height="98" rx="49" fill="#FAF9F5"/><path d="M200 214H311V338A55.5 55.5 0 0 1 200 338Z" fill="#9CC0DE"/><path d="M200 216C232 201 262 189 290 191C311 193 328 203 343 216H322Q311 216 311 227V270C299 246 262 226 200 221Z" fill="#5F86A8"/></svg>`;
   return t.content.firstChild;
 }
 /** Logotipo completo: icono + nombre. */
