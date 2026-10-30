@@ -27,16 +27,17 @@ export function render(container) {
     toast(parsed.due ? `Añadida para ${relativeDay(parsed.due).toLowerCase()}` : 'Tarea añadida');
   };
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } });
-  const composer = h('div', { class: 'composer' },
+  const composer = h('div', { class: 'composer hy-composer' },
     h('label', { class: 'sr-only', for: 'hoy-captura' }, 'Añadir tarea'), input,
+    h('button', { type: 'button', class: 'hy-mic', id: 'hoy-dictar', 'aria-label': 'Dictar a Tabula tareas, eventos, observaciones o tutorías', title: 'Dictar', onclick: () => import('./voz.js').then((m) => m.openVoz()) }, icon('mic', 18)),
     h('button', { class: 'send', 'aria-label': 'Añadir tarea', onclick: add }, icon('plus', 18)));
 
   // --- Tarjeta de tareas (se refresca sola) ---
   const tasksBody = h('div');
   const tasksCount = h('span', { class: 'eyebrow' });
-  const tasksCard = h('section', { class: 'card', 'aria-labelledby': 'hoy-tareas-t' },
-    h('div', { class: 'card-head' },
-      h('h2', { class: 'card-title', id: 'hoy-tareas-t' }, 'Tareas de hoy'),
+  const tasksCard = h('section', { class: 'hy-sec', 'aria-labelledby': 'hoy-tareas-t' },
+    h('div', { class: 'hy-sec-head' },
+      h('h2', { class: 'hy-sec-title', id: 'hoy-tareas-t' }, 'Tareas'),
       h('a', { class: 'link-btn', href: '#/tareas' }, 'Ver todas')),
     tasksBody);
 
@@ -53,9 +54,8 @@ export function render(container) {
       : 'Todo al día';
 
     if (!pending.length && !doneToday.length) {
-      tasksBody.replaceChildren(h('div', { class: 'empty' }, icon('tareas', 36),
-        h('strong', {}, 'Nada pendiente para hoy'),
-        upcoming ? `Tienes ${upcoming} tarea${upcoming > 1 ? 's' : ''} para los próximos días.` : 'Escribe arriba para añadir la primera.'));
+      tasksBody.replaceChildren(h('p', { class: 'hy-quiet' }, 'Nada pendiente hoy',
+        upcoming ? h('span', {}, ` · ${upcoming} en los próximos días`) : ''));
       return;
     }
     const list = h('ul', { class: 'task-list' },
@@ -66,13 +66,15 @@ export function render(container) {
 
   // --- Horario de hoy (sesión en curso destacada) ---
   const scheduleBody = h('div');
-  const scheduleCard = h('section', { class: 'card', 'aria-labelledby': 'hoy-horario-t' },
-    h('div', { class: 'card-head' },
-      h('h2', { class: 'card-title', id: 'hoy-horario-t' }, 'Horario de hoy'),
+  const scheduleCard = h('section', { class: 'hy-sec', 'aria-labelledby': 'hoy-horario-t' },
+    h('div', { class: 'hy-sec-head' },
+      h('h2', { class: 'hy-sec-title', id: 'hoy-horario-t' }, 'Horario'),
       h('a', { class: 'link-btn', href: '#/calendario?vista=semana' }, 'Semana')),
     scheduleBody,
     h('div', { class: 'su-hoy-foot' },
       h('button', { type: 'button', class: 'btn btn-sm btn-ghost su-hoy-btn', onclick: () => import('./sustituto.js').then((m) => m.openSustituto()) }, icon('note', 16), 'Plan para el sustituto')));
+  // Lo que toca ahora (o lo siguiente): lo primero que se ve, con sus acciones
+  const nowSlot = h('div', { class: 'hy-now-slot' });
 
   // Botón «Anotar» para sesiones «otro» que corresponden a un programa (o contienen «coord»)
   function programButton(s) {
@@ -125,13 +127,12 @@ export function render(container) {
     });
 
     if (!sessions.length) {
+      nowSlot.replaceChildren();
       const anySchedule = store.list('schedule').length > 0;
       const wd = now.getDay();
-      items.push(h('div', { class: 'empty' }, icon('calendario', 34),
-        anySchedule
-          ? h('strong', {}, wd === 0 || wd === 6 ? 'Fin de semana: hoy no hay clase' : 'Hoy no tienes sesiones')
-          : [h('strong', {}, 'Aún no has creado tu horario'),
-            h('a', { class: 'btn', href: '#/calendario?vista=horario', style: { marginTop: '10px' } }, 'Crear horario')]));
+      items.push(anySchedule
+        ? h('p', { class: 'hy-quiet' }, wd === 0 || wd === 6 ? 'Fin de semana: hoy no hay clase' : 'Hoy no tienes sesiones')
+        : h('p', { class: 'hy-quiet' }, 'Aún no has creado tu horario · ', h('a', { href: '#/calendario?vista=horario' }, 'Crear horario')));
       scheduleBody.replaceChildren(...items);
       return;
     }
@@ -146,6 +147,10 @@ export function render(container) {
         && (last.groupId || null) === (s.groupId || null) && (last.titulo || '') === (s.titulo || '');
       if (same) { last.fin = s.fin; last.parts.push(s); } else blocks.push({ ...s, parts: [s] });
     }
+    const clases = blocks.filter((b) => b.tipo === 'clase' || b.tipo === 'otro');
+    const hero = clases.find((b) => toMin(b.inicio) <= nowMin && nowMin < toMin(b.fin))
+      || clases.find((b) => toMin(b.inicio) > nowMin) || null;
+    paintNow(hero, planned, nowMin, today);
     blocks.forEach((s) => {
       // Apoyos: "Pili" si cubre todo el bloque; "Pili (9:00–9:30)" si solo una parte
       const apoyos = [...new Set(s.parts.map((p) => p.apoyo).filter(Boolean))].map((name) => {
@@ -157,7 +162,7 @@ export function render(container) {
       const current = toMin(s.inicio) <= nowMin && nowMin < toMin(s.fin);
       const past = toMin(s.fin) <= nowMin;
       const group = getGroup(s.groupId);
-      const sub = [group && group.nombre, current ? 'Ahora' : null, plan ? plan.titulo : null, s.aula].filter(Boolean).join(' · ');
+      const sub = [group && group.nombre, plan ? plan.titulo : null, s.aula].filter(Boolean).join(' · ');
       const apoyoTag = apoyos.length ? h('span', { class: 'sched-apoyo' }, `Apoyo: ${apoyos.join(', ')}`) : null;
       const mainContent = [
         h('span', { class: 'sched-title' }, s.tipo === 'clase' ? areaShort(s.area) || 'Clase' : sessionLabel(s),
@@ -169,35 +174,51 @@ export function render(container) {
           ? h('button', { class: 'sched-main sched-open', 'aria-label': `Abrir sesión: ${plan.titulo}`,
             onclick: () => import('./planificacion/session-sheet.js').then((m) => m.openSessionSheet(plan.id)) }, ...mainContent)
           : h('span', { class: 'sched-main' }, ...mainContent),
-        // Anecdotario: registro rápido durante la clase en curso
-        s.tipo === 'clase' && group && current
-          ? h('button', {
-            type: 'button', class: 'icon-btn sched-observe', title: 'Observar', 'aria-label': `Registrar observación en ${group.nombre}`,
-            onclick: () => import('./anecdotario.js').then((m) => m.openQuickObservation({ groupId: group.id, area: s.area, sesionId: plan ? plan.id : null })),
-          }, icon('note', 20))
-          : null,
-        // Evaluación rápida (niveles por criterio) durante o después de la clase
-        s.tipo === 'clase' && group && s.area ? evalButton(s, group, plan, current) : null,
+        // Evaluación rápida (niveles por criterio) después de la clase
+        s.tipo === 'clase' && group && s.area && past ? evalButton(s, group, plan, false) : null,
         // Documentos adjuntos a la sesión planificada
         plan && (plan.documentoIds || []).filter((id) => store.get('documentos', id)).length ? docClip(plan) : null,
         // Programas: anotar en el diario desde una sesión de coordinación u otra actividad de un programa
         programButton(s),
-        s.tipo === 'clase' && group && (current || !past)
-          ? (getAttendance(group.id, today)
-            ? h('a', { class: 'sched-done', href: `#/grupos?id=${group.id}&tab=asistencia&fecha=${today}`, 'aria-label': `Lista de ${group.nombre} pasada; ver asistencia` }, icon('check', 16), 'Lista')
-            : h('a', { class: current ? 'btn btn-sm' : 'icon-btn', href: `#/grupos?id=${group.id}&tab=asistencia&fecha=${today}`, 'aria-label': `Pasar lista de ${group.nombre}` },
-              current ? 'Pasar lista' : icon('grupos', 18)))
-          : null));
+        null));
     });
     items.push(list);
     scheduleBody.replaceChildren(...items);
   }
 
+  function paintNow(s, planned, nowMin, today) {
+    if (!s) { nowSlot.replaceChildren(); return; }
+    const current = toMin(s.inicio) <= nowMin;
+    const group = getGroup(s.groupId);
+    const plan = s.tipo === 'clase' ? planned.find((x) => s.parts.some((p) => p.id === x.scheduleId)) : null;
+    const falta = toMin(s.inicio) - nowMin;
+    const cuando = current ? `Ahora · hasta las ${s.fin}`
+      : falta <= 60 ? `Siguiente · en ${falta} min` : `Siguiente · a las ${s.inicio}`;
+    const isClass = s.tipo === 'clase' && group;
+    const lista = isClass ? getAttendance(group.id, today) : null;
+    const actions = [
+      isClass ? (lista
+        ? h('a', { class: 'btn btn-sm hy-now-done', href: `#/grupos?id=${group.id}&tab=asistencia&fecha=${today}`, 'aria-label': `Lista de ${group.nombre} pasada; ver asistencia` }, icon('check', 15), 'Lista pasada')
+        : h('a', { class: `btn btn-sm${current ? ' btn-primary' : ''}`, href: `#/grupos?id=${group.id}&tab=asistencia&fecha=${today}` }, icon('grupos', 15), 'Pasar lista')) : '',
+      isClass && current ? h('button', { type: 'button', class: 'btn btn-sm', 'aria-label': `Registrar observación en ${group.nombre}`,
+        onclick: () => import('./anecdotario.js').then((m) => m.openQuickObservation({ groupId: group.id, area: s.area, sesionId: plan ? plan.id : null })) }, icon('note', 15), 'Observar') : '',
+      isClass && s.area ? h('button', { type: 'button', class: 'btn btn-sm', 'aria-label': `Evaluar ${areaShort(s.area)} con ${group.nombre}`,
+        onclick: () => import('./aula/evaluar.js').then((m) => m.openQuickEval({ groupId: group.id, area: s.area, sesionId: plan ? plan.id : null })) }, icon('check', 15), 'Evaluar') : '',
+      plan ? h('button', { type: 'button', class: 'btn btn-sm btn-ghost', onclick: () => import('./planificacion/session-sheet.js').then((m) => m.openSessionSheet(plan.id)) }, 'Ver sesión') : '',
+      programButton(s) || '',
+    ];
+    nowSlot.replaceChildren(h('section', { class: `hy-now${current ? ' is-live' : ''}`, 'aria-label': current ? 'Clase en curso' : 'Próxima clase' },
+      h('div', { class: 'hy-now-when' }, current ? h('span', { class: 'hy-dot', 'aria-hidden': 'true' }) : '', cuando),
+      h('div', { class: 'hy-now-title' }, s.tipo === 'clase' ? areaShort(s.area) || 'Clase' : sessionLabel(s)),
+      h('div', { class: 'hy-now-sub' }, [group && group.nombre, plan && plan.titulo, s.aula, `${s.inicio}–${s.fin}`].filter(Boolean).join(' · ')),
+      h('div', { class: 'hy-now-actions' }, ...actions)));
+  }
+
   // --- Para imprimir hoy (Documentos): solo aparece si hay algo pendiente ---
   const printBody = h('ul', { class: 'dc-mini-list' });
-  const printCard = h('section', { class: 'card', 'aria-labelledby': 'hoy-imprimir-t', hidden: true },
-    h('div', { class: 'card-head' },
-      h('h2', { class: 'card-title', id: 'hoy-imprimir-t' }, 'Para imprimir hoy'),
+  const printCard = h('section', { class: 'hy-sec', 'aria-labelledby': 'hoy-imprimir-t', hidden: true },
+    h('div', { class: 'hy-sec-head' },
+      h('h2', { class: 'hy-sec-title', id: 'hoy-imprimir-t' }, 'Para imprimir'),
       h('a', { class: 'link-btn', href: '#/documentos?tab=imprimir' }, 'Ver cola')),
     printBody);
   function paintPrint() {
@@ -228,9 +249,9 @@ export function render(container) {
 
   // --- Tutoría: reuniones de hoy, reuniones sin cerrar y revisiones de medidas (solo si hay algo) ---
   const tutBody = h('div');
-  const tutCard = h('section', { class: 'card', 'aria-labelledby': 'hoy-tutoria-t', hidden: true },
-    h('div', { class: 'card-head' },
-      h('h2', { class: 'card-title', id: 'hoy-tutoria-t' }, 'Tutoría'),
+  const tutCard = h('section', { class: 'hy-sec', 'aria-labelledby': 'hoy-tutoria-t', hidden: true },
+    h('div', { class: 'hy-sec-head' },
+      h('h2', { class: 'hy-sec-title', id: 'hoy-tutoria-t' }, 'Tutoría'),
       h('a', { class: 'link-btn', href: '#/tutoria' }, 'Abrir')),
     tutBody);
   function paintTutoria() {
@@ -273,22 +294,18 @@ export function render(container) {
   let alive = true, asistenteOff = null;
   import('./bandeja.js').then((m) => { if (alive) asistenteOff = m.mountHoyCard(asistenteSlot); }).catch(() => {});
 
-  container.replaceChildren(
-    h('header', { class: 'page-head' },
-      h('div', {},
+  container.replaceChildren(h('div', { class: 'hy' },
+    h('header', { class: 'page-head hy-head' },
+      h('div', { class: 'hy-head-text' },
         h('div', { class: 'eyebrow' }, longDate(), ' · ', tasksCount),
-        h('div', { class: 'au-hoy-title' },
-          h('h1', { class: 'page-title' }, firstName ? `${greeting()}, ${firstName}` : greeting()),
-          h('a', { class: 'btn btn-sm au-hoy-link', href: '#/aula', 'aria-label': 'Abrir En clase: herramientas del aula' }, icon('aula', 17), 'En clase'),
-          h('button', { type: 'button', class: 'btn btn-sm au-hoy-link', id: 'hoy-dictar', 'aria-label': 'Dictar a Tabula tareas, eventos, observaciones o tutorías', onclick: () => import('./voz.js').then((m) => m.openVoz()) }, icon('mic', 17), 'Dictar'))),
-      composer),
+        h('h1', { class: 'page-title' }, firstName ? `${greeting()}, ${firstName}` : greeting())),
+      h('a', { class: 'icon-btn hy-aula', href: '#/aula', 'aria-label': 'En clase: herramientas del aula', title: 'En clase' }, icon('aula', 20))),
+    composer,
     asistenteSlot,
-    h('div', { class: 'today-grid' },
+    nowSlot,
+    h('div', { class: 'today-grid hy-grid' },
       h('div', { class: 'today-col' }, scheduleCard, tutCard),
-      h('div', { class: 'today-col' },
-        tasksCard,
-        printCard)),
-  );
+      h('div', { class: 'today-col' }, tasksCard, printCard))));
 
   const paintAll = () => { paintTasks(); paintSchedule(); paintPrint(); paintTutoria(); };
   paintAll();
