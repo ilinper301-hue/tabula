@@ -10,12 +10,14 @@ const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition |
 const PLURAL = { tarea: 'tareas', evento: 'eventos', observacion: 'observaciones', reunion: 'tutorías' };
 let closeSheet = null;
 
-function activeStudents() {
-  const groups = new Set(store.list('groups').filter((g) => !g.archivado).map((g) => g.id));
+/** Alumnado entre el que se buscan los nombres: el del grupo indicado (En clase) o el de todos los grupos activos. */
+function activeStudents(groupId = null) {
+  const groups = new Set(store.list('groups').filter((g) => !g.archivado && (!groupId || g.id === groupId)).map((g) => g.id));
   return store.list('students').filter((s) => groups.has(s.groupId));
 }
 
-export function openVoz() {
+/** @param opts { groupId } para buscar solo en el alumnado de ese grupo (p. ej. desde En clase) */
+export function openVoz({ groupId = null } = {}) {
   if (closeSheet) return closeSheet;
   let rec = null, listening = false;
 
@@ -84,7 +86,7 @@ export function openVoz() {
     if (listening) { stop(); commit(); }
     const text = area.value.trim();
     if (!text) { toast('Dicta o escribe algo primero'); return; }
-    const items = interpretDictation(text, { students: activeStudents(), today: todayISO() });
+    const items = interpretDictation(text, { students: activeStudents(groupId), today: todayISO() });
     if (!items.length) { toast('No he entendido nada que guardar. Prueba con frases más completas.'); return; }
     const now = Date.now();
     items.forEach((it, i) => store.add('bandejaAsistente', {

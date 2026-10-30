@@ -32,7 +32,9 @@ export function render(container, params) {
   const root = h('div', { class: 'au-root' },
     h('header', { class: 'page-head au-head' },
       h('div', {}, h('div', { class: 'eyebrow' }, longDate()), h('h1', { class: 'page-title' }, 'En clase')),
-      h('div', { class: 'au-head-tools' }, groups.length ? h('div', { class: 'au-group' }, h('label', { class: 'sr-only', for: 'au-grupo' }, 'Grupo'), groupSel) : null, boardBtn)),
+      h('div', { class: 'au-head-tools' }, groups.length ? h('div', { class: 'au-group' }, h('label', { class: 'sr-only', for: 'au-grupo' }, 'Grupo'), groupSel) : null,
+        h('button', { type: 'button', class: 'btn au-dictar', id: 'au-dictar', 'aria-label': 'Dictar observaciones o tareas de este grupo', onclick: () => import('./voz.js').then((m) => m.openVoz({ groupId })) }, icon('mic', 17), h('span', { class: 'au-dictar-txt' }, 'Dictar')),
+        boardBtn)),
     tabs, stage);
 
   const ctx = {

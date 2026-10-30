@@ -31,6 +31,58 @@
       "type": "image/svg+xml"
     }
   ],
+  "shortcuts": [
+    {
+      "name": "Dictar a Tabula",
+      "short_name": "Dictar",
+      "description": "Dicta tareas, eventos, observaciones o tutorías",
+      "url": "./?accion=dictar#/hoy",
+      "icons": [
+        {
+          "src": "icons/atajo-dictar.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Nueva tarea",
+      "short_name": "Nueva tarea",
+      "url": "./?accion=tarea#/tareas",
+      "icons": [
+        {
+          "src": "icons/atajo-tarea.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Pasar lista",
+      "short_name": "Pasar lista",
+      "description": "Asistencia del grupo de la clase actual",
+      "url": "./?accion=lista#/grupos",
+      "icons": [
+        {
+          "src": "icons/atajo-lista.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Códigos",
+      "short_name": "Códigos",
+      "url": "./#/codigos",
+      "icons": [
+        {
+          "src": "icons/atajo-codigos.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
   "share_target": {
     "action": "./share-target",
     "method": "POST",

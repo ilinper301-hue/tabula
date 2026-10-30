@@ -4,7 +4,9 @@ import { h, icon, openSheet, toast } from '../../ui.js';
 import { listName, fullName, initials, areaShort, areaColor } from '../../school.js';
 import { toLevel, formatGrade } from '../../grading.js';
 import { CLAVES, CLAVE_CORTA } from '../../competencias.js';
-import { COMENTARIOS, fillComment, areaPhrase, senecaGrade } from '../../informes.js';
+import { COMENTARIOS, fillComment, areaPhrase, senecaGrade, draftComment } from '../../informes.js';
+import { listObservations, evaluationRange } from '../../observations.js';
+import { startYear } from '../anecdotario/common.js';
 import { segmented, plural } from './common.js';
 import { areaGrades, attendanceOf, getReport, saveReport } from './informes-data.js';
 import { profileSetting, cursoLabel } from './informes-common.js';
@@ -104,6 +106,18 @@ export function openReportSheet({ data, student, onSaved }) {
   const attBlock = att ? h('p', { class: 'cb-fam-att' }, icon('clock', 15),
     h('span', {}, `${plural(att.faltas + att.justificadas, 'falta', 'faltas')}${att.justificadas ? ` (${att.justificadas} justificadas)` : ''}, ${plural(att.retrasos, 'retraso', 'retrasos')} · asistencia ${att.pct} % en ${plural(att.dias, 'día registrado', 'días registrados')}`)) : null;
 
+  // Borrador a partir de las notas, las observaciones de la evaluación y la asistencia
+  const draft = () => {
+    const prev = ta.value;
+    const { from, to } = evaluationRange(ev, startYear(group));
+    ta.value = draftComment({
+      nombre: student.nombre, areas: grades, asistencia: att, final: ev === 'final',
+      obs: listObservations({ studentId: student.id, from, to }),
+    });
+    upd(); ta.focus();
+    if (prev.trim()) toast('Borrador generado', { label: 'Deshacer', run: () => { ta.value = prev; upd(); } });
+  };
+
   const save = () => {
     saveReport(group.id, student.id, ev, ta.value);
     toast(ta.value.trim() ? 'Comentario guardado' : 'Comentario vacío: no se guarda');
@@ -119,7 +133,9 @@ export function openReportSheet({ data, student, onSaved }) {
     h('h3', { class: 'section-label cb-sec cb-sec-first' }, 'Áreas'), areasBlock,
     h('h3', { class: 'section-label cb-sec' }, 'Competencias clave'), clavesBlock,
     attBlock ? [h('h3', { class: 'section-label cb-sec' }, 'Asistencia'), attBlock] : null,
-    h('h3', { class: 'section-label cb-sec' }, h('label', { for: 'cb-fam-text' }, 'Comentario para la familia')),
+    h('div', { class: 'cb-fam-texthead' },
+      h('h3', { class: 'section-label cb-sec' }, h('label', { for: 'cb-fam-text' }, 'Comentario para la familia')),
+      h('button', { type: 'button', class: 'btn btn-sm', id: 'cb-fam-borrador', title: 'Redacta un primer borrador con sus notas, observaciones y asistencia', onclick: draft }, icon('sparkle', 14), 'Generar borrador')),
     ta, h('div', { class: 'cb-fam-meta' }, count),
     h('div', { class: 'cb-bank' }, h('span', { class: 'field-label' }, 'Banco de frases'), bankSeg, bankBody),
     h('div', { class: 'cb-actions cb-fam-actions' },

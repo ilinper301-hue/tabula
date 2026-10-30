@@ -45,7 +45,9 @@ export function matchStudents(grupos, query) {
       // «j.» es una inicial (lectura del asistente): vale cualquier palabra que empiece por esa letra
       const parts = full.split(' ');
       if (!words.every((w) => parts.some((p) => p.startsWith(w) || (/^[a-z]\.$/.test(p) && w[0] === p[0])))) continue;
-      const score = (nom === words.join(' ') ? 0 : nom.startsWith(words[0]) ? 1 : 2);
+      let score = (nom === words.join(' ') ? 0 : nom.startsWith(words[0]) ? 1 : 2);
+      // Iniciales en el mismo orden que lo escrito («Jesús María García» → J. M. G.): primero
+      if (parts.map((p) => p[0]).join('').startsWith(words.map((w) => w[0]).join(''))) score = Math.min(score, 0.5);
       out.push({ id: a.id, nombre: a.nombre, apellidos: a.apellidos, groupId: g.id, grupo: g.nombre, score });
     }
   }

@@ -109,6 +109,68 @@ export function areaPhrase(nota) {
   }[l] : '';
 }
 
+// ---------- Borrador del comentario (a partir de notas, observaciones y asistencia) ----------
+const OBS_POS = {
+  'Participa': 'participa activamente en clase', 'Ayuda a un compañero': 'ayuda a sus compañeros y compañeras',
+  'Buen trabajo': 'realiza un buen trabajo', 'Esfuerzo': 'se esfuerza en sus tareas', 'Buena lectura': 'lee con soltura',
+  'Comportamiento ejemplar': 'tiene un comportamiento ejemplar',
+};
+const OBS_NEG = {
+  'No trae material': 'traer el material necesario', 'No hace la tarea': 'hacer las tareas a diario',
+  'Interrumpe': 'respetar el turno de palabra', 'Distraído': 'mantener la atención en clase',
+  'Conflicto con compañeros': 'mejorar la convivencia con sus compañeros y compañeras', 'Llega tarde': 'llegar con puntualidad',
+};
+/** Nombre del área para usar dentro de una frase. */
+const AREA_PROSA = {
+  'Lengua Castellana y Literatura': 'Lengua', 'Conocimiento del Medio Natural, Social y Cultural': 'Conocimiento del Medio',
+  'Lengua Extranjera (Inglés)': 'Inglés', 'Religión / Atención educativa': 'Religión o Atención educativa',
+  'Educación en Valores Cívicos y Éticos': 'Valores Cívicos y Éticos',
+};
+const listY = (a) => (a.length < 2 ? a.join('') : `${a.slice(0, -1).join(', ')} y ${a[a.length - 1]}`);
+/** Etiquetas más repetidas (como mínimo `min` veces), de mayor a menor. */
+function topTags(obs, tipo, map, min) {
+  const n = new Map();
+  for (const o of obs) if (o.tipo === tipo && map[o.etiqueta]) n.set(o.etiqueta, (n.get(o.etiqueta) || 0) + 1);
+  return [...n].filter(([, c]) => c >= min).sort((a, b) => b[1] - a[1]).map(([k]) => map[k]);
+}
+
+/**
+ * Primer borrador del comentario para la familia. Redacción neutra (sin marcar género) y prudente:
+ * solo menciona lo que se repite en las observaciones. El docente lo revisa antes de guardarlo.
+ * @param p { nombre, areas: [{ area, nota }], obs: [{ tipo, etiqueta }], asistencia?: { faltas, justificadas, retrasos }, final?: boolean }
+ */
+export function draftComment({ nombre, areas = [], obs = [], asistencia = null, final = false }) {
+  const areaName = (a) => AREA_PROSA[a] || a;
+  const periodo = final ? 'curso' : 'trimestre';
+  const quien = nombre || 'Su hijo o hija';
+  const notas = areas.filter((a) => typeof a.nota === 'number');
+  const media = notas.length ? notas.reduce((t, a) => t + a.nota, 0) / notas.length : null;
+  const out = [];
+  if (media == null) out.push(`${quien} ha trabajado durante este periodo y seguimos de cerca su evolución.`);
+  else if (media >= 8.5) out.push(`${quien} ha tenido un ${periodo} excelente.`);
+  else if (media >= 7) out.push(`${quien} ha tenido un muy buen ${periodo}.`);
+  else if (media >= 5) out.push(`${quien} ha tenido un ${periodo} positivo y progresa adecuadamente.`);
+  else out.push(`${quien} ha encontrado algunas dificultades este ${periodo}, pero puede mejorar con esfuerzo y apoyo.`);
+
+  const fuertes = notas.filter((a) => a.nota >= 7).sort((a, b) => b.nota - a.nota).slice(0, 2).map((a) => areaName(a.area));
+  if (fuertes.length && media != null && media < 8.5) out.push(`Destaca especialmente en ${listY(fuertes)}.`);
+  const pos = topTags(obs, 'positiva', OBS_POS, 2).slice(0, 2);
+  if (pos.length) out.push(`En el día a día ${listY(pos)}.`);
+  else if (obs.filter((o) => o.tipo === 'positiva').length >= 3) out.push('Muestra una actitud positiva en clase.');
+
+  const flojas = notas.filter((a) => a.nota < 5).sort((a, b) => a.nota - b.nota).slice(0, 2).map((a) => areaName(a.area));
+  if (flojas.length) out.push(`Debe reforzar ${listY(flojas)}.`);
+  const neg = topTags(obs, 'negativa', OBS_NEG, 2).slice(0, 2);
+  if (asistencia && asistencia.faltas >= 5) neg.push('mejorar la asistencia a clase');
+  else if (asistencia && asistencia.retrasos >= 3 && !neg.includes(OBS_NEG['Llega tarde'])) neg.push(OBS_NEG['Llega tarde']);
+  if (neg.length) out.push(`Le ayudará ${listY(neg.slice(0, 3))}.`);
+
+  out.push(flojas.length || neg.length
+    ? 'Les animamos a repasar en casa lo trabajado en clase. Gracias por su colaboración: seguimos trabajando juntos.'
+    : 'Gracias por su colaboración: seguimos trabajando juntos.');
+  return out.join(' ').slice(0, 1500);
+}
+
 // ---------- Rúbrica por criterio (niveles de logro) ----------
 /**
  * Descriptores por defecto de los cinco niveles para un criterio. Son genéricos y editables:
