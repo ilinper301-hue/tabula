@@ -125,14 +125,11 @@ export function greeting(d = new Date()) {
 
 // ---------- Logotipo de Tabula ----------
 // Icono: círculo crema con una T que deja ver el fondo de franjas diagonales y sale por abajo.
-let logoSeq = 0;
-const LOGO_BANDS = '<rect width="512" height="512" fill="#5A80A3"/><path d="M400 0H512V512H0V400Z" fill="#3E5C76"/><path d="M512 128V512H128Z" fill="#2B4257"/>';
-/** Icono de Tabula como <svg> (tamaño en px). Decorativo por defecto. */
+/** Icono de Tabula como <svg> (tamaño en px). Decorativo por defecto. Mismo dibujo que icons/icon.svg. */
 export function logoMark(size = 32, { label = null } = {}) {
-  const id = `tblogo${++logoSeq}`;
   const a = label ? `role="img" aria-label="${label}"` : 'aria-hidden="true"';
   const t = document.createElement('template');
-  t.innerHTML = `<svg class="logo-mark" ${a} width="${size}" height="${size}" viewBox="0 0 512 512"><defs><clipPath id="${id}c"><rect width="512" height="512" rx="112"/></clipPath><clipPath id="${id}t"><rect x="227" y="160" width="58" height="400" rx="12"/><rect x="150" y="146" width="212" height="58" rx="12"/></clipPath></defs><g clip-path="url(#${id}c)">${LOGO_BANDS}<circle cx="256" cy="256" r="196" fill="#FAF9F5"/><g clip-path="url(#${id}t)">${LOGO_BANDS}</g></g></svg>`;
+  t.innerHTML = `<svg class="logo-mark" ${a} width="${size}" height="${size}" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#2B4257"/><rect x="96" y="118" width="320" height="98" rx="49" fill="#FAF9F5"/><path d="M200 214H311V338A55.5 55.5 0 0 1 200 338Z" fill="#9CC0DE"/><path d="M200 216C232 201 262 189 290 191C311 193 328 203 343 216H322Q311 216 311 227V270C299 246 262 226 200 221Z" fill="#5F86A8"/></svg>`;
   return t.content.firstChild;
 }
 /** Logotipo completo: icono + nombre. */
