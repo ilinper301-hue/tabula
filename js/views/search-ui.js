@@ -25,7 +25,7 @@ const isApple = () => /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigato
 export const searchHint = () => (isApple() ? '⌘K' : 'Ctrl K');
 
 // ---------- Datos: índice perezoso, se invalida con cualquier cambio ----------
-const COLS = ['groups', 'students', 'tasks', 'events', 'documentos', 'situaciones', 'sesiones', 'reuniones', 'medidas', 'programas', 'encuestas', 'gradebooks', 'observaciones'];
+const COLS = ['groups', 'students', 'tasks', 'events', 'documentos', 'situaciones', 'sesiones', 'reuniones', 'medidas', 'programas', 'encuestas', 'gradebooks', 'observaciones', 'codigos'];
 let dirty = true;
 let cache = null; // { index, byKey }
 function getIndex() {

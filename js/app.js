@@ -25,6 +25,7 @@ const ROUTES = [
   { id: 'planificacion', label: 'Planificación', icon: 'planificacion', load: () => import('./views/planificacion.js') },
   { id: 'programas', label: 'Planes y programas', icon: 'programas', load: () => import('./views/programas.js') },
   { id: 'encuestas', label: 'Encuestas', icon: 'encuestas', load: () => import('./views/encuestas.js') },
+  { id: 'codigos', label: 'Códigos', icon: 'lock', load: () => import('./views/codigos.js') },
 ];
 const EXTRA = [
   { id: 'ajustes', label: 'Ajustes', icon: 'ajustes', load: () => import('./views/ajustes.js') },

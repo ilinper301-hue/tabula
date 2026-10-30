@@ -13,6 +13,7 @@ export const SECTIONS = {
   documentos: { label: 'Documentos', icon: 'documentos', desc: 'Fichas, archivos y cola de impresión' },
   programas: { label: 'Planes y programas', icon: 'programas', desc: 'Diario de coordinación y memorias' },
   encuestas: { label: 'Encuestas', icon: 'encuestas', desc: 'Pregunta a tus compañeros con un enlace' },
+  codigos: { label: 'Códigos', icon: 'lock', desc: 'Libros digitales, impresora, wifi…' },
 };
 
 export const AJUSTES = { id: 'ajustes', label: 'Ajustes', icon: 'ajustes', desc: 'Perfil, cuenta, evaluación y copias' };
@@ -21,7 +22,7 @@ export const NAV_BLOCKS = [
   { id: 'dia', label: 'Día a día', items: ['hoy', 'tareas', 'calendario', 'aula'] },
   { id: 'alumnado', label: 'Alumnado', items: ['grupos', 'tutoria'] },
   { id: 'evaluacion', label: 'Evaluación', items: ['cuaderno', 'planificacion'] },
-  { id: 'centro', label: 'Centro', items: ['documentos', 'programas', 'encuestas'] },
+  { id: 'centro', label: 'Centro', items: ['documentos', 'codigos', 'programas', 'encuestas'] },
 ];
 
 export const DEFAULT_MOBILE = ['hoy', 'tareas', 'calendario', 'grupos'];
