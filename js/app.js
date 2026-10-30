@@ -199,8 +199,11 @@ setForgotHandler((card) => {
 });
 initLock();
 
+// Sin sesión en este dispositivo: lo primero es la pantalla de entrada (iniciar sesión o seguir sin cuenta)
+const entrada = await import('./views/entrada.js');
+if (entrada.needsEntrada()) entrada.showEntrada();
 // Primer uso: asistente (nunca para quien ya tiene datos o enlazó una cuenta en este dispositivo)
-if (!location.hash || location.hash === '#/' || location.hash === '#/hoy') {
+else if (!location.hash || location.hash === '#/' || location.hash === '#/hoy') {
   const { needsOnboarding } = await import('./views/bienvenida.js');
   if (needsOnboarding() && !store.getSetting('syncUid')) location.hash = '#/bienvenida';
 }
@@ -218,7 +221,7 @@ const backupReminder = async (intento = 0) => {
   try {
     if (store.getSetting('syncUid') || !store._hasLocalData()) return;
     // No pisar otro aviso (p. ej. un «Deshacer»): se espera a que no haya ninguno visible
-    if (document.querySelector('#toast.show') || document.querySelector('.overlay')) { if (intento < 10) setTimeout(() => backupReminder(intento + 1), 8000); return; }
+    if (document.querySelector('#toast.show') || document.querySelector('.overlay') || document.body.classList.contains('has-entrada')) { if (intento < 10) setTimeout(() => backupReminder(intento + 1), 8000); return; }
     const { daysSinceBackup } = await import('./backup.js');
     const d = daysSinceBackup();
     const last = store.getSetting('backup:aviso', 0);

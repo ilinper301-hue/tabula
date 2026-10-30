@@ -8,7 +8,8 @@
 // - Los metadatos (título, carpeta, etiquetas…) van en la colección normal "documentos" de store.js.
 // - En otro dispositivo, el archivo se descarga la primera vez que se abre y queda guardado.
 
-import { cloud } from './sync.js';
+import { cloud, onSyncChange } from './sync.js';
+import { store } from './store.js';
 
 export const MAX_FILE_MB = 15;
 const CHUNK = 700 * 1024;
@@ -54,6 +55,7 @@ export async function saveFile(file) {
   const blob = new Blob([await file.arrayBuffer()], { type: meta.tipo });
   await tx('blobs', 'readwrite', (s) => s.put(blob, fileId));
   await tx('pending', 'readwrite', (s) => s.put(meta, fileId));
+  emitPending();
   uploadPending().catch(() => {});
   return { fileId, ...meta };
 }
@@ -73,7 +75,7 @@ export async function getFile(fileId, onProgress) {
   if (!fileId) return null;
   const local = await tx('blobs', 'readonly', (s) => s.get(fileId));
   if (local) return local;
-  const c = cloud();
+  const c = await waitCloud();
   if (!c) return null;
   const { fb, db, uid } = c;
   const metaSnap = await fb.fs.getDoc(fb.fs.doc(db, 'apps', 'tabula', 'users', uid, 'files', fileId));
@@ -108,6 +110,27 @@ export async function deleteFile(fileId) {
   } catch (e) { console.warn('Tabula: no se pudo borrar el archivo de la nube', e); }
 }
 
+/**
+ * La sesión tarda unos segundos en conectarse al abrir la app: si este dispositivo tiene cuenta enlazada,
+ * se espera a que esté lista (como mucho `ms`) antes de dar el archivo por perdido.
+ */
+function waitCloud(ms = 15000) {
+  const c = cloud();
+  if (c || !store.getSetting('syncUid')) return Promise.resolve(c);
+  return new Promise((resolve) => {
+    const t = setTimeout(() => { off(); resolve(cloud()); }, ms);
+    const off = onSyncChange(() => { const x = cloud(); if (x) { clearTimeout(t); off(); resolve(x); } });
+  });
+}
+
+/** Avisos a la interfaz cuando cambia lo que queda por subir (p. ej. Documentos lo muestra). */
+const filesListeners = new Set();
+export function onPendingChange(fn) { filesListeners.add(fn); return () => filesListeners.delete(fn); }
+const emitPending = () => filesListeners.forEach((fn) => { try { fn(); } catch {} });
+/** Archivos guardados en este dispositivo que aún no están en la cuenta. */
+export async function pendingFileIds() { try { return (await tx('pending', 'readonly', (s) => s.getAllKeys())) || []; } catch { return []; } }
+export let lastUploadError = null;
+
 let uploading = null;
 /** Sube a la nube los archivos guardados sin sesión o sin conexión. Seguro de llamar siempre. */
 export function uploadPending() {
@@ -118,26 +141,37 @@ export function uploadPending() {
     const { fb, db, uid } = c;
     const keys = await tx('pending', 'readonly', (s) => s.getAllKeys());
     let done = 0;
+    lastUploadError = null;
     for (const fileId of keys || []) {
-      const meta = await tx('pending', 'readonly', (s) => s.get(fileId));
-      const blob = await tx('blobs', 'readonly', (s) => s.get(fileId));
-      if (!blob) { await tx('pending', 'readwrite', (s) => s.delete(fileId)); continue; }
-      const bytes = new Uint8Array(await blob.arrayBuffer());
-      const n = Math.max(1, Math.ceil(bytes.length / CHUNK));
-      for (let i = 0; i < n; i++) {
-        await fb.fs.setDoc(fb.fs.doc(db, 'apps', 'tabula', 'users', uid, 'files', fileId, 'c', String(i)),
-          { d: fb.fs.Bytes.fromUint8Array(bytes.subarray(i * CHUNK, (i + 1) * CHUNK)) });
+      try {
+        const meta = await tx('pending', 'readonly', (s) => s.get(fileId));
+        const blob = await tx('blobs', 'readonly', (s) => s.get(fileId));
+        if (!blob) { await tx('pending', 'readwrite', (s) => s.delete(fileId)); continue; }
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        const n = Math.max(1, Math.ceil(bytes.length / CHUNK));
+        for (let i = 0; i < n; i++) {
+          await fb.fs.setDoc(fb.fs.doc(db, 'apps', 'tabula', 'users', uid, 'files', fileId, 'c', String(i)),
+            { d: fb.fs.Bytes.fromUint8Array(bytes.subarray(i * CHUNK, (i + 1) * CHUNK)) });
+        }
+        // El documento principal se escribe al final: si existe, el archivo está completo
+        await fb.fs.setDoc(fb.fs.doc(db, 'apps', 'tabula', 'users', uid, 'files', fileId),
+          { n, tipo: meta?.tipo || blob.type || '', tamano: bytes.length, nombre: meta?.nombre || '', updatedAt: Date.now() });
+        await tx('pending', 'readwrite', (s) => s.delete(fileId));
+        done++;
+        emitPending();
+      } catch (e) {
+        // Se queda pendiente y se reintenta más tarde (al volver a la app, al recuperar la red…)
+        console.warn('Tabula: no se pudo subir el archivo', fileId, e);
+        lastUploadError = e?.message || 'error';
       }
-      // El documento principal se escribe al final: si existe, el archivo está completo
-      await fb.fs.setDoc(fb.fs.doc(db, 'apps', 'tabula', 'users', uid, 'files', fileId),
-        { n, tipo: meta?.tipo || blob.type || '', tamano: bytes.length, nombre: meta?.nombre || '', updatedAt: Date.now() });
-      await tx('pending', 'readwrite', (s) => s.delete(fileId));
-      done++;
     }
     return done;
-  })().finally(() => { uploading = null; });
+  })().finally(() => { uploading = null; emitPending(); });
   return uploading;
 }
+
+// Al volver a la app (p. ej. tras cerrarla en mitad de una subida) se continúa lo pendiente
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') uploadPending().catch(() => {}); });
 
 /** Vacía los archivos del dispositivo (al cerrar sesión). */
 export async function clearLocalFiles() {
