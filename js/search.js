@@ -27,6 +27,7 @@ export const TYPES = {
   observacion: { label: 'Observaciones', icon: 'note' },
   programa: { label: 'Planes y programas', icon: 'programas' },
   encuesta: { label: 'Encuestas', icon: 'encuestas' },
+  codigo: { label: 'Códigos', icon: 'lock' },
   seccion: { label: 'Secciones', icon: 'sidebar' },
   ajuste: { label: 'Ajustes', icon: 'ajustes' },
 };
@@ -147,6 +148,13 @@ export function buildItems(data = {}, ctx = {}) {
       sub: join((KINDS[kindOf(d)] || {}).label, d.carpeta, (d.etiquetas || []).map((x) => `#${x}`).join(' ')),
       go: { hash: `#/documentos?${q({ doc: d.id })}` },
       kw: [d.nombreArchivo, d.carpeta, d.area, d.notas, ...(d.etiquetas || [])].filter(Boolean).join(' '), ts: ts(d),
+    });
+  }
+  // Códigos: se busca por nombre, tipo, usuario y notas; el código en sí nunca entra en el buscador
+  for (const c of L('codigos')) {
+    out.push({
+      key: `codigo:${c.id}`, type: 'codigo', title: c.titulo || 'Código', sub: join(c.usuario),
+      go: { hash: '#/codigos' }, kw: [c.categoria, c.notas].filter(Boolean).join(' '), ts: ts(c),
     });
   }
   for (const s of L('situaciones')) {
