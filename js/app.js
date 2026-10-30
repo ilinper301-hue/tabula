@@ -211,6 +211,22 @@ else if (!location.hash || location.hash === '#/' || location.hash === '#/hoy') 
 
 initSearch();
 navigate();
+
+// Atajos del icono de la app (manifest «shortcuts»): ?accion=dictar | tarea | lista
+const accion = new URLSearchParams(location.search).get('accion');
+if (accion) {
+  history.replaceState(null, '', location.pathname + location.hash);
+  if (accion === 'dictar') import('./views/voz.js').then((m) => m.openVoz()).catch(() => {});
+  else if (accion === 'tarea') {
+    let n = 0;
+    const t = setInterval(() => { const el = document.getElementById('tareas-quick'); if (el || ++n > 30) { clearInterval(t); el?.focus(); } }, 100);
+  } else if (accion === 'lista') {
+    import('./views/aula/common.js').then((m) => {
+      const id = m.defaultGroupId();
+      if (id) location.hash = `#/grupos?${new URLSearchParams({ id, tab: 'asistencia' })}`;
+    }).catch(() => {});
+  }
+}
 onSyncChange(() => renderNav(parseHash().id));
 initSync();
 

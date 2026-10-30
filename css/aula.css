@@ -6,7 +6,7 @@
 .au-head-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .au-group { min-width: 150px; }
 .au-group .select { min-height: 46px; font-weight: 500; }
-.au-board-btn { min-height: 46px; }
+.au-board-btn, .au-dictar { min-height: 46px; }
 
 .au-tabs {
   display: flex; gap: 4px; padding: 4px; background: var(--hover); border-radius: 16px;
@@ -333,6 +333,8 @@ html.au-board-on, html.au-board-on body { overflow: hidden; }
   .au-group { flex: 1; }
   .au-board-btn .au-board-lbl { display: none; }
   .au-board-btn { width: 46px; padding: 0; }
+  .au-dictar .au-dictar-txt { display: none; }
+  .au-dictar { width: 46px; padding: 0; justify-content: center; }
   .au-tab { padding: 0 14px; }
   .au-root.au-board { padding: 12px 14px 18px; }
   .au-eval-sheet .sheet-body { padding: 4px 16px 24px; }

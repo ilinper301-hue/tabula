@@ -517,3 +517,4 @@ tbody tr:focus-within > td.cb-cell .cb-in:focus { background: var(--surface); }
   .cb-inf-tools { width: 100%; }
 }
 @media (max-width: 420px) { .cb-inf-long { display: none; } }
+.cb-fam-texthead { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
