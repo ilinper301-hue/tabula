@@ -1,6 +1,6 @@
 // Tabula · service worker: permite abrir la app sin conexión.
 // Estrategia: red primero para archivos propios (siempre la última versión), caché si no hay red.
-const CACHE = 'tabula-v31';
+const CACHE = 'tabula-v32';
 const CORE = [
   './', './index.html', './manifest.webmanifest', './css/app.css', './css/tareas.css', './css/calendario.css', './css/grupos.css', './css/cuaderno.css', './css/planificacion.css', './css/bienvenida.css', './css/anecdotario.css', './css/programas.css', './css/encuestas.css', './css/encuesta-public.css', './css/documentos.css',
   './js/app.js', './js/store.js', './js/ui.js', './js/tasks-model.js', './js/school.js', './js/grading.js', './js/planning.js', './js/plan-sync.js', './js/observations.js', './js/lock.js', './js/timetable.js', './js/programs.js', './js/surveys.js', './js/sync.js', './js/files.js', './js/documents.js', './js/firebase-config.js', './js/curriculo.js', './js/data/criterios-andalucia.js',

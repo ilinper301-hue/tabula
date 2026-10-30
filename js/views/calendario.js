@@ -6,7 +6,7 @@ import { h, icon, todayISO, toISO, fromISO, addDaysISO, MESES, toast, openSheet 
 import {
   AREAS, areaShort, areaColor, EVENT_TYPES, DIAS_LECTIVOS, getGroups, getGroup, sessionLabel, toMin,
 } from '../school.js';
-import { buildFranjas, applyFranjas, fillFranja } from '../timetable.js';
+import { buildFranjas, applyFranjas, fillFranja, TRAMOS, RECREOS } from '../timetable.js';
 import { getPrograms } from '../programs.js';
 import { calendarBanner } from './ajustes/calendario-escolar.js';
 import { asistenteChip, asistenteDetail } from '../asistente-mark.js';
@@ -228,7 +228,7 @@ export function render(container, params = new URLSearchParams()) {
       for (const s of snap.sessionsOn(iso)) {
         const top = yOf(toMin(s.inicio)), height = ((toMin(s.fin) - toMin(s.inicio)) / 60) * HOUR_PX - 2;
         col.append(h('button', {
-          type: 'button', class: `cal-block ${sessionTone(s)}${height < 58 ? ' compact' : ''}`,
+          type: 'button', class: `cal-block ${sessionTone(s)}${height < 58 ? ' compact' : ''}${height < 28 ? ' tiny' : ''}`,
           style: `top:${top + 1}px;height:${height}px`, title: `${sessionTitle(s)} · ${sessionSub(s)}`,
           onclick: () => openSessionDetail(s),
         }, h('span', { class: 'cal-block-time' }, `${s.inicio}–${s.fin}`),
@@ -674,10 +674,10 @@ function ensureFranja(f) {
 function openSetupSheet() {
   let close;
   const ini = h('input', { type: 'time', class: 'input', value: '09:00' });
-  const dur = h('select', { class: 'select' }, [45, 60].map((m) => h('option', { value: m, selected: m === 60 }, `${m} minutos`)));
+  const dur = h('select', { class: 'select' }, TRAMOS.map((m) => h('option', { value: m, selected: m === 60 }, `${m} minutos`)));
   const num = h('input', { type: 'number', class: 'input', min: '1', max: '10', value: '5', inputmode: 'numeric' });
   const rec = h('input', { type: 'number', class: 'input', min: '0', max: '10', value: '3', inputmode: 'numeric' });
-  const recLen = h('select', { class: 'select' }, [20, 30, 45].map((m) => h('option', { value: m, selected: m === 30 }, `${m} minutos`)));
+  const recLen = h('select', { class: 'select' }, RECREOS.map((m) => h('option', { value: m, selected: m === 30 }, `${m} minutos`)));
   const err = h('p', { class: 'cal-error', role: 'alert', hidden: true });
 
   const create = (e) => {

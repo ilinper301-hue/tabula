@@ -230,3 +230,6 @@
 .cal-block.compact .cal-block-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cal-block.compact .cal-block-sub { flex-shrink: 0; }
 .cal-apoyo { font-weight: 600; }
+/* Tramos muy cortos (15 min): una sola línea pequeña con el título */
+.cal-block.tiny { font-size: 11px; line-height: 1; padding: 0 6px; min-height: 0; border-radius: 5px; }
+.cal-block.tiny .cal-block-time, .cal-block.tiny .cal-block-sub { display: none; }
