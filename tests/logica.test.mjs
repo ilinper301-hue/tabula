@@ -11,6 +11,7 @@ import { normalizeMobileNav, DEFAULT_MOBILE } from '../js/nav-model.js';
 import { buildItems } from '../js/search.js';
 import { crc32 } from '../js/backup.js';
 import { buildFranjas, TRAMOS } from '../js/timetable.js';
+import { quietStudents } from '../js/observations.js';
 
 const HOY = new Date(2026, 9, 28);   // miércoles 28 oct 2026
 const hoy = '2026-10-28';
@@ -142,4 +143,16 @@ test('horario: tramos de 15, 30, 45 y 60 minutos', () => {
   const f = buildFranjas({ inicio: '09:00', duracion: 15, sesiones: 3, recreoTras: 2, recreoDuracion: 15 });
   assert.deepEqual(f.map((x) => `${x.inicio}-${x.fin} ${x.tipo}`), ['09:00-09:15 clase', '09:15-09:30 clase', '09:30-09:45 recreo', '09:45-10:00 clase']);
   assert.equal(buildFranjas({ inicio: '09:00', duracion: 30, sesiones: 2, recreoTras: 0 }).at(-1).fin, '10:00');
+});
+
+test('observaciones: alumnado sin observar en 3 semanas', () => {
+  const al = [
+    { id: 'a', nombre: 'Ana', groupId: 'g' }, { id: 'b', nombre: 'Bea', groupId: 'g' }, { id: 'c', nombre: 'Carlos', groupId: 'g' },
+    { id: 'n', nombre: 'Nuevo', groupId: 'g', createdAt: Date.parse('2026-10-20T10:00:00') },
+    { id: 'x', nombre: 'Otro grupo', groupId: 'h' },
+  ];
+  const obs = [{ studentId: 'a', groupId: 'g', fecha: '2026-10-25' }, { studentId: 'b', groupId: 'g', fecha: '2026-09-20' }];
+  const q = quietStudents(al, obs, '2026-10-30');
+  assert.deepEqual(q.map((x) => x.student.id), ['c', 'b']);   // sin ninguna primero; el nuevo y el grupo sin anecdotario no cuentan
+  assert.equal(q[1].dias, 40);
 });

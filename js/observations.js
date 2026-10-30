@@ -71,6 +71,24 @@ export function tallyByStudent(groupId, opts = {}) {
   return out;
 }
 
+/**
+ * Alumnado «invisible»: sin observaciones en los últimos `dias` (los que llevan más tiempo, primero).
+ * Solo cuenta en grupos donde ya se usa el anecdotario y no incluye al alumnado dado de alta hace menos de `dias`.
+ * @returns [{ student, ultima: 'YYYY-MM-DD' | null, dias: number | null }]
+ */
+export function quietStudents(students, obs, today, dias = 21) {
+  const t0 = Date.parse(`${today}T00:00:00`);
+  const daysSince = (iso) => Math.round((t0 - Date.parse(`${iso}T00:00:00`)) / 86400000);
+  const usados = new Set(obs.map((o) => o.groupId));
+  const last = new Map();
+  for (const o of obs) if (o.fecha && (!last.has(o.studentId) || o.fecha > last.get(o.studentId))) last.set(o.studentId, o.fecha);
+  return students
+    .filter((s) => usados.has(s.groupId) && !(s.createdAt && t0 - s.createdAt < dias * 86400000))
+    .map((s) => { const u = last.get(s.id) || null; return { student: s, ultima: u, dias: u ? daysSince(u) : null }; })
+    .filter((x) => x.dias === null || x.dias > dias)
+    .sort((a, b) => (b.dias ?? 1e9) - (a.dias ?? 1e9) || a.student.nombre.localeCompare(b.student.nombre, 'es'));
+}
+
 /** Etiquetas más usadas por un docente (para ordenar los botones rápidos). */
 export function topTags(tipo, limit = 6) {
   const counts = new Map();
