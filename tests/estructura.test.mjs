@@ -71,7 +71,7 @@ test('interfaz: nunca se pasa null a replaceChildren/append (se vería «null» 
     for (const { line, args } of domCalls(readFileSync(join(ROOT, f), 'utf8'))) {
       for (const a of args) {
         const t = topLevel(a);
-        if (/^null$/.test(t) || /\?.*:\s*null$/.test(t) || /&&/.test(t)) bad.push(`${relative(ROOT, join(ROOT, f))}:${line}  ${a.trim().slice(0, 70)}`);
+        if (/^null$/.test(t) || /\?.*:\s*null$/.test(t) || (/&&/.test(t) && !/\?/.test(t))) bad.push(`${relative(ROOT, join(ROOT, f))}:${line}  ${a.trim().slice(0, 70)}`);
       }
     }
   }

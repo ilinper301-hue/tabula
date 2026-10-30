@@ -306,3 +306,9 @@ body.has-entrada { overflow: hidden; }
 .hy-quiet-row:hover .hy-quiet-names { color: var(--accent-text); }
 .hy-quiet-names { font-size: 15px; }
 .hy-quiet-group { flex-shrink: 0; font-size: 13px; color: var(--muted); }
+.cd-vault { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 14px; margin-bottom: 16px; border-radius: var(--r-md); background: var(--accent-soft); border: 1px solid var(--accent-line); font-size: 14px; }
+.cd-vault > span { flex: 1; min-width: 200px; }
+.cd-vault.is-on { background: transparent; border-color: var(--border); color: var(--text-2); }
+.cd-vault .icon { flex-shrink: 0; color: var(--accent-text); }
+.cd-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; margin: 4px 0 8px; cursor: pointer; }
+.cd-check input { margin-top: 3px; }

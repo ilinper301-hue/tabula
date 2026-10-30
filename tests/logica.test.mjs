@@ -12,6 +12,7 @@ import { buildItems } from '../js/search.js';
 import { crc32 } from '../js/backup.js';
 import { buildFranjas, TRAMOS } from '../js/timetable.js';
 import { quietStudents } from '../js/observations.js';
+import { newVault, openVault, encryptText, decryptText } from '../js/codigos-crypto.js';
 
 const HOY = new Date(2026, 9, 28);   // miércoles 28 oct 2026
 const hoy = '2026-10-28';
@@ -166,4 +167,15 @@ test('junta de evaluación: medias, aprobados y áreas no superadas', () => {
   assert.deepEqual(r.porArea.map((x) => [x.media, x.pct]), [[5, 33], [5.8, 67]]);
   assert.deepEqual(r.porAlumno.c.suspensas, ['Matemáticas', 'Lengua']);
   assert.deepEqual(r.reparto, { todo: 1, una: 1, dos: 1, tresOmas: 0, sinNotas: 1 });
+});
+
+test('códigos: cifrado con la clave del docente', async () => {
+  const { cfg, key } = await newVault('una clave larga');
+  const box = await encryptText(key, '4512-impresora');
+  assert.ok(!JSON.stringify({ cfg, box }).includes('4512'));          // en la cuenta no queda el código
+  assert.equal(await decryptText(key, box), '4512-impresora');
+  assert.equal(await openVault(cfg, 'otra clave mala'), null);
+  const k2 = await openVault(cfg, 'una clave larga');                  // otro dispositivo, misma clave
+  assert.equal(await decryptText(k2, box), '4512-impresora');
+  await assert.rejects(newVault('corta'));
 });
