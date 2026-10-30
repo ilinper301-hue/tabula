@@ -171,6 +171,36 @@ export function draftComment({ nombre, areas = [], obs = [], asistencia = null, 
   return out.join(' ').slice(0, 1500);
 }
 
+// ---------- Sesión de evaluación (junta): resumen del grupo ----------
+/**
+ * Resumen para la sesión de evaluación.
+ * @param students [{ id }]   areas [{ area, notas: { [studentId]: nota|null } }]
+ * @returns { porArea: [{ area, media, evaluados, aprobados, pct }], porAlumno: { [id]: { media, suspensas: [area] } },
+ *            reparto: { todo: n, una: n, dos: n, tresOmas: n, sinNotas: n }, mediaGrupo }
+ */
+export function juntaResumen(students, areas) {
+  const isN = (n) => typeof n === 'number' && Number.isFinite(n);
+  const porArea = areas.map(({ area, notas }) => {
+    const v = students.map((s) => notas[s.id]).filter(isN);
+    const aprobados = v.filter((n) => n >= 5).length;
+    return { area, media: v.length ? round1(v.reduce((a, b) => a + b, 0) / v.length) : null, evaluados: v.length, aprobados, pct: v.length ? Math.round((aprobados / v.length) * 100) : null };
+  });
+  const porAlumno = {};
+  const reparto = { todo: 0, una: 0, dos: 0, tresOmas: 0, sinNotas: 0 };
+  for (const s of students) {
+    const mine = areas.map((a) => ({ area: a.area, n: a.notas[s.id] })).filter((x) => isN(x.n));
+    const suspensas = mine.filter((x) => x.n < 5).map((x) => x.area);
+    porAlumno[s.id] = { media: mine.length ? round1(mine.reduce((t, x) => t + x.n, 0) / mine.length) : null, suspensas };
+    if (!mine.length) reparto.sinNotas++;
+    else if (!suspensas.length) reparto.todo++;
+    else if (suspensas.length === 1) reparto.una++;
+    else if (suspensas.length === 2) reparto.dos++;
+    else reparto.tresOmas++;
+  }
+  const medias = Object.values(porAlumno).map((x) => x.media).filter(isN);
+  return { porArea, porAlumno, reparto, mediaGrupo: medias.length ? round1(medias.reduce((a, b) => a + b, 0) / medias.length) : null };
+}
+
 // ---------- Rúbrica por criterio (niveles de logro) ----------
 /**
  * Descriptores por defecto de los cinco niveles para un criterio. Son genéricos y editables:

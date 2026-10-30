@@ -518,3 +518,18 @@ tbody tr:focus-within > td.cb-cell .cb-in:focus { background: var(--surface); }
 }
 @media (max-width: 420px) { .cb-inf-long { display: none; } }
 .cb-fam-texthead { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+/* Sesión de evaluación (junta) */
+.cb-junta-stats { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.cb-junta-stat { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; min-width: 110px; border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--border); }
+.cb-junta-stat strong { font-family: var(--font-serif); font-size: 22px; font-weight: 500; }
+.cb-junta-stat span { font-size: 12px; color: var(--muted); }
+.cb-junta-stat.ok strong { color: var(--accent-text); }
+.cb-junta-stat.warn { border-color: color-mix(in srgb, var(--danger) 35%, var(--border)); }
+.cb-junta-card { margin-bottom: 14px; }
+.cb-junta-wrap { overflow-x: auto; }
+.cb-junta-table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.cb-junta-table th { text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.cb-junta-table th:first-child, .cb-junta-table td:first-child { text-align: left; white-space: nowrap; }
+.cb-junta-table td { text-align: center; padding: 6px 8px; border-bottom: 1px solid var(--divider); }
+.cb-junta-table tfoot td { font-weight: 600; border-bottom: 0; }
+.cb-junta-list { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; }

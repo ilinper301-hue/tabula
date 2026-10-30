@@ -116,6 +116,35 @@ export function groupProfileDocument({ group, evLabel, curso, profile, students,
   return doc('Perfil competencial', body, true);
 }
 
+/** Acta de apoyo para la sesión de evaluación: notas por área, áreas no superadas, asistencia, medidas y acuerdos. */
+export function juntaDocument({ group, evLabel, curso, profile, students, areas, resumen, faltas, medidas, obs, acuerdos, fullName }) {
+  const head = areas.map((a) => `<th class="c" title="${esc(a.area)}">${esc(areaShort(a.area))}</th>`).join('');
+  const cell = (n) => `<td class="c">${n === null || n === undefined ? '<span class="muted">·</span>' : lvPill(n, num1(n))}</td>`;
+  const rows = students.map((s) => {
+    const r = resumen.porAlumno[s.id];
+    return `<tr><td>${esc(fullName(s))}</td>${areas.map((a) => cell(a.notas[s.id])).join('')}<td class="c">${r.suspensas.length || '<span class="muted">0</span>'}</td><td class="c">${faltas[s.id] ?? '<span class="muted">·</span>'}</td></tr>`;
+  }).join('');
+  const foot = `<tr><td>Media del grupo</td>${resumen.porArea.map((a) => cell(a.media)).join('')}<td></td><td></td></tr>
+    <tr><td>Aprobados</td>${resumen.porArea.map((a) => `<td class="c">${a.pct === null ? '·' : `${a.pct} %`}</td>`).join('')}<td></td><td></td></tr>`;
+  const R = resumen.reparto;
+  const pend = students.filter((s) => resumen.porAlumno[s.id].suspensas.length)
+    .map((s) => `<li><b>${esc(fullName(s))}</b>: ${resumen.porAlumno[s.id].suspensas.map((a) => esc(areaShort(a))).join(', ')}</li>`).join('');
+  const med = medidas.map((m) => `<li><b>${esc(m.alumno)}</b>: ${esc(m.texto)}</li>`).join('');
+  const ob = obs.map((o) => `<li><b>${esc(o.alumno)}</b>: ${o.pos} positivas, ${o.neg} a mejorar</li>`).join('');
+  const body = `<section>
+    <div class="rep-top"><strong>${esc(profile?.centro || 'Sesión de evaluación')}</strong><span>Curso ${esc(curso || '')} · ${esc(fechaLarga())}</span></div>
+    <h1 style="font-size:20pt">Sesión de evaluación · ${esc(group?.nombre || '')}</h1>
+    <p class="sub">${esc(evLabel)} · ${students.length} alumnos · media del grupo ${resumen.mediaGrupo === null ? '—' : num1(resumen.mediaGrupo)}</p>
+    <p class="sub">Todo superado: <b>${R.todo}</b> · Una área no superada: <b>${R.una}</b> · Dos: <b>${R.dos}</b> · Tres o más: <b>${R.tresOmas}</b>${R.sinNotas ? ` · Sin notas: ${R.sinNotas}` : ''}</p>
+    <table class="grp"><thead><tr><th>Alumnado</th>${head}<th class="c">No sup.</th><th class="c">Faltas</th></tr></thead><tbody>${rows}</tbody><tfoot>${foot}</tfoot></table>
+    ${pend ? `<h2>Áreas no superadas</h2><ul>${pend}</ul>` : ''}
+    ${med ? `<h2>Medidas de atención a la diversidad</h2><ul>${med}</ul>` : ''}
+    ${ob ? `<h2>Observaciones del periodo</h2><ul>${ob}</ul>` : ''}
+    <h2>Acuerdos</h2><p style="white-space:pre-wrap;min-height:30mm;border:1px solid #ddd9cd;border-radius:6px;padding:8px">${esc(acuerdos || '')}</p>
+  </section>`;
+  return doc('Sesión de evaluación', body, true);
+}
+
 /** Imprime un documento HTML completo a través de un iframe oculto (no toca la página de la app). */
 export function printHTML(html) {
   document.querySelectorAll('iframe.cb-print-frame').forEach((f) => f.remove());

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { toLevel, wmean } from '../js/grading.js';
-import { senecaGrade, draftComment } from '../js/informes.js';
+import { senecaGrade, draftComment, juntaResumen } from '../js/informes.js';
 import { parseQuickInput } from '../js/tasks-model.js';
 import { interpretDictation, sound } from '../js/voz-model.js';
 import { buildLectura, matchStudents, normalizeItem } from '../js/asistente-model.js';
@@ -155,4 +155,15 @@ test('observaciones: alumnado sin observar en 3 semanas', () => {
   const q = quietStudents(al, obs, '2026-10-30');
   assert.deepEqual(q.map((x) => x.student.id), ['c', 'b']);   // sin ninguna primero; el nuevo y el grupo sin anecdotario no cuentan
   assert.equal(q[1].dias, 40);
+});
+
+test('junta de evaluación: medias, aprobados y áreas no superadas', () => {
+  const al = [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }];
+  const r = juntaResumen(al, [
+    { area: 'Matemáticas', notas: { a: 8, b: 4, c: 3, d: null } },
+    { area: 'Lengua', notas: { a: 7, b: 6, c: 4.5, d: null } },
+  ]);
+  assert.deepEqual(r.porArea.map((x) => [x.media, x.pct]), [[5, 33], [5.8, 67]]);
+  assert.deepEqual(r.porAlumno.c.suspensas, ['Matemáticas', 'Lengua']);
+  assert.deepEqual(r.reparto, { todo: 1, una: 1, dos: 1, tresOmas: 0, sinNotas: 1 });
 });
