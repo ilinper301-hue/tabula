@@ -210,3 +210,18 @@
 .vz-help summary { cursor: pointer; font-weight: 600; font-size: 14px; }
 .vz-help ul { margin: 8px 0 0; padding-left: 18px; font-size: 14px; display: grid; gap: 6px; }
 .vz-actions { justify-content: flex-end; }
+
+/* ---------- Pantalla de entrada (sin sesión) ---------- */
+body.has-entrada { overflow: hidden; }
+.entrada { position: fixed; inset: 0; z-index: 90; background: var(--bg); display: grid; place-items: center; padding: 24px 16px; overflow-y: auto; }
+.en-card { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+.en-title { font-family: var(--font-serif, Georgia, serif); font-weight: 500; font-size: 28px; line-height: 1.2; margin: 18px 0 0; }
+.en-lead { margin: 0; color: var(--muted); font-size: 16px; }
+.en-google { width: 100%; display: flex; justify-content: center; margin-top: 10px; }
+.en-google .btn { width: 100%; max-width: 320px; min-height: 48px; justify-content: center; }
+.en-error { margin: 0; color: var(--danger); font-size: 14px; }
+.en-perks { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; text-align: left; font-size: 14px; color: var(--muted); }
+.en-perks li { display: flex; gap: 8px; align-items: flex-start; }
+.en-perks .icon { flex-shrink: 0; margin-top: 2px; color: var(--accent-text); }
+.en-skip { margin-top: 18px; }
+.en-note { margin: 0; font-size: 13px; color: var(--muted); max-width: 340px; }
