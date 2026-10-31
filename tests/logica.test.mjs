@@ -179,3 +179,45 @@ test('códigos: cifrado con la clave del docente', async () => {
   assert.equal(await decryptText(k2, box), '4512-impresora');
   await assert.rejects(newVault('corta'));
 });
+
+test('Calculi: leer el resumen, emparejar alumnos y preparar columnas', async () => {
+  const { readCalculi, matchCalculi, planCalculi, trucosConDatos, gradeFromDominio } = await import('../js/calculi.js');
+  const resumen = { app: 'calculi', v: 1, ts: 1761876000000, alumnos: [
+    { id: 'c1', n: 'Lucía', curso: 1, estrellas: 5, trucos: [
+      { id: 'amigos10', nombre: 'Amigos del 10', curso: 1, trimestre: 1, dominio: 90, semaforo: 'v', estrellas: 3, intentos: 20 },
+      { id: 'dobles', nombre: 'Dobles', curso: 1, trimestre: 2, dominio: 50, semaforo: 'a', estrellas: 1, intentos: 8 }] },
+    { id: 'c2', n: 'Mateo R.', curso: 1, trucos: [{ id: 'amigos10', nombre: 'Amigos del 10', curso: 1, trimestre: 1, dominio: null, semaforo: 'g', intentos: 2 }] },
+    { id: 'c3', n: 'Sara', curso: 1, trucos: [] }] };
+  const storage = { getItem: (k) => (k === 'calc.tabula' ? JSON.stringify(resumen) : null) };
+  const d = readCalculi(storage);
+  assert.equal(d.alumnos.length, 3);
+  assert.equal(readCalculi({ getItem: () => '{"app":"otra"}' }), null);
+  assert.equal(readCalculi({ getItem: () => 'no es json' }), null);
+
+  const students = [
+    { id: 's1', nombre: 'Lucía', apellidos: 'García Pérez' },
+    { id: 's2', nombre: 'Mateo', apellidos: 'Ruiz López' },
+    { id: 's3', nombre: 'Mateo', apellidos: 'Sánchez' },
+    { id: 's4', nombre: 'Sara', apellidos: 'Gil' }, { id: 's5', nombre: 'Sara', apellidos: 'Moreno' }];
+  const mapa = matchCalculi(students, d.alumnos);
+  assert.equal(mapa.s1, 'c1');                 // nombre sin tilde ni apellidos: encaja
+  assert.equal(mapa.s2, 'c2');                 // «Mateo R.» → Mateo Ruiz, no Mateo Sánchez
+  assert.equal(mapa.s3, undefined);
+  assert.equal(mapa.s4, undefined);            // dos Saras en el grupo: no se adivina
+  assert.equal(mapa.s5, undefined);
+
+  assert.equal(gradeFromDominio(87), 8.7);
+  assert.equal(gradeFromDominio(null), null);
+  const tr = trucosConDatos(d.alumnos, new Set(['c1', 'c2']), 1);
+  assert.deepEqual(tr.map((t) => [t.id, t.conDatos]), [['amigos10', 1], ['dobles', 1]]);
+
+  const cols = planCalculi({ alumnos: d.alumnos, mapa, trucos: ['amigos10', 'dobles'], modo: 'truco' });
+  assert.equal(cols.length, 2);
+  assert.equal(cols[0].nombre, 'Calculi · Amigos del 10');
+  assert.equal(cols[0].notas.s1.v, 9);
+  assert.equal(cols[0].notas.s2, undefined);   // sin datos suficientes: sin nota
+  const media = planCalculi({ alumnos: d.alumnos, mapa, trucos: ['amigos10', 'dobles'], modo: 'media' });
+  assert.equal(media.length, 1);
+  assert.equal(media[0].notas.s1.v, 7);        // (90 + 50) / 2 = 70 % → 7
+  assert.equal(planCalculi({ alumnos: d.alumnos, mapa, trucos: ['amigos10'], modo: 'truco' })[0].clave, 'calculi:amigos10');
+});
