@@ -533,3 +533,10 @@ tbody tr:focus-within > td.cb-cell .cb-in:focus { background: var(--surface); }
 .cb-junta-table td { text-align: center; padding: 6px 8px; border-bottom: 1px solid var(--divider); }
 .cb-junta-table tfoot td { font-weight: 600; border-bottom: 0; }
 .cb-junta-list { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+
+/* Traer de Calculi */
+.cb-calc-match { display: flex; flex-direction: column; gap: 6px; padding: 0 12px 12px; }
+.cb-calc-row { display: flex; align-items: center; gap: 10px; }
+.cb-calc-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cb-calc-row .select { width: 46%; max-width: 220px; }
+.cb-calc-trucos { display: flex; flex-wrap: wrap; gap: 6px; }

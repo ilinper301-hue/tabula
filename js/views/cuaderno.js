@@ -20,6 +20,7 @@ import { openActivitySheet } from './cuaderno/sheet-activity.js';
 import { openConfigSheet } from './cuaderno/sheet-config.js';
 import { openStudentSheet } from './cuaderno/sheet-student.js';
 import { downloadCsv } from './cuaderno/export.js';
+import { openCalculiSheet } from './cuaderno/sheet-calculi.js';
 import { href, segmented, plural } from './cuaderno/common.js';
 
 // Lo último que eligió el docente, para volver al mismo sitio desde otras secciones.
@@ -86,6 +87,8 @@ export function render(container, params = new URLSearchParams()) {
       ctx.gb ? h('div', { class: 'cb-actions-top' },
         h('button', { type: 'button', class: 'btn btn-primary', onclick: newActivity, 'aria-label': 'Nueva actividad' }, icon('plus', 16), h('span', {}, 'Nueva actividad')),
         h('button', { type: 'button', class: 'btn cb-btn-icon', onclick: openConfig, 'aria-label': 'Configurar cuaderno' }, icon('ajustes', 16), h('span', { class: 'cb-lbl' }, 'Configurar')),
+        h('button', { type: 'button', class: 'btn cb-btn-icon', 'aria-label': 'Traer notas de Calculi', title: 'Traer notas de Calculi (cálculo mental)', onclick: () => openCalculiSheet({ gb: fresh().gb, group: getGroup(st.groupId), ev: st.ev }) },
+          icon('upload', 16), h('span', { class: 'cb-lbl' }, 'Calculi')),
         h('button', { type: 'button', class: 'btn cb-btn-icon', 'aria-label': 'Exportar a CSV', onclick: () => downloadCsv(fresh(), getGroup(st.groupId), st.area, st.ev) },
           icon('download', 16), h('span', { class: 'cb-lbl' }, 'Exportar'))) : null);
   }
