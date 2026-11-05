@@ -2,7 +2,7 @@
 //
 // Contrato de URL (mismo origen; Charta ya lo implementa):
 //   Tabula → Charta (crear):  ../Charta/?desde=tabula[&grupo=<id>&sesion=<id>&tarea=<id>]
-//   Charta → Tabula (volver): ../tabula/?charta=<base64url(JSON UTF-8)>
+//   Charta → Tabula (volver): /tabula/?charta=<base64url(JSON UTF-8)>
 //       { v:1, id?, titulo, tipos[], comp{}, grupo?, sesion?, tarea? }
 //   Tabula → Charta (abrir):  ../Charta/?ficha=<id>  ó  ../Charta/?comp=<base64url(comp)>  (+ &grupo=<id>&desde=tabula)
 // Nunca se envían nombres de alumnos: Charta lee la lista del grupo en el IndexedDB de Tabula.
