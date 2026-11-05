@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Reglas COMPLETAS del proyecto "mis-apps-educativas" (Barri, Lectori, Calculi y Tabula).
+// Reglas COMPLETAS del proyecto "mis-apps-educativas" (Barri, Lectori, Calculi, Tabula y Charta).
 // Pégalas tal cual en Firebase → Firestore Database → Reglas → Publicar.
 // Cada app solo deja a cada docente acceder a sus propios datos; ninguna regla abre la base de datos a todo el mundo.
 
@@ -160,6 +160,31 @@ service cloud.firestore {
       }
     }
     // ---------- fin Tabula ----------
+
+    // ---------- Charta ----------
+    // apps/charta/fichas/{id}: fichas de Charta (la ficha va como texto JSON, SIN nombres de alumnos).
+    // Solo su autor (cuenta de Google) la ve, la cambia o la borra. Tabula y Fori la leen con la misma cuenta.
+    match /apps/charta/fichas/{id} {
+      function esGoogle() {
+        return request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      }
+      function valida(d) {
+        return d.keys().hasOnly(['schemaVersion', 'app', 'autor', 'titulo', 'creada', 'tipos', 'variantes', 'ficha', 'composicion'])
+          && d.autor == request.auth.uid && d.app == 'charta'
+          && d.schemaVersion is int && d.titulo is string && d.titulo.size() <= 200
+          && d.creada is string && d.creada.size() <= 30
+          && d.tipos is list && d.tipos.size() <= 10
+          && d.variantes is int && d.variantes >= 1 && d.variantes <= 30
+          && d.ficha is string && d.ficha.size() <= 900000
+          && d.composicion is string && d.composicion.size() <= 20000;
+      }
+      // resource == null: leer una ficha que ya no existe da «no encontrada» y no «acceso denegado»
+      allow read: if esGoogle() && (resource == null || resource.data.autor == request.auth.uid);
+      allow create: if esGoogle() && valida(request.resource.data);
+      allow update: if esGoogle() && resource.data.autor == request.auth.uid && valida(request.resource.data);
+      allow delete: if esGoogle() && resource.data.autor == request.auth.uid;
+    }
+    // ---------- fin Charta ----------
 
   }
 }
