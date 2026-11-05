@@ -15,6 +15,7 @@ import { openDocDetail } from './documentos/detail.js';
 import { pickFiles, uploadFiles, openLinkSheet, addFromDrive } from './documentos/upload.js';
 import { setHash } from './documentos/common.js';
 import { openPasteSheet, importShared } from './documentos/claude.js';
+import { urlCrearFicha } from '../charta.js';
 
 let disposePrev = null; // evita escuchas duplicadas si la vista se pinta dos veces seguidas
 
@@ -74,6 +75,7 @@ export function render(container, params = new URLSearchParams()) {
     h('header', { class: 'page-head dc-head' },
       h('div', {}, h('div', { class: 'eyebrow' }, 'Fichas, exámenes y recursos'), h('h1', { class: 'page-title' }, 'Documentos')),
       h('div', { class: 'dc-head-actions' },
+        h('button', { type: 'button', class: 'btn', onclick: () => { location.href = urlCrearFicha({ groupId: libState.groupId || '' }); }, 'aria-label': 'Crear ficha con Charta', title: 'Crear una ficha con Charta' }, icon('sparkle', 16), h('span', { class: 'dc-btn-text' }, 'Crear ficha')),
         h('button', { type: 'button', class: 'btn', onclick: () => openPasteSheet({ carpeta: libState.carpeta || '', onSaved: () => { if (tab !== 'biblioteca') showTab('biblioteca'); } }), 'aria-label': 'Pegar de Claude', title: 'Pegar una ficha hecha con Claude' }, icon('sparkle', 16), h('span', { class: 'dc-btn-text' }, 'Pegar de Claude')),
         h('button', { type: 'button', class: 'btn', onclick: fromDrive, 'aria-label': 'Añadir desde Google Drive', title: 'Elegir archivos de tu Google Drive' }, icon('drive', 16), h('span', { class: 'dc-btn-text' }, 'Drive')),
         h('button', { type: 'button', class: 'btn', onclick: addLink, 'aria-label': 'Añadir enlace' }, icon('link', 16), h('span', { class: 'dc-btn-text' }, 'Añadir enlace')),

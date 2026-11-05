@@ -12,7 +12,7 @@ Planificación, agenda y evaluación para docentes de Primaria.
 - **Planificación**: situaciones de aprendizaje y sesiones repartidas automáticamente en el horario.
 - **Planes y programas**: diario de coordinación, objetivos, equipo, tareas y memoria final.
 - **Encuestas**: se comparten con un enlace (`encuesta.html`) y las respuestas llegan a la app.
-- **Documentos**: biblioteca de fichas, PDF y enlaces, cola de impresión y fichas hechas con Claude.
+- **Documentos**: biblioteca de fichas, PDF y enlaces, cola de impresión y fichas hechas con Claude. Integración con **Charta** (app hermana de fichas, `../Charta/`): botones «Crear ficha» en Documentos, Grupos, sesiones y tareas; la ficha vuelve a Tabula como documento de tipo Charta (`js/charta.js`).
 - **Tutoría**: familias, reuniones con acuerdos y atención a la diversidad.
 - **En clase**: temporizador, azar, equipos, responsables, semáforo y evaluación rápida.
 - **Informes** (desde el Cuaderno): perfil competencial, resumen para Séneca e informes para familias.

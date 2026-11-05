@@ -34,11 +34,12 @@ export function openDocDetail(docId, { onClose } = {}) {
   if (!first) { toast('Ese documento ya no existe'); return null; }
   const kind = kindOf(first);
   const isLink = kind === 'enlace';
+  const isCharta = kind === 'charta';
   const printable = canPrint(first);
 
   // ---------- Vista previa ----------
   const preview = h('button', {
-    type: 'button', class: 'dc-preview', 'aria-label': isLink ? 'Abrir enlace' : 'Abrir archivo', onclick: () => openDoc(getDoc(docId) || first),
+    type: 'button', class: 'dc-preview', 'aria-label': isLink ? 'Abrir enlace' : isCharta ? 'Abrir en Charta' : 'Abrir archivo', onclick: () => openDoc(getDoc(docId) || first),
   }, thumb(first, { size: 44 }));
 
   // ---------- Título y favorito ----------
@@ -119,10 +120,10 @@ export function openDocDetail(docId, { onClose } = {}) {
 
   const actions = h('div', { class: 'dc-actions' },
     isLink ? null : printBtn, queueBtn,
-    h('button', { type: 'button', class: 'btn', onclick: () => openDoc(getDoc(docId) || first) }, icon('external', 16), isLink ? 'Abrir enlace' : 'Abrir'),
-    isLink ? null : h('button', { type: 'button', class: 'btn', onclick: () => downloadDoc(getDoc(docId) || first) }, icon('download', 16), 'Descargar'),
+    h('button', { type: 'button', class: 'btn', onclick: () => openDoc(getDoc(docId) || first) }, icon('external', 16), isLink ? 'Abrir enlace' : isCharta ? 'Abrir en Charta' : 'Abrir'),
+    isLink || isCharta ? null : h('button', { type: 'button', class: 'btn', onclick: () => downloadDoc(getDoc(docId) || first) }, icon('download', 16), 'Descargar'),
     // Copia traída de Drive: el original sigue allí
-    !isLink && first.driveId && first.enlace ? h('a', { class: 'btn', href: first.enlace, target: '_blank', rel: 'noopener' }, icon('drive', 16), 'Ver en Drive') : null);
+    !isLink && !isCharta && first.driveId && first.enlace ? h('a', { class: 'btn', href: first.enlace, target: '_blank', rel: 'noopener' }, icon('drive', 16), 'Ver en Drive') : null);
 
   const del = h('button', {
     type: 'button', class: 'btn btn-ghost btn-danger', onclick: () => {

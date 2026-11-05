@@ -1,13 +1,15 @@
 // Tabula · Documentos: modelo puro (sin DOM ni almacenamiento), probado con Node.
 //
 // documentos   { id, titulo, fileId?, nombreArchivo, tipo, tamano, paginas?, miniatura?, enlace?,
-//                carpeta, etiquetas[], groupId?, area?, notas, favorito, copias?, impresoEn? }
+//                carpeta, etiquetas[], groupId?, area?, notas, favorito, copias?, impresoEn?, charta?: { id?, tipos[], comp } }
+//   - charta: ficha de Charta (sin archivo; se abre/imprime en Charta, ver js/charta.js).
 //   - fileId: archivo guardado (files.js). enlace: URL externa (Drive, web…) si no hay archivo.
 // impresiones  { id, documentoId, fecha (YYYY-MM-DD, para cuándo), copias, dobleCara, color,
 //                estado: 'pendiente' | 'impreso', groupId?, sesionId?, nota, impresoEn? }
 // sesiones (Planificación) pueden llevar documentoIds[].
 
 export const KINDS = {
+  charta: { label: 'Ficha de Charta', print: true },
   pdf: { label: 'PDF', print: true },
   ficha: { label: 'Ficha', print: true },
   imagen: { label: 'Imagen', print: true },
@@ -22,6 +24,7 @@ export const KINDS = {
 export function kindOf(doc) {
   const t = (doc.tipo || '').toLowerCase();
   const n = (doc.nombreArchivo || doc.titulo || '').toLowerCase();
+  if (doc.charta) return 'charta';
   if (!doc.fileId && doc.enlace) return 'enlace';
   if (t === 'application/pdf' || n.endsWith('.pdf')) return 'pdf';
   if (t === 'text/html' || /\.html?$/.test(n)) return 'ficha';

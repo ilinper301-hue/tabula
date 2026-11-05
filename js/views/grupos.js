@@ -13,6 +13,7 @@ import { mountAlumnado } from './grupos/alumnado.js';
 import { mountAsistencia } from './grupos/asistencia.js';
 import { mountResumen } from './grupos/resumen.js';
 import { mountObservaciones } from './anecdotario/group-tab.js';
+import { urlCrearFicha } from '../charta.js';
 
 const TABS = [['alumnado', 'Alumnado'], ['asistencia', 'Asistencia'], ['resumen', 'Resumen'], ['observaciones', 'Observaciones']];
 const href = (p) => `#/grupos?${new URLSearchParams(p)}`;
@@ -120,7 +121,9 @@ function renderDetail(container, group, params) {
         h('div', { class: 'gr-head-meta' }, h('span', { class: 'eyebrow' }, `${g.curso}º de Primaria · curso ${g.cursoEscolar}`),
           g.tutoria ? h('span', { class: `chip ${c}` }, 'Tutoría') : null,
           g.archivado ? h('span', { class: 'chip t5' }, 'Archivado') : null)),
-      h('button', { type: 'button', class: 'btn', onclick: () => openGroupSheet(g) }, 'Editar grupo'));
+      h('div', { class: 'gr-head-actions', style: { display: 'flex', gap: '10px', flexWrap: 'wrap' } },
+        h('button', { type: 'button', class: 'btn', onclick: () => { location.href = urlCrearFicha({ groupId }); } }, icon('sparkle', 16), 'Crear ficha con Charta'),
+        h('button', { type: 'button', class: 'btn', onclick: () => openGroupSheet(g) }, 'Editar grupo')));
   }
   paintHead();
   container.replaceChildren(head, tabs, panel);

@@ -4,9 +4,10 @@ import { h, icon, toast, todayISO, relativeDay, fromISO, toISO } from '../../ui.
 import { KINDS, kindOf, canPrint, formatSize } from '../../documents.js';
 import { getFile, printBlob, openBlob, downloadBlob } from '../../files.js';
 import { cloud } from '../../sync.js';
+import { urlAbrirFicha } from '../../charta.js';
 
-export const KIND_ICON = { ficha: 'sparkle', pdf: 'documentos', imagen: 'image', texto: 'documentos', hoja: 'table', presentacion: 'slides', enlace: 'link', otro: 'documentos' };
-export const KIND_SHORT = { ficha: 'Ficha', pdf: 'PDF', imagen: 'Imagen', texto: 'Texto', hoja: 'Hoja', presentacion: 'Diapos', enlace: 'Enlace', otro: 'Archivo' };
+export const KIND_ICON = { charta: 'sparkle', ficha: 'sparkle', pdf: 'documentos', imagen: 'image', texto: 'documentos', hoja: 'table', presentacion: 'slides', enlace: 'link', otro: 'documentos' };
+export const KIND_SHORT = { charta: 'Charta', ficha: 'Ficha', pdf: 'PDF', imagen: 'Imagen', texto: 'Texto', hoja: 'Hoja', presentacion: 'Diapos', enlace: 'Enlace', otro: 'Archivo' };
 
 export const docsById = () => Object.fromEntries(store.list('documentos').map((d) => [d.id, d]));
 export const getDoc = (id) => store.get('documentos', id);
@@ -75,21 +76,24 @@ export async function fetchBlob(doc) {
 }
 
 export async function openDoc(doc) {
+  if (doc.charta) { location.href = urlAbrirFicha(doc); return; }
   if (doc.enlace && !doc.fileId) { window.open(doc.enlace, '_blank', 'noopener'); return; }
   const blob = await fetchBlob(doc);
   if (blob) openBlob(blob, doc.nombreArchivo || doc.titulo);
 }
 
 export async function downloadDoc(doc) {
+  if (doc.charta) { location.href = urlAbrirFicha(doc); return; }
   const blob = await fetchBlob(doc);
   if (blob) downloadBlob(blob, doc.nombreArchivo || doc.titulo);
 }
 
 /**
- * Imprime un documento. Devuelve 'printed' | 'opened' | 'unsupported' | null (error).
+ * Imprime un documento. Devuelve 'printed' | 'opened' | 'charta' (se abre Charta en la misma pestaña) | 'unsupported' | null (error).
  * Anota doc.impresoEn cuando se ha lanzado la impresión.
  */
 export async function printDoc(doc, { quiet = false } = {}) {
+  if (doc.charta) { location.href = urlAbrirFicha(doc); return 'charta'; }
   if (!canPrint(doc)) {
     if (!quiet) toast('Este tipo de archivo no se imprime desde aquí: ábrelo y usa su opción de imprimir');
     return 'unsupported';

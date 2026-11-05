@@ -1,6 +1,7 @@
 // Tabula · módulo Tareas · modelo, análisis de texto rápido, fila reutilizable y editor
 import { store, uid } from './store.js';
 import { asistenteChip } from './asistente-mark.js';
+import { urlAbrirFicha, urlCrearFicha } from './charta.js';
 import {
   h, icon, toast, openSheet, todayISO, addDaysISO, relativeDay, toISO, tagClass,
 } from './ui.js';
@@ -257,6 +258,7 @@ function openForm(sheetTitle, task, prefill = {}) {
   let priority = base.priority ? 1 : 0;
   let subtasks = (base.subtasks || []).map((s) => ({ ...s }));
   let close = () => {};
+  const fichas = isNew ? [] : (task.documentoIds || []).map((id) => store.get('documentos', id)).filter((d) => d && d.charta);
 
   // --- Campos
   const title = h('input', { class: 'input', id: 'te-title', value: base.title, placeholder: '¿Qué hay que hacer?', required: true, autocomplete: 'off' });
@@ -349,6 +351,10 @@ function openForm(sheetTitle, task, prefill = {}) {
       h('label', { for: 'te-tags' }, 'Etiquetas (separadas por comas)'), tagsInput, tagsPreview),
     h('div', { class: 'field' },
       h('label', { for: 'te-sub' }, 'Subtareas'), subList, subInput),
+    isNew ? null : h('div', { class: 'field' },
+      h('span', { class: 'field-label' }, 'Fichas'),
+      ...fichas.map((d) => h('a', { class: 'link-btn', href: urlAbrirFicha(d), style: { display: 'block', margin: '4px 0' } }, `Ficha: ${d.titulo}`)),
+      h('button', { type: 'button', class: 'btn', onclick: () => { location.href = urlCrearFicha({ tareaId: task.id }); } }, icon('sparkle', 16), 'Crear ficha con Charta')),
     h('div', { class: 'te-foot' },
       isNew ? h('span') : h('button', {
         type: 'button', class: 'btn btn-ghost btn-danger',

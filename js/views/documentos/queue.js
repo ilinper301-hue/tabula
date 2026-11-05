@@ -25,7 +25,7 @@ export function mountQueue(ctx) {
     if (busy) return;
     const byId = docsById();
     const due = dueNow(liveQueue(), todayISO());
-    const printable = due.filter((i) => canPrint(byId[i.documentoId]));
+    const printable = due.filter((i) => byId[i.documentoId] && canPrint(byId[i.documentoId]) && !byId[i.documentoId].charta); // las fichas de Charta se imprimen desde Charta, una a una
     if (!printable.length) { toast('Nada que se pueda imprimir desde aquí'); return; }
     busy = true; paint();
     const done = [];

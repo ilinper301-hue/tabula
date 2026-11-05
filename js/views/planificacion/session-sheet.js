@@ -9,6 +9,7 @@ import { h, icon, openSheet, toast, todayISO, fromISO } from '../../ui.js';
 import { areaShort, areaColor, getGroup } from '../../school.js';
 import { slotsFor, hasSlots, isLectivo } from '../../planning.js';
 import { docsField } from '../documentos/attach.js';
+import { urlCrearFicha } from '../../charta.js';
 import {
   ctxFor, sesionesOfSit, whenText, slotTime, shortDate, plural, postponeSession, fixSessionDate, applyChanges,
   debounced, field, href, ico, ESTADOS_SES, ESTADO_SES_CLASS,
@@ -155,6 +156,10 @@ export function openSessionSheet(sessionId) {
     textField('desarrollo', 'Desarrollo', { rows: 5, placeholder: 'Actividades, agrupamientos, tiempos…' }),
     textField('materiales', 'Materiales', { rows: 2, placeholder: 'Libro, fichas, proyector…' }),
     docs.el,
+    h('button', {
+      type: 'button', class: 'btn', style: { marginBottom: '16px' },
+      onclick: () => { location.href = urlCrearFicha({ groupId: first.groupId || '', sesionId: sessionId }); },
+    }, icon('sparkle', 16), 'Crear ficha con Charta'),
     h('div', { class: 'pl-diary' }, textField('diario', 'Diario de clase', { rows: 4, placeholder: '¿Qué pasó realmente?' })),
     h('section', { class: 'pl-ss-block' }, h('h3', { class: 'section-label' }, 'Fijar fecha'), fixBox),
     h('div', { class: 'pl-ss-foot' },

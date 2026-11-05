@@ -218,6 +218,32 @@ else if (!location.hash || location.hash === '#/' || location.hash === '#/hoy') 
 initSearch();
 navigate();
 
+// Vuelta desde Charta: ?charta=<payload> → ficha añadida a Documentos (y vinculada a su sesión o tarea)
+async function recibirDeCharta() {
+  const search = location.search;
+  if (!new URLSearchParams(search).has('charta')) return;
+  const { leerEntradaCharta, documentoDeCharta, mismaFichaCharta } = await import('./charta.js');
+  const { toast } = await import('./ui.js');
+  const { isLocked } = await import('./lock.js');
+  // Se espera a que no haya bloqueo ni pantalla de entrada
+  for (let i = 0; i < 600 && (isLocked() || document.body.classList.contains('has-entrada')); i++) await new Promise((r) => setTimeout(r, 500));
+  history.replaceState(null, '', location.pathname + location.hash);
+  const p = leerEntradaCharta(search);
+  if (!p) { toast('El enlace de Charta no es válido'); return; }
+  const doc = store.list('documentos').find((d) => mismaFichaCharta(d, p)) || store.add('documentos', documentoDeCharta(p));
+  const ses = p.sesion ? store.get('sesiones', p.sesion) : null;
+  const tarea = p.tarea ? store.get('tasks', p.tarea) : null;
+  const unir = (col, it) => store.update(col, it.id, { documentoIds: [...new Set([...(it.documentoIds || []), doc.id])] });
+  if (ses) unir('sesiones', ses);
+  if (tarea) unir('tasks', tarea);
+  if (ses) {
+    const { href } = await import('./views/planificacion/model.js');
+    location.hash = href({ grupo: ses.groupId, area: ses.area, sit: ses.situacionId });
+  } else location.hash = tarea ? '#/tareas' : '#/documentos';
+  toast(`Ficha de Charta añadida a Documentos${ses ? ' y vinculada a la sesión' : tarea ? ' y vinculada a la tarea' : ''}`);
+}
+recibirDeCharta().catch((e) => console.warn(e));
+
 // Atajos del icono de la app (manifest «shortcuts»): ?accion=dictar | tarea | lista
 const accion = new URLSearchParams(location.search).get('accion');
 if (accion) {
