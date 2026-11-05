@@ -222,7 +222,7 @@ navigate();
 async function recibirDeCharta() {
   const search = location.search;
   if (!new URLSearchParams(search).has('charta')) return;
-  const { leerEntradaCharta, documentoDeCharta, mismaFichaCharta } = await import('./charta.js');
+  const { leerEntradaCharta, documentoDeCharta, mismaFichaCharta, miniaturaDeCharta, CLAVE_MINIATURA } = await import('./charta.js');
   const { toast } = await import('./ui.js');
   const { isLocked } = await import('./lock.js');
   // Se espera a que no haya bloqueo ni pantalla de entrada
@@ -230,7 +230,11 @@ async function recibirDeCharta() {
   history.replaceState(null, '', location.pathname + location.hash);
   const p = leerEntradaCharta(search);
   if (!p) { toast('El enlace de Charta no es válido'); return; }
-  const doc = store.list('documentos').find((d) => mismaFichaCharta(d, p)) || store.add('documentos', documentoDeCharta(p));
+  let mini = null;
+  try { mini = miniaturaDeCharta(localStorage.getItem(CLAVE_MINIATURA), p.titulo); localStorage.removeItem(CLAVE_MINIATURA); } catch {}
+  let doc = store.list('documentos').find((d) => mismaFichaCharta(d, p));
+  if (!doc) doc = store.add('documentos', { ...documentoDeCharta(p), ...(mini ? { miniatura: mini } : {}) });
+  else if (mini) store.update('documentos', doc.id, { miniatura: mini });
   const ses = p.sesion ? store.get('sesiones', p.sesion) : null;
   const tarea = p.tarea ? store.get('tasks', p.tarea) : null;
   const unir = (col, it) => store.update(col, it.id, { documentoIds: [...new Set([...(it.documentoIds || []), doc.id])] });

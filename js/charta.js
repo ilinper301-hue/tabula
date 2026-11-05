@@ -3,7 +3,8 @@
 // Contrato de URL (mismo origen; Charta ya lo implementa):
 //   Tabula → Charta (crear):  ../Charta/?desde=tabula[&grupo=<id>&sesion=<id>&tarea=<id>]
 //   Charta → Tabula (volver): /tabula/?charta=<base64url(JSON UTF-8)>
-//       { v:1, id?, titulo, tipos[], comp{}, grupo?, sesion?, tarea? }
+//       { v:1, id?, titulo, tipos[], comp{}, grupo?, sesion?, tarea?, variantes?, minutos?, dificultad?, etiquetas? }
+//   Charta deja además la miniatura de la hoja 1 (sin nombres) en localStorage['charta:aTabula'] = { v:1, titulo, miniatura } (mismo origen)
 //   Tabula → Charta (abrir):  ../Charta/?ficha=<id>  ó  ../Charta/?comp=<base64url(comp)>  (+ &grupo=<id>&desde=tabula)
 // Nunca se envían nombres de alumnos: Charta lee la lista del grupo en el IndexedDB de Tabula.
 
@@ -56,6 +57,11 @@ export function leerEntradaCharta(search) {
     if (p.id != null && !idOk(p.id)) return null;
     if (p.tipos != null && (!Array.isArray(p.tipos) || p.tipos.length > 100 || p.tipos.some((t) => typeof t !== 'string' || t.length > 80))) return null;
     for (const k of ['grupo', 'sesion', 'tarea']) if (p[k] != null && !idOk(p[k])) return null;
+    const entero = (x, max) => Number.isInteger(x) && x >= 1 && x <= max;
+    if (p.variantes != null && !entero(p.variantes, 30)) return null;
+    if (p.minutos != null && !entero(p.minutos, 600)) return null;
+    if (p.dificultad != null && !entero(p.dificultad, 3)) return null;
+    if (p.etiquetas != null && (!Array.isArray(p.etiquetas) || p.etiquetas.length > 12 || p.etiquetas.some((t) => typeof t !== 'string' || t.length > 30))) return null;
     return p;
   } catch { return null; }
 }
@@ -64,8 +70,11 @@ export function leerEntradaCharta(search) {
 export function documentoDeCharta(p) {
   const charta = { tipos: Array.isArray(p.tipos) ? p.tipos : [], comp: p.comp };
   if (p.id) charta.id = p.id;
+  if (p.variantes > 1) charta.variantes = p.variantes;
+  if (p.minutos) charta.minutos = p.minutos;
+  if (p.dificultad) charta.dificultad = p.dificultad;
   return {
-    titulo: p.titulo.trim(), tipo: 'charta', nombreArchivo: '', carpeta: 'Charta', etiquetas: [],
+    titulo: p.titulo.trim(), tipo: 'charta', nombreArchivo: '', carpeta: 'Charta', etiquetas: Array.isArray(p.etiquetas) ? [...new Set(p.etiquetas.map((t) => t.trim()).filter(Boolean))] : [],
     groupId: p.grupo || null, area: 'Matemáticas', notas: '', favorito: false, charta,
   };
 }
@@ -77,4 +86,17 @@ export function mismaFichaCharta(doc, p) {
   if (p.id) return c.id === p.id;
   if (c.id) return false;
   return JSON.stringify(c.comp) === JSON.stringify(p.comp);
+}
+
+export const CLAVE_MINIATURA = 'charta:aTabula';
+const MAX_MINIATURA = 60000;
+
+/** Miniatura que Charta dejó en localStorage para esta ficha (data URL JPEG/PNG) o null. Se comprueba el título. */
+export function miniaturaDeCharta(raw, titulo) {
+  try {
+    const m = JSON.parse(raw);
+    if (!esObjeto(m) || m.v !== 1 || m.titulo !== String(titulo || '').slice(0, 200)) return null;
+    if (typeof m.miniatura !== 'string' || m.miniatura.length > MAX_MINIATURA || !/^data:image\/(jpeg|png);base64,[A-Za-z0-9+/=]+$/.test(m.miniatura)) return null;
+    return m.miniatura;
+  } catch { return null; }
 }

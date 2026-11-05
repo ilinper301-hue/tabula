@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   CHARTA_URL, b64urlCodificar, b64urlDecodificar, urlCrearFicha, urlAbrirFicha,
-  leerEntradaCharta, documentoDeCharta, mismaFichaCharta,
+  leerEntradaCharta, documentoDeCharta, mismaFichaCharta, miniaturaDeCharta,
 } from '../js/charta.js';
 import { kindOf, canPrint, KINDS } from '../js/documents.js';
 
@@ -74,4 +74,28 @@ test('kindOf: un documento de Charta es «charta» y se puede imprimir', () => {
   assert.equal(KINDS.charta.label, 'Ficha de Charta');
   assert.ok(canPrint(d));
   assert.equal(kindOf({ ...d, enlace: 'https://x.es', nombreArchivo: 'a.pdf' }), 'charta');
+});
+
+test('5.4: variantes, minutos, dificultad y etiquetas viajan y se validan', () => {
+  const p = { ...ok, variantes: 3, minutos: 15, dificultad: 2, etiquetas: ['suma', ' llevadas ', 'suma'] };
+  assert.deepEqual(leerEntradaCharta(payload(p)), p);
+  const d = documentoDeCharta(p);
+  assert.deepEqual(d.etiquetas, ['suma', 'llevadas']);
+  assert.equal(d.charta.variantes, 3); assert.equal(d.charta.minutos, 15); assert.equal(d.charta.dificultad, 2);
+  assert.equal(documentoDeCharta({ ...ok, variantes: 1 }).charta.variantes, undefined);
+  for (const mal of [{ variantes: 0 }, { variantes: 31 }, { minutos: 'x' }, { dificultad: 4 }, { etiquetas: 'a' }, { etiquetas: [5] }, { etiquetas: ['x'.repeat(31)] }])
+    assert.equal(leerEntradaCharta(payload({ ...ok, ...mal })), null);
+});
+
+test('5.4: miniaturaDeCharta solo acepta imagen pequeña de esa ficha', () => {
+  const img = 'data:image/jpeg;base64,/9j/4AAQSkZJRg==';
+  const raw = (o) => JSON.stringify({ v: 1, titulo: ok.titulo, miniatura: img, ...o });
+  assert.equal(miniaturaDeCharta(raw(), ok.titulo), img);
+  assert.equal(miniaturaDeCharta(raw(), 'otra ficha'), null);
+  assert.equal(miniaturaDeCharta(raw({ miniatura: 'javascript:alert(1)' }), ok.titulo), null);
+  assert.equal(miniaturaDeCharta(raw({ miniatura: 'data:image/svg+xml;base64,AAAA' }), ok.titulo), null);
+  assert.equal(miniaturaDeCharta(raw({ miniatura: 'data:image/jpeg;base64,' + 'A'.repeat(60001) }), ok.titulo), null);
+  assert.equal(miniaturaDeCharta(raw({ v: 2 }), ok.titulo), null);
+  assert.equal(miniaturaDeCharta(null, ok.titulo), null);
+  assert.equal(miniaturaDeCharta('no json', ok.titulo), null);
 });

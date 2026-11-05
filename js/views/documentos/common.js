@@ -30,6 +30,8 @@ export function metaLine(doc) {
   const kind = kindOf(doc);
   const bits = [KINDS[kind].label];
   if (doc.paginas > 1) bits.push(`${doc.paginas} págs.`);
+  if (doc.charta && doc.charta.variantes > 1) bits.push(`${doc.charta.variantes} variantes`);
+  if (doc.charta && doc.charta.minutos) bits.push(`${doc.charta.minutos} min`);
   if (doc.tamano) bits.push(formatSize(doc.tamano));
   const when = doc.createdAt ? relativeDay(toISO(new Date(doc.createdAt))) : '';
   if (when) bits.push(when);
