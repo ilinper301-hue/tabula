@@ -8,7 +8,7 @@
 // Submódulos en ./documentos/ · estilos en css/documentos.css · modelo puro en js/documents.js
 import { store } from '../store.js';
 import { h, icon, todayISO } from '../ui.js';
-import { pageHead } from '../ui-kit.js';
+import { pageHead, openActionSheet } from '../ui-kit.js';
 import { dueNow } from '../documents.js';
 import { mountLibrary, libState } from './documentos/library.js';
 import { mountQueue, liveQueue } from './documentos/queue.js';
@@ -37,6 +37,18 @@ export function render(container, params = new URLSearchParams()) {
   const chooseFiles = async () => upload(await pickFiles());
   const fromDrive = async () => { const c = await addFromDrive({ carpeta: libState.carpeta || '' }, setStatus); if (c.length && tab !== 'biblioteca') showTab('biblioteca'); };
   const addLink = () => openLinkSheet({ carpeta: libState.carpeta || '', onAdded: () => { if (tab !== 'biblioteca') showTab('biblioteca'); } });
+  const pasteClaude = () => openPasteSheet({ carpeta: libState.carpeta || '', onSaved: () => { if (tab !== 'biblioteca') showTab('biblioteca'); } });
+  const createCharta = () => { location.href = urlCrearFicha({ groupId: libState.groupId || '' }); };
+
+  // «Añadir»: una sola acción principal con todas las formas de añadir (cada una con su icono)
+  const openAdd = () => openActionSheet('Añadir', [
+    { icon: 'upload', label: 'Subir archivo', desc: 'PDF, imágenes, fichas o documentos de este dispositivo', run: chooseFiles },
+    { icon: 'drive', label: 'Google Drive', desc: 'Elige archivos de tu Drive; los PDF se guardan para imprimir', run: fromDrive },
+    { icon: 'link', label: 'Enlace', desc: 'Una página web o un documento compartido', run: addLink },
+    { icon: 'sparkle', label: 'Crear ficha (Charta)', desc: 'Diseña una ficha nueva en Charta y vuelve con ella', run: createCharta },
+    { icon: 'clipboard', label: 'Pegar de Claude', desc: 'Una ficha que te ha preparado Claude', run: pasteClaude },
+  ], { className: 'dc-add-sheet' });
+  const startSelect = () => { if (tab !== 'biblioteca') showTab('biblioteca'); mounted && mounted.select && mounted.select(); };
 
   const openDoc = (id) => { setHash({ tab: tab === 'imprimir' ? 'imprimir' : '', doc: id }); openDocDetail(id, { onClose: () => setHash({ tab: tab === 'imprimir' ? 'imprimir' : '' }) }); };
 
@@ -67,7 +79,7 @@ export function render(container, params = new URLSearchParams()) {
     mounted && mounted.destroy();
     mounted = id === 'imprimir'
       ? mountQueue({ onOpen: openDoc, goLibrary: () => showTab('biblioteca') })
-      : mountLibrary({ onOpen: openDoc, upload: chooseFiles, link: addLink });
+      : mountLibrary({ onOpen: openDoc, add: openAdd });
     panel.replaceChildren(mounted.el);
     setHash({ tab: id === 'imprimir' ? 'imprimir' : '' });
   }
@@ -75,12 +87,9 @@ export function render(container, params = new URLSearchParams()) {
   container.replaceChildren(
     pageHead({
       eyebrow: 'Fichas, exámenes y recursos', title: 'Documentos', className: 'dc-head',
-      primary: { label: 'Subir', icon: 'upload', run: chooseFiles, ariaLabel: 'Subir archivos' },
-      menu: [
-        { icon: 'sparkle', label: 'Crear ficha con Charta', run: () => { location.href = urlCrearFicha({ groupId: libState.groupId || '' }); } },
-        { icon: 'edit', label: 'Pegar de Claude', desc: 'Una ficha hecha con Claude', run: () => openPasteSheet({ carpeta: libState.carpeta || '', onSaved: () => { if (tab !== 'biblioteca') showTab('biblioteca'); } }) },
-        { icon: 'drive', label: 'Desde Google Drive', run: fromDrive },
-        { icon: 'link', label: 'Añadir enlace', run: addLink },
+      primary: { label: 'Añadir', icon: 'plus', run: openAdd, ariaLabel: 'Añadir documentos' },
+      menu: () => [
+        { icon: 'tareas', label: 'Seleccionar', desc: 'Varios documentos, para imprimirlos juntos o eliminarlos', run: startSelect, disabled: !store.list('documentos').length },
       ],
     }),
     tabs, status, panel);

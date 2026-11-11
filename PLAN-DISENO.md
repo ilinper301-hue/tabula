@@ -55,7 +55,12 @@ Base de todo lo demás. No cambia funciones, solo estructura visual.
 - Aplicar `pageHead` a todas las vistas (`js/views/*.js`) sin tocar aún su contenido.
 - Prueba nueva con Playwright (o en `tests/` como estructura): ninguna ruta desborda a 360 y 390 px.
 
-## Fase 2 · Documentos — *Opus, esfuerzo alto*
+## Fase 2 · Documentos — *Opus, esfuerzo alto* — ✅ hecha (2026-11-11)
+
+> Hecho: «Añadir» único con hoja, «Filtros» en hoja con píldoras de filtros activos, selección por pulsación larga o
+> «⋯ → Seleccionar» (Imprimir juntos y Eliminar), ficha con «Imprimir»/«Programar»/«⋯» y «Detalles» plegado,
+> «Imprimir lo de hoy» único y filas con «⋯». Sin desbordamiento a 360/390 (también con hojas abiertas).
+> Sin hacer: «Mover a carpeta» desde la selección y la guía desplegada en los estados vacíos.
 
 Archivos: `js/views/documentos.js`, `documentos/library.js`, `queue.js`, `detail.js`, `combine.js`, `css/documentos.css`.
 

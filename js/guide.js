@@ -77,8 +77,9 @@ export const GUIDE_TIPS = {
   documentos: {
     text: 'Tus fichas, PDF y enlaces, listos para abrir o imprimir.',
     how: [
-      ['Subir un archivo', 'arrástralo o usa «Subir»; también puedes pegar fichas de Claude.'],
-      ['Imprimir mañana', 'añade el documento a la cola y elige copias y fecha.'],
+      ['Añadir', 'usa «Añadir» (archivo, Drive, enlace, Charta o Claude) o arrastra el archivo.'],
+      ['Imprimir mañana', 'en la ficha del documento, «Programar»: elige copias y fecha.'],
+      ['Imprimir varios juntos', 'mantén pulsado un documento (o «⋯ → Seleccionar») y elige los demás.'],
       ['Adjuntar a una sesión', 'desde la sesión en Planificación.'],
     ],
   },

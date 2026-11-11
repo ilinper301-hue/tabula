@@ -1,7 +1,7 @@
 // Tabula · «Imprimir juntos»: lógica pura (sin DOM), probada con Node.
 // Une varios documentos (PDF, imágenes y fichas HTML) en un único trabajo de impresión,
 // p. ej. para sacar una ficha por delante y otra por detrás del mismo folio.
-import { kindOf } from './documents.js';
+import { kindOf, canPrint } from './documents.js';
 
 /** Tipos que se pueden combinar. Las fichas de Charta se imprimen desde Charta. */
 export const COMBINABLE = ['pdf', 'imagen', 'ficha'];
@@ -46,3 +46,18 @@ export function scopeFichaCss(css) {
 /** Páginas aproximadas de una ficha HTML a partir de su altura en px (A4 a 96 ppp con márgenes de 14 mm). */
 export const FICHA_PAGE_PX = 1123 - 2 * 53;
 export const fichaPagesFromHeight = (px) => Math.max(1, Math.ceil((Number(px) || 0) / FICHA_PAGE_PX - 0.02));
+
+/**
+ * «Imprimir lo de hoy»: qué hacer con los elementos de la cola para hoy (y atrasados).
+ *   - 'none'   nada se imprime desde Tabula (enlaces, Word…, fichas de Charta)
+ *   - 'direct' se imprime directamente, uno a uno (solo hay un documento distinto)
+ *   - 'choose' hay más de un documento combinable: preguntar «Uno a uno» o «Todo junto»
+ * @returns { mode, items (imprimibles), docIds (combinables, sin repetir), charta (n.º de fichas de Charta) }
+ */
+export function printTodayPlan(due, docsById) {
+  const items = due.filter((i) => { const d = docsById[i.documentoId]; return d && !d.charta && canPrint(d); });
+  const docIds = [...new Set(items.filter((i) => canCombine(docsById[i.documentoId])).map((i) => i.documentoId))];
+  const charta = due.filter((i) => docsById[i.documentoId]?.charta).length;
+  const mode = !items.length ? 'none' : docIds.length > 1 ? 'choose' : 'direct';
+  return { mode, items, docIds, charta };
+}

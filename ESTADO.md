@@ -14,6 +14,21 @@ Módulos y estructura: ver `README.md`.
 
 ## Últimos cambios
 
+- **2026-11-11 · Rediseño, fase 2 (Documentos)**
+  - Cabecera: una sola acción «Añadir» que abre una hoja (Subir archivo · Google Drive · Enlace · Crear ficha (Charta) ·
+    Pegar de Claude, cada una con su icono y explicación); el estado vacío usa el mismo botón. «⋯» → Seleccionar.
+    Arrastrar, pegar y «Compartir → Tabula» siguen igual.
+  - Biblioteca: buscador + «Filtros» (con contador) que abre una hoja con orden, favoritos, carpeta, etiqueta, tipo y grupo;
+    bajo el buscador solo las píldoras de filtros activos con ✕. Fuera el desplegable de orden, la impresora y la fila de píldoras.
+  - Selección: pulsación larga en una tarjeta (sin menú del sistema; desplazar no selecciona) o «⋯ → Seleccionar».
+    Barra con «Imprimir juntos» y «Eliminar» (con confirmación y «Deshacer»); acciones en `SEL_ACTIONS`. Sale con ✕ o Escape.
+  - Ficha: principal «Imprimir» (o «Abrir enlace» / «Abrir»; Charta: «Imprimir» que abre Charta), secundario «Programar»,
+    y en «⋯» Abrir, Descargar, Ver en Drive y Eliminar. Carpeta, etiquetas, grupo, área, copias y notas plegados en «Detalles».
+  - Para imprimir: un único «Imprimir lo de hoy» (si hay varios combinables pregunta «Uno a uno» / «Todo junto (doble cara)»;
+    con uno, directo). Cada fila: «Imprimir» (o «Abrir») + «⋯» (Marcar como impreso, Editar, Quitar de la cola).
+  - Lógica pura: `activeFilters`, `clearFilter`, `toggleOrdered`, `queueItemsOf` (`js/documents.js`), `printTodayPlan`
+    (`js/combine-model.js`); pruebas en `tests/documentos.test.mjs`. `tests/desbordamiento.py` mide también las hojas abiertas.
+    Iconos nuevos `clipboard` y `filter` en `js/ui.js`. `sw.js` → `tabula-v48`.
 - **2026-11-11 · Rediseño, fase 1 (piezas comunes y cabecera única)**
   - Piezas nuevas en `js/ui-kit.js`: `pageHead` (línea superior + título; a la derecha solo acción principal y «⋯»),
     `openMenu` (menú «⋯» accesible) y `openActionSheet` (hoja de acciones sobre `openSheet`). Todas las vistas usan
@@ -73,9 +88,10 @@ Módulos y estructura: ver `README.md`.
 
 ## Pendiente / ideas
 
-- **Rediseño**: fase 1 hecha. Siguen las fases de `PLAN-DISENO.md` (2 Documentos → 3 Cuaderno/Planificación
+- **Rediseño**: fases 1 y 2 hechas. Siguen las fases de `PLAN-DISENO.md` (3 Cuaderno/Planificación
   → 4 Ajustes y Más → 5 resto → 6 repaso). Pendiente de la fase 1: la guía «desplegada dentro de los estados vacíos»
-  (se hará al rehacer cada estado vacío en su fase).
+  (tampoco se puso en los de Documentos). Documentos: la pulsación larga solo está probada en Chrome con toque simulado;
+  falta probarla en iPhone/iPad y Android reales. «Mover a carpeta» en la selección, sin hacer.
 - **Datos (de la auditoría, sin hacer)**:
   - La copia de seguridad se arma entera en memoria (`createBackup`/`makeZip`/`readZip`): con muchos archivos puede
     agotar la memoria del móvil. Escribirla y leerla por partes (streams). *Opus.*

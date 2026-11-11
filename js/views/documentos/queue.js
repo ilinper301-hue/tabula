@@ -6,8 +6,9 @@ import { isLectivo } from '../../planning.js';
 import { getGroup } from '../../school.js';
 import { thumb, docsById, itemSummary, printItem, markPrinted, removeItemWithUndo, printDoc, getDoc, plural, weekdayLong, dateLabel, openDoc } from './common.js';
 import { openScheduleSheet } from './schedule.js';
-import { canCombine } from '../../combine-model.js';
+import { printTodayPlan } from '../../combine-model.js';
 import { openCombineSheet } from './combine.js';
+import { openMenu, openActionSheet } from '../../ui-kit.js';
 
 let confirmIds = []; // elementos recién impresos en bloque, pendientes de «marcar como impresos»
 
@@ -23,18 +24,30 @@ export function mountQueue(ctx) {
   const root = h('div', { class: 'dc-queue' });
   let busy = false;
 
-  async function printAll() {
+  /** «Imprimir lo de hoy»: con un solo documento imprime directamente; con varios combinables pregunta cómo. */
+  function printToday() {
+    if (busy) return;
+    const plan = printTodayPlan(dueNow(liveQueue(), todayISO()), docsById());
+    if (plan.mode === 'none') {
+      toast(plan.charta ? 'Las fichas de Charta se imprimen desde Charta: ábrelas una a una' : 'Nada que se pueda imprimir desde aquí');
+      return;
+    }
+    if (plan.mode === 'direct') { printOneByOne(plan.items); return; }
+    openActionSheet('Imprimir lo de hoy', [
+      { icon: 'printer', label: 'Uno a uno', desc: 'Una ventana de impresión por documento, con sus copias y opciones', run: () => printOneByOne(plan.items) },
+      { icon: 'planificacion', label: 'Todo junto (doble cara)', desc: 'Un solo trabajo, en orden: elige «Doble cara» en la ventana de impresión', run: () => combineAll(plan) },
+    ], { intro: `${plural(plan.docIds.length, 'documento', 'documentos')} para imprimir${plan.charta ? ` (las fichas de Charta, aparte, desde Charta)` : ''}.`, className: 'dc-today-sheet' });
+  }
+
+  async function printOneByOne(items) {
     if (busy) return;
     const byId = docsById();
-    const due = dueNow(liveQueue(), todayISO());
-    const printable = due.filter((i) => byId[i.documentoId] && canPrint(byId[i.documentoId]) && !byId[i.documentoId].charta); // las fichas de Charta se imprimen desde Charta, una a una
-    if (!printable.length) { toast('Nada que se pueda imprimir desde aquí'); return; }
     busy = true; paint();
     const done = [];
     let opened = 0;
-    for (let i = 0; i < printable.length; i++) {
-      const it = printable[i];
-      toast(`Imprimiendo ${i + 1} de ${printable.length}: ${byId[it.documentoId].titulo}`);
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      if (items.length > 1) toast(`Imprimiendo ${i + 1} de ${items.length}: ${byId[it.documentoId].titulo}`);
       const res = await printItemQuiet(it);
       if (res === 'printed') done.push(it.id); else if (res === 'opened') opened++;
     }
@@ -45,12 +58,10 @@ export function mountQueue(ctx) {
     paint();
   }
   // Todo lo de hoy en un solo trabajo (p. ej. dos fichas en el mismo folio, una por cada cara)
-  function combineAll() {
-    const byId = docsById();
-    const items = dueNow(liveQueue(), todayISO()).filter((i) => canCombine(byId[i.documentoId]));
-    const ids = [...new Set(items.map((i) => i.documentoId))];
-    if (!ids.length) { toast('Nada que se pueda combinar: solo PDF, imágenes y fichas'); return; }
-    openCombineSheet(ids, { onPrinted: () => { confirmIds = items.map((i) => i.id); paint(); } });
+  function combineAll(plan) {
+    const ids = new Set(plan.docIds);
+    const items = plan.items.filter((i) => ids.has(i.documentoId));
+    openCombineSheet(plan.docIds, { onPrinted: () => { confirmIds = items.map((i) => i.id); paint(); } });
   }
   // En bloque no se marca cada uno: se pregunta al final (la impresión del sistema no dice si se canceló)
   async function printItemQuiet(it) {
@@ -66,30 +77,45 @@ export function mountQueue(ctx) {
     toast(`${plural(ids.length, 'documento marcado', 'documentos marcados')} como impreso${ids.length === 1 ? '' : 's'}`);
   }
 
+  const backToPending = (it) => store.update('impresiones', it.id, { estado: 'pendiente', impresoEn: null });
+
+  function rowMenu(it, doc, printed) {
+    return printed ? [
+      { icon: 'clock', label: 'Volver a pendiente', run: () => backToPending(it) },
+      '-',
+      { icon: 'trash', label: 'Quitar de la cola', danger: true, run: () => removeItemWithUndo(it) },
+    ] : [
+      { icon: 'check', label: 'Marcar como impreso', run: () => { markPrinted(it); toast('Marcado como impreso', { label: 'Deshacer', run: () => backToPending(it) }); } },
+      { icon: 'edit', label: 'Editar', desc: 'Fecha, copias, grupo…', run: () => openScheduleSheet({ itemId: it.id }) },
+      '-',
+      { icon: 'trash', label: 'Quitar de la cola', danger: true, run: () => removeItemWithUndo(it) },
+    ];
+  }
+
   function row(it, byId, { showDate = false, printed = false } = {}) {
     const doc = byId[it.documentoId];
     const g = it.groupId ? getGroup(it.groupId) : null;
     const printable = canPrint(doc);
+    const label = `Más opciones para «${doc.titulo}»`;
+    const more = h('button', {
+      type: 'button', class: 'icon-btn dc-row-more', dataset: { key: `more-${it.id}` }, 'aria-label': label, title: 'Más opciones', 'aria-haspopup': 'menu', 'aria-expanded': 'false',
+      onclick: () => openMenu(more, rowMenu(it, doc, printed), { label }),
+    }, icon('mas', 20));
     return h('li', { class: `dc-row${printed ? ' is-done' : ''}` },
-      h('button', { type: 'button', class: 'dc-row-thumb', 'aria-label': `Abrir ${doc.titulo}`, onclick: () => ctx.onOpen(doc.id) }, thumb(doc, { label: false, size: 20 })),
+      h('button', { type: 'button', class: 'dc-row-thumb', 'aria-label': `Ver la ficha de ${doc.titulo}`, tabindex: '-1', onclick: () => ctx.onOpen(doc.id) }, thumb(doc, { label: false, size: 20 })),
       h('div', { class: 'dc-row-main' },
-        h('button', { type: 'button', class: 'dc-row-title', onclick: () => ctx.onOpen(doc.id) }, doc.titulo),
+        h('button', { type: 'button', class: 'dc-row-title', dataset: { key: `title-${it.id}` }, onclick: () => ctx.onOpen(doc.id) }, doc.titulo),
         h('span', { class: 'dc-row-sub' }, itemSummary(it)),
         h('span', { class: 'dc-row-chips' },
           showDate ? h('span', { class: `chip ${it.fecha && it.fecha < todayISO() ? 't1' : 't5'}` }, icon('calendario', 12), dateLabel(it.fecha)) : null,
+          printed && it.impresoEn ? h('span', { class: 'chip t3' }, icon('check', 12), 'Impreso') : null,
           g ? h('span', { class: `chip ${g.color || 't3'}` }, g.nombre) : null,
           it.nota ? h('span', { class: 'dc-row-note' }, it.nota) : null)),
-      h('div', { class: 'dc-row-actions' },
-        printed
-          ? h('button', { type: 'button', class: 'btn btn-sm btn-ghost', onclick: () => { store.update('impresiones', it.id, { estado: 'pendiente', impresoEn: null }); } }, 'Volver a pendiente')
-          : [
-            printable
-              ? h('button', { type: 'button', class: 'btn btn-sm dc-print', 'aria-label': `Imprimir ${doc.titulo}`, onclick: async (e) => { e.currentTarget.disabled = true; await printItem(it); } }, icon('printer', 16), 'Imprimir')
-              : h('button', { type: 'button', class: 'btn btn-sm', 'aria-label': `Abrir ${doc.titulo}`, onclick: () => openDoc(doc) }, icon('external', 16), 'Abrir'),
-            h('button', { type: 'button', class: 'icon-btn dc-mark', title: 'Marcar como impreso', 'aria-label': `Marcar «${doc.titulo}» como impreso`, onclick: () => { markPrinted(it); toast('Marcado como impreso', { label: 'Deshacer', run: () => store.update('impresiones', it.id, { estado: 'pendiente', impresoEn: null }) }); } }, icon('check', 20)),
-            h('button', { type: 'button', class: 'icon-btn', title: 'Editar', 'aria-label': `Editar impresión de «${doc.titulo}»`, onclick: () => openScheduleSheet({ itemId: it.id }) }, icon('edit', 18)),
-          ],
-        h('button', { type: 'button', class: 'icon-btn', title: 'Quitar de la cola', 'aria-label': `Quitar «${doc.titulo}» de la cola`, onclick: () => removeItemWithUndo(it) }, icon('trash', 18))));
+      printed ? null
+        : printable
+          ? h('button', { type: 'button', class: 'btn btn-sm dc-row-act', dataset: { key: `act-${it.id}` }, 'aria-label': doc.charta ? `Imprimir «${doc.titulo}» en Charta` : `Imprimir «${doc.titulo}»`, onclick: async (e) => { const b = e.currentTarget; b.disabled = true; try { await printItem(it); } finally { b.disabled = false; } } }, icon('printer', 16), 'Imprimir')
+          : h('button', { type: 'button', class: 'btn btn-sm dc-row-act', dataset: { key: `act-${it.id}` }, 'aria-label': `Abrir «${doc.titulo}»`, onclick: () => openDoc(doc) }, icon('external', 16), 'Abrir'),
+      more);
   }
 
   function section(title, items, byId, { cls = '', showDate = false, printed = false, sub = '' } = {}) {
@@ -100,6 +126,12 @@ export function mountQueue(ctx) {
   }
 
   function paint() {
+    const focusKey = root.contains(document.activeElement) ? document.activeElement.dataset?.key : null;
+    paintInner();
+    if (focusKey) root.querySelector(`[data-key="${focusKey}"]`)?.focus({ preventScroll: true });
+  }
+
+  function paintInner() {
     const byId = docsById();
     const cola = liveQueue();
     const today = todayISO();
@@ -130,13 +162,15 @@ export function mountQueue(ctx) {
             h('button', { type: 'button', class: 'btn btn-primary', onclick: () => markAll(ids) }, icon('check', 16), 'Marcar como impresos'))));
       } else confirmIds = [];
     }
+    const plan = printTodayPlan(due, byId);
     out.push(h('div', { class: 'dc-summary' },
       h('div', { class: 'dc-summary-text' },
         h('strong', {}, due.length ? `${plural(due.length, 'documento', 'documentos')} para hoy` : 'Nada para hoy'),
         h('span', {}, due.length ? `Unas ${plural(dueSheets, 'hoja', 'hojas')} en total${sec.atrasados.length ? ` · ${sec.atrasados.length} atrasado${sec.atrasados.length > 1 ? 's' : ''}` : ''}` : `${plural(pendientes.length, 'pendiente', 'pendientes')} para más adelante`)),
-      due.length ? h('div', { class: 'dc-actions' },
-        due.length > 1 ? h('button', { type: 'button', class: 'btn', disabled: busy, onclick: combineAll, title: 'Unir lo de hoy en un solo trabajo de impresión (por ejemplo, a doble cara)' }, 'Imprimir juntos') : null,
-        h('button', { type: 'button', class: 'btn btn-primary', disabled: busy, onclick: printAll }, icon('printer', 16), busy ? 'Imprimiendo…' : 'Imprimir todo lo de hoy')) : null));
+      plan.mode !== 'none' ? h('button', {
+        type: 'button', class: 'btn btn-primary dc-today', disabled: busy, onclick: printToday, dataset: { key: 'today' },
+        'aria-haspopup': plan.mode === 'choose' ? 'dialog' : null,
+      }, icon('printer', 16), busy ? 'Imprimiendo…' : 'Imprimir lo de hoy') : null));
 
     out.push(
       section('Atrasados', sec.atrasados, byId, { cls: 'alert', showDate: true }),

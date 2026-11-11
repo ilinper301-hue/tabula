@@ -80,6 +80,40 @@ export function filterDocs(docs, f = {}, sort = 'recientes') {
   return out.sort((a, b) => (b.favorito ? 1 : 0) - (a.favorito ? 1 : 0) || by(a, b));
 }
 
+// ---------- Filtros de la biblioteca (hoja «Filtros» y píldoras de filtros activos) ----------
+export const SORTS = [['recientes', 'Más recientes'], ['titulo', 'Título (A–Z)'], ['impresos', 'Impresos hace poco']];
+export const DEFAULT_SORT = 'recientes';
+const NO_FILTERS = { carpeta: '', etiqueta: '', kind: '', groupId: '', favoritos: false, sort: DEFAULT_SORT };
+
+/**
+ * Filtros activos, en el orden en que se muestran como píldoras (el orden distinto del habitual cuenta como uno).
+ * @param f estado de la biblioteca { sort, favoritos, carpeta, etiqueta, kind, groupId }
+ * @param names { group(id) → nombre } para mostrar el grupo
+ * @returns [{ key, label }]
+ */
+export function activeFilters(f = {}, names = {}) {
+  const out = [];
+  if (f.sort && f.sort !== DEFAULT_SORT) out.push({ key: 'sort', label: `Orden: ${(SORTS.find(([v]) => v === f.sort) || [, f.sort])[1]}` });
+  if (f.favoritos) out.push({ key: 'favoritos', label: 'Favoritos' });
+  if (f.carpeta) out.push({ key: 'carpeta', label: `Carpeta: ${f.carpeta}` });
+  if (f.etiqueta) out.push({ key: 'etiqueta', label: `Etiqueta: ${f.etiqueta}` });
+  if (f.kind) out.push({ key: 'kind', label: `Tipo: ${KINDS[f.kind] ? KINDS[f.kind].label : f.kind}` });
+  if (f.groupId) out.push({ key: 'groupId', label: `Grupo: ${(names.group && names.group(f.groupId)) || 'otro grupo'}` });
+  return out;
+}
+
+/** Devuelve el estado sin el filtro `key` ('all' = todos los filtros y el orden; la búsqueda no se toca). */
+export function clearFilter(f, key) {
+  if (key === 'all') return { ...f, ...NO_FILTERS };
+  return key in NO_FILTERS ? { ...f, [key]: NO_FILTERS[key] } : { ...f };
+}
+
+/** Añade `id` al final de la selección o lo quita si ya estaba (el orden de los toques es el orden de impresión). */
+export const toggleOrdered = (list, id) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
+
+/** Elementos de la cola que dependen de los documentos `ids` (se borran y se restauran con ellos). */
+export const queueItemsOf = (ids, cola) => { const set = new Set(ids); return cola.filter((i) => set.has(i.documentoId)); };
+
 /** Carpetas y etiquetas existentes, con su número de documentos. */
 export function facets(docs) {
   const carpetas = new Map(), etiquetas = new Map();
