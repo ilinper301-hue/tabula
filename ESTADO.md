@@ -22,6 +22,13 @@ Módulos y estructura: ver `README.md`.
     si de verdad se borra. Archivos: `js/datos-model.js` (lógica pura), `js/sync.js` (`pendingStatus`),
     `js/views/ajustes/cerrar-sesion.js`, `js/views/ajustes/copia.js`, `tests/datos.test.mjs`.
     De paso: se veía la palabra «null» en Ajustes → Cuenta con sesión iniciada; corregido.
+  - *IndexedDB que falla ya no deja la app «vacía»*: `store.ready()` distingue «no existe» (modo antiguo en
+    localStorage, sin aviso) de «existe pero falló» (`decidirAlmacen`). Si este dispositivo ya guardaba en IndexedDB
+    (marca `tabula:v1:almacen`), la app no arranca ni sincroniza ni escribe: pantalla «No puedo leer tus datos.
+    No añadas nada y reintenta» con botón Reintentar. Si nunca la usó, sigue en localStorage con una franja de aviso.
+    Además: tiempo límite de 10 s al abrir, y franja «No puedo guardar tus cambios» si un guardado falla a mitad de
+    sesión (antes solo iba a la consola). Estado en `store.almacen`, `store.onAlmacen`, `store.reintentar()`.
+    Archivos: `js/store.js`, `js/views/almacen-aviso.js`, `js/datos-model.js`, `css/extra.css`.
 - **2026-11-11 · Documentos → «Imprimir juntos»**: elegir varios documentos (PDF, imágenes, fichas HTML)
   e imprimirlos en un solo trabajo, en el orden elegido; con «Doble cara» en la ventana de impresión salen
   uno por delante y otro por detrás del mismo folio. Opción «Cada documento en una hoja nueva» (añade blancas).

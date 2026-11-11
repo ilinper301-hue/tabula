@@ -35,3 +35,33 @@ export function riesgoAlBorrar({ online = true, status = 'synced', conectado = t
   if (archivos > 0) motivos.push(archivos === 1 ? 'Hay 1 archivo de Documentos sin subir.' : `Hay ${archivos} archivos de Documentos sin subir.`);
   return { seguro: motivos.length === 0, motivos };
 }
+
+/**
+ * Decide dónde guardar al arrancar, según si IndexedDB existe y si ha fallado al abrirse.
+ * Distingue «no existe» (modo antiguo: localStorage, sin aviso) de «existe pero falló»:
+ * si este dispositivo ya guardaba en IndexedDB, los datos siguen allí aunque ahora no se puedan leer,
+ * así que se BLOQUEA la escritura (seguir en localStorage vacío parecería una app sin datos y los cambios se perderían).
+ * @param e.existe            typeof indexedDB !== 'undefined'
+ * @param e.fallo             existe pero no se pudo abrir o leer
+ * @param e.marca             último modo usado con éxito en este dispositivo: 'idb' | 'local' | null (aún sin marca)
+ * @param e.hayAjustes        hay ajustes de uso guardados (la app ya se ha usado aquí)
+ * @param e.hayColeccionesLS  hay colecciones en localStorage (datos del modo antiguo)
+ * @returns { modo: 'idb' | 'local' | 'bloqueado', aviso: boolean }
+ */
+export function decidirAlmacen({ existe, fallo = false, marca = null, hayAjustes = false, hayColeccionesLS = false } = {}) {
+  if (!existe) return { modo: 'local', aviso: false };
+  if (!fallo) return { modo: 'idb', aviso: false };
+  // Sin marca (instalaciones anteriores a ella): si la app ya se usó y no quedan datos en localStorage, estaban en IndexedDB
+  const usabaIdb = marca === 'idb' || (marca == null && hayAjustes && !hayColeccionesLS);
+  return usabaIdb ? { modo: 'bloqueado', aviso: true } : { modo: 'local', aviso: true };
+}
+
+/** Une dos listas de elementos por id: gana el modificado más recientemente. */
+export function unirPorId(a = [], b = []) {
+  const m = new Map(a.map((x) => [x.id, x]));
+  for (const x of b) {
+    const y = m.get(x.id);
+    if (!y || (x.updatedAt || 0) > (y.updatedAt || 0)) m.set(x.id, x);
+  }
+  return [...m.values()];
+}

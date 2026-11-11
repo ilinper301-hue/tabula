@@ -10,6 +10,13 @@ import { openSearch, initSearch, searchHint } from './views/search-ui.js';
 
 // Datos del dispositivo (IndexedDB) cargados antes de pintar nada
 await store.ready();
+if (store.almacen.bloqueado) {
+  // IndexedDB existe pero no se pudo abrir y aquí había datos: no se arranca (ni sincronización ni escritura)
+  // para no trabajar sobre una app «vacía». Solo se muestra el aviso con «Reintentar».
+  (await import('./views/almacen-aviso.js')).mostrarBloqueo();
+  await new Promise(() => {});
+}
+import('./views/almacen-aviso.js').then((m) => m.montarAvisoAlmacen()).catch(() => {});
 
 // Módulos de la app. `fase` indica cuándo se construye cada uno.
 const ROUTES = [

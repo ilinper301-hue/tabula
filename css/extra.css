@@ -312,3 +312,22 @@ body.has-entrada { overflow: hidden; }
 .cd-vault .icon { flex-shrink: 0; color: var(--accent-text); }
 .cd-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; margin: 4px 0 8px; cursor: pointer; }
 .cd-check input { margin-top: 3px; }
+
+/* Avisos del almacén de datos (no se puede leer o guardar) */
+.almacen-bloqueo { position: fixed; inset: 0; z-index: 4000; display: flex; align-items: center; justify-content: center; overflow: auto;
+  padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)); background: var(--bg); color: var(--text); visibility: visible; }
+.almacen-card { width: 100%; max-width: 440px; margin: auto; padding: 24px 22px; background: var(--surface); border: 1px solid var(--border-strong); border-top: 4px solid var(--danger); border-radius: var(--r-lg); box-shadow: var(--shadow-md); }
+.almacen-title { margin: 0 0 10px; font-family: var(--font-serif); font-weight: 500; font-size: 26px; line-height: 1.2; }
+.almacen-card p { margin: 0 0 12px; font-size: 15px; color: var(--text-2); }
+.almacen-card p strong { color: var(--danger); }
+.almacen-pasos { margin: 0 0 12px; padding-left: 20px; font-size: 15px; color: var(--text-2); }
+.almacen-pasos li + li { margin-top: 4px; }
+.almacen-card .almacen-nota { font-size: 13px; color: var(--muted); }
+.almacen-card .btn { width: 100%; justify-content: center; min-height: 48px; }
+.almacen-card .almacen-estado { margin: 12px 0 0; font-size: 14px; color: var(--muted); min-height: 20px; overflow-wrap: anywhere; }
+.almacen-bar { margin: 12px 16px 0; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border-strong); border-left: 4px solid var(--danger); border-radius: var(--r-md); font-size: 14px; color: var(--text-2); }
+.almacen-bar p { margin: 0 0 10px; }
+.almacen-bar strong { color: var(--danger); }
+.almacen-bar-actions { display: flex; align-items: center; gap: 10px; }
+.almacen-bar-estado { color: var(--muted); font-size: 13px; }
+@media print { .almacen-bar, .almacen-bloqueo { display: none !important; } }
