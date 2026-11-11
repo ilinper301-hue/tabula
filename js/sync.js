@@ -123,10 +123,10 @@ export async function signIn() {
 /**
  * Comprueba si queda algo de este dispositivo sin subir a la nube.
  * Espera (con tiempo límite) a que Firestore confirme las escrituras pendientes.
- * @returns { seguro, motivos: [texto…] }
+ * @returns { seguro, cierto, motivos: [texto…] }
  */
 export async function pendingStatus(ms = 8000) {
-  if (!auth || !db || !state.user) return { seguro: true, motivos: [] };
+  if (!auth || !db || !state.user) return { seguro: true, cierto: false, motivos: [] };
   try { await store.flush(); } catch {}
   const online = typeof navigator === 'undefined' || navigator.onLine !== false;
   // Sin red no merece la pena esperar: Firestore no puede confirmar nada

@@ -298,6 +298,21 @@ const backupReminder = async (intento = 0) => {
 };
 setTimeout(backupReminder, 6000);
 
+// Pedir al navegador que conserve los datos aunque falte espacio. Sin molestar: Chrome y Safari lo deciden
+// solos, sin preguntar; Firefox muestra un permiso, así que allí se pide desde Ajustes → «Estado de tus datos».
+setTimeout(async () => {
+  try {
+    const s = navigator.storage;
+    if (!s || !s.persist || !s.persisted) return;
+    const { debePedirPersistencia } = await import('./datos-model.js');
+    const pedir = debePedirPersistencia({
+      soportado: true, persistente: await s.persisted(),
+      hayDatos: store._hasLocalData() || !!store.getSetting('syncUid'), pregunta: /Firefox\//.test(navigator.userAgent),
+    });
+    if (pedir) await s.persist();
+  } catch {}
+}, 3000);
+
 // Encuestas: recibir respuestas en tiempo real y avisar
 import('./surveys.js').then((m) => m.initSurveys()).catch(() => {});
 import('./views/encuestas.js').then((m) => m.startResponseToasts && m.startResponseToasts()).catch(() => {});

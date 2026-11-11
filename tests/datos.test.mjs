@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { conLimite, riesgoAlBorrar, decidirAlmacen, unirPorId } from '../js/datos-model.js';
+import { conLimite, riesgoAlBorrar, decidirAlmacen, unirPorId, formatoBytes, textoCopia, debePedirPersistencia, filasEstado } from '../js/datos-model.js';
 
 test('conLimite: ok, error y tiempo agotado (nunca rechaza)', async () => {
   assert.equal(await conLimite(Promise.resolve(1), 50), 'ok');
@@ -12,7 +12,10 @@ test('conLimite: ok, error y tiempo agotado (nunca rechaza)', async () => {
 });
 
 test('cerrar sesión: solo es seguro borrar si todo está subido', () => {
-  assert.deepEqual(riesgoAlBorrar({ online: true, status: 'synced', conectado: true, escrituras: 'ok', sinEnviar: false, archivos: 0 }), { seguro: true, motivos: [] });
+  assert.deepEqual(riesgoAlBorrar({ online: true, status: 'synced', conectado: true, escrituras: 'ok', sinEnviar: false, archivos: 0 }), { seguro: true, cierto: false, motivos: [] });
+  assert.equal(riesgoAlBorrar({ online: false, status: 'offline', escrituras: 'timeout' }).cierto, false, 'sin red no se sabe');
+  assert.equal(riesgoAlBorrar({ escrituras: 'timeout' }).cierto, true);
+  assert.equal(riesgoAlBorrar({ archivos: 2, online: false }).cierto, true);
   // Sin red
   const off = riesgoAlBorrar({ online: false, status: 'offline', escrituras: 'timeout' });
   assert.equal(off.seguro, false);
@@ -115,4 +118,56 @@ test('store: sin IndexedDB (modo antiguo) funciona en localStorage sin aviso', a
   store.add('tasks', { title: 'a' });
   assert.equal(JSON.parse(localStorage.getItem('tabula:v1:tasks')).length, 1);
   delete globalThis.localStorage;
+});
+
+test('estado de los datos: tamaños y fecha de la última copia', () => {
+  assert.equal(formatoBytes(0), '0 B');
+  assert.equal(formatoBytes(340 * 1024), '340 KB');
+  assert.equal(formatoBytes(12.4 * 1048576), '12,4 MB');
+  assert.equal(formatoBytes(3 * 1048576), '3 MB');
+  assert.equal(formatoBytes(250 * 1048576), '250 MB');
+  assert.equal(formatoBytes(1.2 * 1073741824), '1,2 GB');
+  assert.equal(formatoBytes(undefined), '—');
+  assert.equal(textoCopia(null), 'Nunca');
+  assert.equal(textoCopia(0), 'Hoy');
+  assert.equal(textoCopia(1), 'Ayer');
+  assert.equal(textoCopia(12), 'Hace 12 días');
+});
+
+test('estado de los datos: la persistencia se pide sola solo si no molesta', () => {
+  assert.equal(debePedirPersistencia({ soportado: true, persistente: false, hayDatos: true, pregunta: false }), true);
+  assert.equal(debePedirPersistencia({ soportado: true, persistente: true, hayDatos: true, pregunta: false }), false);
+  assert.equal(debePedirPersistencia({ soportado: true, persistente: false, hayDatos: false, pregunta: false }), false);
+  assert.equal(debePedirPersistencia({ soportado: true, persistente: false, hayDatos: true, pregunta: true }), false, 'Firefox preguntaría');
+  assert.equal(debePedirPersistencia({ soportado: false, persistente: false, hayDatos: true, pregunta: false }), false);
+});
+
+test('estado de los datos: filas del panel y sus tonos', () => {
+  const por = (filas) => Object.fromEntries(filas.map((f) => [f.clave, f]));
+  // Sin cuenta y sin copia: lo más grave
+  const a = por(filasEstado({ diasCopia: null, persistente: false, uso: 5 * 1048576, cuota: 1073741824, sync: { enabled: true, status: 'signed-out', user: null }, etiquetaSync: 'Sin sesión iniciada' }));
+  assert.equal(a.copia.valor, 'Nunca'); assert.equal(a.copia.tono, 'mal');
+  assert.equal(a.persistente.valor, 'No'); assert.equal(a.persistente.tono, 'aviso');
+  assert.equal(a.espacio.valor, '5 MB de 1 GB'); assert.equal(a.espacio.tono, '');
+  assert.equal(a.sync.valor, 'Sin sesión iniciada');
+  assert.equal(a.pendientes, undefined, 'sin cuenta no hay nada que subir');
+  // Con cuenta, todo en orden
+  const user = { email: 'a@b.c' };
+  const b = por(filasEstado({ diasCopia: 3, persistente: true, uso: 1, cuota: 100, sync: { enabled: true, status: 'synced', user }, etiquetaSync: 'Sincronizado', pendientes: { seguro: true, motivos: [] } }));
+  assert.deepEqual([b.copia.tono, b.persistente.tono, b.sync.tono, b.pendientes.tono], ['ok', 'ok', 'ok', 'ok']);
+  assert.equal(b.pendientes.valor, 'Ninguno');
+  // Con cuenta: copia vieja es aviso (no grave), pendientes y poco espacio
+  const c = por(filasEstado({ diasCopia: 45, persistente: null, uso: 90, cuota: 100, sync: { enabled: true, status: 'offline', user }, etiquetaSync: 'Sin conexión', pendientes: { seguro: false, cierto: false, motivos: ['No hay conexión.'] } }));
+  assert.equal(c.copia.tono, 'aviso');
+  assert.equal(c.persistente.valor, 'No disponible');
+  assert.equal(c.espacio.tono, 'aviso');
+  assert.equal(c.pendientes.valor, 'Sin confirmar'); assert.match(c.pendientes.detalle, /conexión/);
+  assert.equal(por(filasEstado({ sync: { status: 'synced', user }, pendientes: { seguro: false, cierto: true, motivos: ['Hay 1 archivo de Documentos sin subir.'] } })).pendientes.valor, 'Sí');
+  // Comprobando, error de sincronización y fallo al guardar
+  const d = por(filasEstado({ sync: { enabled: true, status: 'error', user, error: 'Rechazado' }, etiquetaSync: 'Error de sincronización', pendientes: null, almacen: { guardadoFallido: true } }));
+  assert.equal(d.pendientes.valor, 'Comprobando…');
+  assert.equal(d.sync.tono, 'mal'); assert.equal(d.sync.detalle, 'Rechazado');
+  assert.equal(d.almacen.tono, 'mal');
+  // Sin datos del navegador
+  assert.equal(por(filasEstado({})).espacio.valor, 'No disponible');
 });

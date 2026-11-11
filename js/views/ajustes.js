@@ -5,7 +5,7 @@ import { h, icon, toast, googleButton } from '../ui.js';
 import { applyTheme, applyAccent, ACCENTS } from '../app.js';
 import { getSyncState, onSyncChange, signIn, SYNC_LABELS } from '../sync.js';
 import { cerrarSesionBox } from './ajustes/cerrar-sesion.js';
-import { descargarCopia } from './ajustes/copia.js';
+import { estadoDatosCard } from './ajustes/estado-datos.js';
 import {
   isLockEnabled, setPin, verifyPin, disableLock, isValidPin, lockTimeout, setLockTimeout, TIMEOUTS,
   biometricAvailable, enableBiometric, disableBiometric, hasBiometric, lockNow, onLockConfigChange,
@@ -65,23 +65,9 @@ export function render(container) {
         },
       }, text))));
 
-  // --- Copia de seguridad (datos + archivos en .zip) ---
-  const backupStatus = h('p', { class: 'settings-text', role: 'status', 'aria-live': 'polite' });
-  const paintBackupStatus = (txt) => {
-    if (txt) { backupStatus.textContent = txt; return; }
-    import('../backup.js').then(({ daysSinceBackup }) => {
-      const d = daysSinceBackup();
-      backupStatus.textContent = d === null ? 'Todavía no has descargado ninguna copia.' : d === 0 ? 'Última copia: hoy.' : `Última copia: hace ${d} ${d === 1 ? 'día' : 'días'}.`;
-    });
-  };
-  paintBackupStatus();
-  const exportData = async () => {
-    try {
-      const { mensaje } = await descargarCopia((t) => paintBackupStatus(t));
-      toast(mensaje);
-      paintBackupStatus();
-    } catch (e) { console.warn(e); toast('No se pudo crear la copia'); paintBackupStatus(); }
-  };
+  // --- Restaurar copia (la descarga y el estado están en la tarjeta «Estado de tus datos») ---
+  const backupStatus = h('p', { class: 'settings-text', role: 'status', 'aria-live': 'polite', hidden: true });
+  const paintBackupStatus = (txt) => { backupStatus.textContent = txt || ''; backupStatus.hidden = !txt; };
   const fileInput = h('input', { type: 'file', accept: '.zip,application/zip,application/json,.json', class: 'sr-only', id: 'aj-import' });
   const importBox = h('div', { class: 'confirm-box', hidden: true });
   fileInput.addEventListener('change', () => {
@@ -207,6 +193,7 @@ export function render(container) {
 
   const calEsc = calendarioEscolarCard();
   const asis = asistenteCard();
+  const datos = estadoDatosCard();
   container.replaceChildren(
     h('header', { class: 'page-head' }, h('div', {}, h('h1', { class: 'page-title' }, 'Ajustes'))),
     h('div', { class: 'settings' },
@@ -236,14 +223,14 @@ export function render(container) {
         h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Cuenta y sincronización')),
         syncBody),
       asis.el,
+      datos.el,
       h('section', { class: 'card' },
         h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Copia de seguridad')),
-        h('p', { class: 'settings-text' }, 'Descarga en un solo archivo (.zip) todos tus datos y los archivos de Documentos. Guárdala de vez en cuando aunque uses la sincronización.'),
+        h('p', { class: 'settings-text' }, 'La copia es un solo archivo (.zip) con todos tus datos y los archivos de Documentos. Se descarga con «Hacer copia ahora», aquí arriba. Para recuperar una copia guardada, restáurala.'),
         backupStatus,
         h('div', { class: 'settings-actions' },
-          h('button', { class: 'btn', onclick: exportData }, icon('download', 18), 'Descargar copia'),
           h('button', { class: 'btn', onclick: () => fileInput.click() }, icon('upload', 18), 'Restaurar copia'), fileInput),
         importBox)),
   );
-  return () => { unsubSync(); unsubLock(); calEsc.destroy(); asis.destroy(); };
+  return () => { unsubSync(); unsubLock(); calEsc.destroy(); asis.destroy(); datos.destroy(); };
 }

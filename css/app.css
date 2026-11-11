@@ -573,3 +573,19 @@ html.is-locked .app, html.is-locked .bottom-nav { visibility: hidden; }
 .riesgo-forzar { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); align-items: center; }
 .riesgo-forzar .btn { padding-left: 0; }
 .confirm-box .settings-text { margin-bottom: 12px; }
+
+/* Ajustes · «Estado de tus datos» */
+.datos-list { margin: 0 0 16px; border-top: 1px solid var(--divider); }
+.datos-row { display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 13fr); gap: 4px 14px; padding: 11px 0; border-bottom: 1px solid var(--divider); font-size: 14px; }
+.datos-row dt { color: var(--muted); }
+.datos-row dd { margin: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+.datos-valor { display: inline-flex; align-items: baseline; gap: 7px; font-weight: 500; color: var(--text); overflow-wrap: anywhere; }
+.datos-dot { flex-shrink: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--border-strong); transform: translateY(-1px); }
+.datos-valor.is-ok .datos-dot { background: var(--t3-fg); }
+.datos-valor.is-aviso .datos-dot { background: var(--t5-fg); }
+.datos-valor.is-mal .datos-dot { background: var(--danger); }
+.datos-valor.is-mal { color: var(--danger); }
+.datos-detalle { color: var(--muted); font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
+.datos-row .btn { margin-top: 2px; }
+.datos-estado { margin-bottom: 12px; }
+@media (max-width: 380px) { .datos-row { grid-template-columns: 1fr; } }

@@ -22,7 +22,7 @@ export function conLimite(promesa, ms) {
  * @param e.escrituras    resultado de esperar las escrituras pendientes: 'ok' | 'timeout' | 'error'
  * @param e.sinEnviar     hay cambios hechos sin conexión con la nube aún por combinar (store._isDirty)
  * @param e.archivos      n.º de archivos de Documentos pendientes de subir
- * @returns { seguro, motivos: [texto…] }
+ * @returns { seguro, cierto, motivos: [texto…] }
  */
 export function riesgoAlBorrar({ online = true, status = 'synced', conectado = true, escrituras = 'ok', sinEnviar = false, archivos = 0 } = {}) {
   const motivos = [];
@@ -33,7 +33,9 @@ export function riesgoAlBorrar({ online = true, status = 'synced', conectado = t
   if (escrituras === 'error') motivos.push('No he podido comprobar si quedan cambios por subir.');
   if (sinEnviar) motivos.push('Hay cambios hechos sin conexión que aún no se han combinado con tu cuenta.');
   if (archivos > 0) motivos.push(archivos === 1 ? 'Hay 1 archivo de Documentos sin subir.' : `Hay ${archivos} archivos de Documentos sin subir.`);
-  return { seguro: motivos.length === 0, motivos };
+  // cierto = se sabe que hay algo sin subir (no solo que no se ha podido comprobar)
+  const cierto = sinEnviar || archivos > 0 || (escrituras === 'timeout' && online && status !== 'offline');
+  return { seguro: motivos.length === 0, cierto, motivos };
 }
 
 /**
@@ -64,4 +66,89 @@ export function unirPorId(a = [], b = []) {
     if (!y || (x.updatedAt || 0) > (y.updatedAt || 0)) m.set(x.id, x);
   }
   return [...m.values()];
+}
+
+// ---------- Panel «Estado de tus datos» ----------
+
+/** Tamaño legible en español: 0 B, 340 KB, 12,4 MB, 1,2 GB. */
+export function formatoBytes(n) {
+  if (typeof n !== 'number' || !isFinite(n) || n < 0) return '—';
+  if (n < 1024) return `${Math.round(n)} B`;
+  if (n < 1048576) return `${Math.round(n / 1024)} KB`;
+  const dec = (x) => (x >= 100 ? String(Math.round(x)) : x.toFixed(1).replace('.', ',').replace(/,0$/, ''));
+  if (n < 1073741824) return `${dec(n / 1048576)} MB`;
+  return `${dec(n / 1073741824)} GB`;
+}
+
+/** Texto de la última copia a partir de daysSinceBackup(). */
+export function textoCopia(dias) {
+  if (dias === null || dias === undefined) return 'Nunca';
+  if (dias <= 0) return 'Hoy';
+  return dias === 1 ? 'Ayer' : `Hace ${dias} días`;
+}
+
+/**
+ * ¿Pedir al arrancar que el navegador conserve los datos (navigator.storage.persist)?
+ * Solo si no molesta: hay algo que proteger, aún no está concedido y el navegador no pregunta al usuario
+ * (Firefox muestra un permiso: allí se pide desde Ajustes, con un botón).
+ */
+export function debePedirPersistencia({ soportado, persistente, hayDatos, pregunta }) {
+  return !!soportado && !persistente && !!hayDatos && !pregunta;
+}
+
+/**
+ * Filas del panel. Cada una: { clave, etiqueta, valor, tono: 'ok' | 'aviso' | 'mal' | '', detalle }.
+ * @param e.diasCopia    daysSinceBackup(): número o null (nunca)
+ * @param e.persistente  true | false | null (el navegador no lo dice)
+ * @param e.uso, e.cuota bytes de navigator.storage.estimate() (o null)
+ * @param e.sync         { enabled, status, user } de getSyncState()
+ * @param e.etiquetaSync texto del estado (SYNC_LABELS[status])
+ * @param e.pendientes   { seguro, cierto, motivos } de pendingStatus(), o null mientras se comprueba
+ * @param e.almacen      store.almacen
+ */
+export function filasEstado({ diasCopia = null, persistente = null, uso = null, cuota = null, sync = {}, etiquetaSync = '', pendientes = null, almacen = {} } = {}) {
+  const conCuenta = !!(sync && sync.user);
+  const filas = [];
+
+  // Sin cuenta, la copia es la única red de seguridad: más de 30 días es grave. Con cuenta, solo un aviso.
+  const vieja = diasCopia === null || diasCopia > 30;
+  filas.push({
+    clave: 'copia', etiqueta: 'Última copia', valor: textoCopia(diasCopia),
+    tono: !vieja ? 'ok' : (conCuenta ? 'aviso' : 'mal'),
+    detalle: !vieja ? '' : (conCuenta ? 'Conviene descargar una de vez en cuando, aunque sincronices.' : 'Tus datos solo están en este dispositivo: haz una copia.'),
+  });
+
+  filas.push(persistente === null
+    ? { clave: 'persistente', etiqueta: 'Almacenamiento protegido', valor: 'No disponible', tono: '', detalle: 'Este navegador no lo indica.' }
+    : persistente
+      ? { clave: 'persistente', etiqueta: 'Almacenamiento protegido', valor: 'Sí', tono: 'ok', detalle: 'El navegador no borrará tus datos por falta de espacio.' }
+      : { clave: 'persistente', etiqueta: 'Almacenamiento protegido', valor: 'No', tono: 'aviso', detalle: 'Si el dispositivo se queda sin espacio, el navegador podría borrar tus datos. Instalar Tabula en la pantalla de inicio suele activarlo.' });
+
+  const lleno = typeof uso === 'number' && typeof cuota === 'number' && cuota > 0 && uso / cuota > 0.8;
+  filas.push({
+    clave: 'espacio', etiqueta: 'Espacio usado',
+    valor: typeof uso === 'number' ? (typeof cuota === 'number' && cuota > 0 ? `${formatoBytes(uso)} de ${formatoBytes(cuota)}` : formatoBytes(uso)) : 'No disponible',
+    tono: lleno ? 'aviso' : '', detalle: lleno ? 'Queda poco espacio para Tabula en este dispositivo.' : '',
+  });
+
+  if (almacen && (almacen.guardadoFallido || almacen.aviso)) {
+    filas.push({ clave: 'almacen', etiqueta: 'Guardado en el dispositivo', valor: almacen.guardadoFallido ? 'Fallando' : 'Modo reducido', tono: 'mal',
+      detalle: almacen.guardadoFallido ? 'No puedo guardar los últimos cambios. No cierres Tabula y haz una copia.' : 'El navegador no deja abrir el almacén principal.' });
+  }
+
+  const st = (sync && sync.status) || 'off';
+  filas.push({
+    clave: 'sync', etiqueta: 'Sincronización', valor: etiquetaSync || '—',
+    tono: st === 'synced' ? 'ok' : st === 'error' ? 'mal' : st === 'offline' ? 'aviso' : '',
+    detalle: st === 'error' ? (sync.error || '') : !conCuenta && st !== 'loading' ? 'Sin cuenta, los datos no salen de este dispositivo.' : '',
+  });
+
+  if (conCuenta) {
+    filas.push(pendientes === null
+      ? { clave: 'pendientes', etiqueta: 'Cambios por subir', valor: 'Comprobando…', tono: '', detalle: '' }
+      : pendientes.seguro
+        ? { clave: 'pendientes', etiqueta: 'Cambios por subir', valor: 'Ninguno', tono: 'ok', detalle: '' }
+        : { clave: 'pendientes', etiqueta: 'Cambios por subir', valor: pendientes.cierto ? 'Sí' : 'Sin confirmar', tono: 'aviso', detalle: (pendientes.motivos || []).join(' ') });
+  }
+  return filas;
 }

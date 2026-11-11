@@ -80,7 +80,8 @@ export function staticItems() {
   aj('curso', 'Nuevo curso', 'Nuevo curso', 'archivar curso siguiente promocionar grupos');
   aj('bloqueo', 'Bloqueo con PIN', 'Bloqueo', 'pin huella face id seguridad privacidad candado');
   aj('cuenta', 'Cuenta y sincronización', 'Cuenta y sincronización', 'google nube sesión dispositivos');
-  aj('copia', 'Copia de seguridad', 'Copia de seguridad', 'backup exportar importar restaurar datos descargar');
+  aj('datos', 'Estado de tus datos', 'Estado de tus datos', 'copia backup exportar descargar almacenamiento espacio persistente sincronización pendientes subir');
+  aj('copia', 'Restaurar copia de seguridad', 'Copia de seguridad', 'backup importar restaurar datos recuperar');
   aj('barra', 'Barra inferior del móvil', null, 'personalizar atajos menú móvil', { go: { action: 'barra-movil' } });
 
   const ac = (id, title, kw, sub) => out.push({ key: `accion:${id}`, type: 'accion', title, sub, go: { action: id }, kw });
