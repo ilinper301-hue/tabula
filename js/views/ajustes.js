@@ -5,6 +5,7 @@ import { h, icon, toast, googleButton } from '../ui.js';
 import { applyTheme, applyAccent, ACCENTS } from '../app.js';
 import { getSyncState, onSyncChange, signIn, SYNC_LABELS } from '../sync.js';
 import { cerrarSesionBox } from './ajustes/cerrar-sesion.js';
+import { cambioCuentaBox } from './ajustes/cambio-cuenta.js';
 import { estadoDatosCard } from './ajustes/estado-datos.js';
 import {
   isLockEnabled, setPin, verifyPin, disableLock, isValidPin, lockTimeout, setLockTimeout, TIMEOUTS,
@@ -99,6 +100,8 @@ export function render(container) {
     const parts = [];
     if (!st.enabled) {
       parts.push(h('p', { class: 'settings-text' }, 'Tus datos se guardan solo en este dispositivo. Cuando se configure la conexión con la nube, podrás iniciar sesión con Google y usarlos en el móvil, la tablet y el ordenador.'));
+    } else if (st.cambioCuenta) {
+      parts.push(cambioCuentaBox(st.cambioCuenta));
     } else if (!st.user) {
       parts.push(
         h('p', { class: 'settings-text' }, 'Inicia sesión con tu cuenta de Google para tener tus datos en todos tus dispositivos. Lo que ya tengas en este dispositivo se subirá a tu cuenta.'),
@@ -115,7 +118,7 @@ export function render(container) {
         h('div', { class: 'settings-actions' }, h('button', { class: 'btn', onclick: () => { salir.el.hidden = false; } }, 'Cerrar sesión')),
         salir.el);
     }
-    if (st.error) parts.push(h('p', { class: 'sync-error', role: 'alert' }, st.error));
+    if (st.error && !st.cambioCuenta) parts.push(h('p', { class: 'sync-error', role: 'alert' }, st.error));
     syncBody.replaceChildren(...parts.filter(Boolean)); // sin filtrar se veía «null» en pantalla
   }
   paintSync();

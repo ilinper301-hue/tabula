@@ -4,7 +4,7 @@
 // devuelve los cambios hechos en otros dispositivos.
 // Las vistas SOLO deben usar este módulo para leer y escribir datos.
 
-import { decidirAlmacen, unirPorId } from './datos-model.js';
+import { decidirAlmacen, unirPorId, nuevoDesde } from './datos-model.js';
 
 const PREFIX = 'tabula:v1:';
 const cache = new Map();      // colección -> array de items
@@ -15,9 +15,9 @@ export const SYNC_COLLECTIONS = ['tasks', 'groups', 'students', 'schedule', 'eve
   'gradebooks', 'activities', 'grades', 'situaciones', 'sesiones', 'observaciones',
   'programas', 'diarioPrograma', 'encuestas', 'encuestaRespuestas', 'documentos', 'impresiones', 'reuniones', 'medidas', 'informes', 'bandejaAsistente', 'codigos'];
 /** Ajustes que se quedan solo en este dispositivo. */
-const LOCAL_ONLY_SETTINGS = new Set(['theme', 'syncUid', 'lock', 'onboarding']);
+const LOCAL_ONLY_SETTINGS = new Set(['theme', 'syncUid', 'syncEmail', 'lock', 'onboarding']);
 /** Claves de localStorage que no son colecciones. */
-const NOT_COLLECTION = (k) => k.startsWith('set:') || k === 'dirty' || k === 'lockFails' || k === 'almacen';
+const NOT_COLLECTION = (k) => k.startsWith('set:') || ['dirty', 'dirtySince', 'borrados', 'lockFails', 'almacen'].includes(k);
 
 // ---------- Almacenamiento de las colecciones ----------
 // Las colecciones viven en IndexedDB (base "tabula-data"), sin el límite de ~5 MB de localStorage.
@@ -67,7 +67,7 @@ const lsCollectionKeys = () => {
   }
   return out;
 };
-const lsRead = (col) => { try { return JSON.parse(localStorage.getItem(PREFIX + col)) || []; } catch { return []; } };
+const lsRead = (col) => { try { const v = JSON.parse(localStorage.getItem(PREFIX + col)); return Array.isArray(v) ? v : []; } catch { return []; } };
 
 let readyP = null;
 /** Carga los datos del dispositivo. Hay que esperarla antes de leer colecciones. */
@@ -172,12 +172,43 @@ if (typeof window !== 'undefined') {
 // Remoto conectado por sync.js: { put(col, item), del(col, id), putSetting(key, value), putMany(col, items) }
 let remote = null;
 const DIRTY_KEY = PREFIX + 'dirty';
-const toRemote = (fn) => {
+const SINCE_KEY = PREFIX + 'dirtySince';  // desde cuándo hay cambios sin enviar (reloj de este dispositivo)
+const BORRADOS_KEY = PREFIX + 'borrados'; // { colección: [{ id, at }] } borrados hechos sin conexión con la nube
+const leerBorrados = () => { try { const o = JSON.parse(localStorage.getItem(BORRADOS_KEY)); return o && typeof o === 'object' ? o : {}; } catch { return {}; } };
+const guardarBorrados = (o) => {
+  try {
+    if (Object.values(o).some((l) => l.length)) localStorage.setItem(BORRADOS_KEY, JSON.stringify(o));
+    else localStorage.removeItem(BORRADOS_KEY);
+  } catch {}
+};
+/**
+ * Envía un cambio a la nube. Si hay cuenta asociada pero no conexión con la nube (p. ej. app abierta sin red),
+ * se marca para combinarlo en la próxima conexión: desde cuándo (at) y, si es un borrado, una marca de borrado.
+ */
+const toRemote = (fn, at = Date.now(), borrado = null) => {
   if (almacen.bloqueado) return;
   if (remote) { try { fn(remote); } catch (e) { console.warn('Tabula: error de sincronización', e); } return; }
-  // Cambio hecho con una cuenta asociada pero sin conexión a la nube (p. ej. app abierta sin red):
-  // se marca para combinarlo con la nube en la próxima conexión.
-  try { if (localStorage.getItem(PREFIX + 'set:syncUid')) localStorage.setItem(DIRTY_KEY, '1'); } catch {}
+  try {
+    if (!localStorage.getItem(PREFIX + 'set:syncUid')) return;
+    // Sin marca «desde» pero ya pendiente (versiones anteriores): se queda en 0 = subir todo lo que falte
+    const previo = localStorage.getItem(DIRTY_KEY) === '1' ? (localStorage.getItem(SINCE_KEY) ?? 0) : null;
+    localStorage.setItem(SINCE_KEY, String(nuevoDesde(previo, at)));
+    localStorage.setItem(DIRTY_KEY, '1');
+    if (borrado) {
+      const o = leerBorrados();
+      o[borrado.col] = [...(o[borrado.col] || []).filter((b) => b.id !== borrado.id), { id: borrado.id, at }];
+      guardarBorrados(o);
+    }
+  } catch {}
+};
+/** Quita la marca de borrado de un item recuperado (Deshacer). */
+const quitarBorrado = (col, id) => {
+  try {
+    const o = leerBorrados();
+    if (!o[col] || !o[col].some((b) => b.id === id)) return;
+    o[col] = o[col].filter((b) => b.id !== id);
+    guardarBorrados(o);
+  } catch {}
 };
 
 function emit(col) {
@@ -224,7 +255,7 @@ export const store = {
     const item = { id: uid(), createdAt: now, updatedAt: now, ...data };
     read(col).push(item);
     persist(col); emit(col);
-    toRemote((r) => r.put(col, item));
+    toRemote((r) => r.put(col, item), now);
     return { ...item };
   },
 
@@ -232,9 +263,10 @@ export const store = {
     const items = read(col);
     const i = items.findIndex((x) => x.id === id);
     if (i < 0) return null;
-    items[i] = { ...items[i], ...patch, updatedAt: Date.now() };
+    const now = Date.now();
+    items[i] = { ...items[i], ...patch, updatedAt: now };
     persist(col); emit(col);
-    toRemote((r) => r.put(col, items[i]));
+    toRemote((r) => r.put(col, items[i]), now);
     return { ...items[i] };
   },
 
@@ -244,7 +276,7 @@ export const store = {
     if (i < 0) return null;
     const [removed] = items.splice(i, 1);
     persist(col); emit(col);
-    toRemote((r) => r.del(col, id));
+    toRemote((r) => r.del(col, id), Date.now(), { col, id });
     return removed;
   },
 
@@ -254,6 +286,7 @@ export const store = {
     const i = items.findIndex((x) => x.id === item.id);
     if (i >= 0) items[i] = item; else items.push(item);
     persist(col); emit(col);
+    quitarBorrado(col, item.id);
     toRemote((r) => r.put(col, item));
   },
 
@@ -283,7 +316,7 @@ export const store = {
       const k = localStorage.key(i);
       if (!k || !k.startsWith(PREFIX)) continue;
       const key = k.slice(PREFIX.length);
-      if (key.startsWith('set:') && !['set:lock', 'set:syncUid', 'set:asistente'].includes(key)) out[key] = localStorage.getItem(k);
+      if (key.startsWith('set:') && !['set:lock', 'set:syncUid', 'set:syncEmail', 'set:asistente'].includes(key)) out[key] = localStorage.getItem(k);
     }
     for (const [col, items] of cache) if (items.length || SYNC_COLLECTIONS.includes(col)) out[col] = JSON.stringify(items);
     for (const col of SYNC_COLLECTIONS) if (!(col in out)) out[col] = JSON.stringify(read(col));
@@ -295,7 +328,7 @@ export const store = {
     const parsed = JSON.parse(json);
     if (parsed.app !== 'tabula') throw new Error('El archivo no es una copia de Tabula');
     for (const [k, v] of Object.entries(parsed.data || {})) {
-      if (['set:lock', 'lockFails', 'dirty', 'set:syncUid', 'set:asistente'].includes(k)) continue;
+      if (['set:lock', 'lockFails', 'dirty', 'dirtySince', 'borrados', 'almacen', 'set:syncUid', 'set:syncEmail', 'set:asistente'].includes(k)) continue;
       if (k.startsWith('set:')) { try { localStorage.setItem(PREFIX + k, v); } catch {} continue; }
       let items = [];
       try { items = JSON.parse(v) || []; } catch { items = []; }
@@ -306,7 +339,7 @@ export const store = {
     toRemote((r) => {
       SYNC_COLLECTIONS.forEach((col) => r.putMany(col, read(col)));
       Object.entries(this._settings()).forEach(([k, v]) => r.putSetting(k, v));
-    });
+    }, 0); // sin conexión: en la próxima se sube todo lo que falte en la nube
     emit('*');
     return flush();
   },
@@ -346,7 +379,12 @@ export const store = {
   _hasLocalData() { return SYNC_COLLECTIONS.some((c) => read(c).length > 0); },
   get _ready() { return isReady; },
   _isDirty() { try { return localStorage.getItem(DIRTY_KEY) === '1'; } catch { return false; } },
-  _clearDirty() { try { localStorage.removeItem(DIRTY_KEY); } catch {} },
+  /** Desde cuándo hay cambios sin enviar (0 = subir todo lo que falte en la nube). */
+  _dirtySince() { try { const v = Number(localStorage.getItem(SINCE_KEY) ?? 0); return Number.isFinite(v) ? v : 0; } catch { return 0; } },
+  /** Marcas de borrado: { colección: [{ id, at }] }. */
+  _borrados() { return leerBorrados(); },
+  _hayBorrados() { return Object.values(leerBorrados()).some((l) => Array.isArray(l) && l.length); },
+  _clearDirty() { try { [DIRTY_KEY, SINCE_KEY, BORRADOS_KEY].forEach((k) => localStorage.removeItem(k)); } catch {} },
   /** Borra los datos de este dispositivo (al cerrar sesión o cambiar de cuenta). Mantiene el tema. Devuelve una promesa. */
   _clearLocal() {
     if (almacen.bloqueado) return Promise.resolve();

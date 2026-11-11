@@ -152,3 +152,53 @@ export function filasEstado({ diasCopia = null, persistente = null, uso = null, 
   }
   return filas;
 }
+
+// ---------- Combinar con la nube los cambios hechos sin conexión ----------
+
+/** Margen de seguridad (ms) al marcar desde cuándo hay cambios sin enviar: protege de pequeños ajustes del reloj. */
+export const MARGEN_SIN_ENVIAR = 10 * 60 * 1000;
+
+/**
+ * Qué hacer con una colección al volver a conectar con la nube.
+ * - Lo local más reciente que lo de la nube se sube.
+ * - Lo local que NO está en la nube: si se creó o cambió en el periodo sin conexión (desde `desde`), se sube;
+ *   si es anterior, es que la nube ya lo tuvo y se borró desde otro dispositivo: no se sube (y desaparecerá de aquí).
+ *   Con desde = 0 (primera vez de la cuenta aquí, copia restaurada o datos antiguos sin marca) se sube todo lo que falte.
+ * - Lo borrado aquí sin conexión (marcas de borrado) se borra de la nube, salvo que en la nube se haya
+ *   cambiado después del borrado o que aquí se haya recuperado (Deshacer).
+ * @param e.local     items de este dispositivo
+ * @param e.remoto    Map id -> item de la nube
+ * @param e.borrados  [{ id, at }] marcas de borrado de esta colección
+ * @param e.desde     ms (reloj de este dispositivo) desde los que hay cambios sin enviar; 0 = subir todo lo que falte
+ * @returns { subir: [item], borrar: [id] }
+ */
+export function planCombinar({ local = [], remoto = new Map(), borrados = [], desde = 0 } = {}) {
+  const subir = [];
+  const borrar = [];
+  const aqui = new Set();
+  for (const item of local) {
+    aqui.add(item.id);
+    const r = remoto.get(item.id);
+    const t = item.updatedAt || item.createdAt || 0;
+    if (r) { if (t > (r.updatedAt || 0)) subir.push(item); }
+    else if (!desde || t >= desde) subir.push(item);
+  }
+  for (const b of borrados) {
+    if (!b || aqui.has(b.id)) continue;
+    const r = remoto.get(b.id);
+    if (r && (r.updatedAt || 0) <= (b.at || 0)) borrar.push(b.id);
+  }
+  return { subir, borrar };
+}
+
+/**
+ * Nuevo «desde» al hacer un cambio sin conexión con la nube.
+ * @param previo  «desde» guardado (número), o null si no había nada pendiente
+ * @param at      momento del cambio (ms); 0 = hay que subir todo lo que falte (p. ej. copia restaurada)
+ */
+export function nuevoDesde(previo, at) {
+  const cand = at > 0 ? Math.max(1, at - MARGEN_SIN_ENVIAR) : 0;
+  if (previo === null || previo === undefined) return cand;
+  const p = Number(previo);
+  return Number.isFinite(p) ? Math.max(0, Math.min(p, cand)) : 0;
+}

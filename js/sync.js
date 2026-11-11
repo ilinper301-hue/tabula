@@ -10,13 +10,15 @@
 // - Con sesión iniciada, cada cambio se envía a Firestore y los cambios de otros dispositivos llegan
 //   por suscripción en tiempo real. Firestore guarda en cola lo que se hace sin conexión.
 // - La primera vez que se inicia sesión en un dispositivo con datos, se combinan con la nube
-//   (gana la versión modificada más recientemente).
+//   (gana la versión modificada más recientemente). Lo hecho sin conexión con la nube se combina al volver
+//   (planCombinar): lo borrado aquí se borra allí (marcas de borrado) y lo borrado en otro dispositivo no revive.
+// - Si entra otra cuenta y este dispositivo tiene cambios sin subir de la anterior, no se borra nada sin permiso.
 // - Al cerrar sesión se borran los datos del dispositivo (pensado para ordenadores compartidos),
 //   pero solo tras comprobar que todo está subido (o con confirmación expresa si no se puede comprobar).
 
 import { store, SYNC_COLLECTIONS } from './store.js';
 import { firebaseConfig, FIREBASE_SDK } from './firebase-config.js';
-import { conLimite, riesgoAlBorrar } from './datos-model.js';
+import { conLimite, riesgoAlBorrar, planCombinar } from './datos-model.js';
 
 const ROOT = ['apps', 'tabula', 'users'];
 const BATCH_LIMIT = 400;
@@ -26,7 +28,8 @@ let auth = null;
 let db = null;
 let unsubs = [];
 let conectado = false; // true cuando los cambios locales ya se envían a la nube
-let state = { enabled: !!firebaseConfig, status: firebaseConfig ? 'loading' : 'off', user: null, error: null };
+let enEspera = null;    // usuario de Firebase que espera a que se resuelva un cambio de cuenta
+let state = { enabled: !!firebaseConfig, status: firebaseConfig ? 'loading' : 'off', user: null, error: null, cambioCuenta: null };
 const listeners = new Set();
 
 /** Estado actual: status = off | loading | signed-out | syncing | synced | offline | error */
@@ -163,9 +166,29 @@ export async function signOutAndClear({ forzar = false, antesDeBorrar = null } =
 // ---------- Conexión de una cuenta ----------
 const clean = (item) => JSON.parse(JSON.stringify(item)); // quita undefined y funciones
 
+let forzarCambio = false;
+
+/**
+ * Resuelve el aviso de cambio de cuenta.
+ * @param borrar true = borrar los datos de la cuenta anterior de este dispositivo y entrar con la nueva;
+ *               false = no entrar (se cierra la sesión nueva y se conserva todo)
+ */
+export async function resolverCambioCuenta(borrar) {
+  const user = enEspera;
+  enEspera = null;
+  if (!user) return;
+  if (borrar) {
+    forzarCambio = true;
+    await attach(user).catch((e) => setState({ status: 'error', error: friendlyError(e) }));
+  } else {
+    setState({ cambioCuenta: null, error: null });
+    try { await fb.auth.signOut(auth); } catch {}
+  }
+}
+
 async function attach(user) {
   detach();
-  setState({ status: 'syncing', error: null, user: { name: user.displayName || '', email: user.email || '', photo: user.photoURL || '' } });
+  setState({ status: 'syncing', error: null, cambioCuenta: null, user: { name: user.displayName || '', email: user.email || '', photo: user.photoURL || '' } });
 
   const base = [...ROOT, user.uid];
   const colRef = (c) => fb.fs.collection(db, ...base, c);
@@ -175,29 +198,55 @@ async function attach(user) {
   const writeMany = async (ops) => {
     for (let i = 0; i < ops.length; i += BATCH_LIMIT) {
       const batch = fb.fs.writeBatch(db);
-      ops.slice(i, i + BATCH_LIMIT).forEach(([ref, data]) => batch.set(ref, data));
+      // data === null → borrar
+      ops.slice(i, i + BATCH_LIMIT).forEach(([ref, data]) => (data === null ? batch.delete(ref) : batch.set(ref, data)));
       await batch.commit();
     }
   };
   const onWriteError = (e) => setState({ status: 'error', error: friendlyError(e) });
 
-  // Otra cuenta usó este dispositivo: sus datos no se mezclan
+  // Otra cuenta usó este dispositivo: sus datos no se mezclan con los de esta.
+  // Si dejó cambios sin subir, no se borran sin permiso (resolverCambioCuenta).
   const prevUid = store.getSetting('syncUid');
-  if (prevUid && prevUid !== user.uid) store._clearLocal();
+  if (prevUid && prevUid !== user.uid) {
+    if (!forzarCambio && (store._isDirty() || store._hayBorrados())) {
+      enEspera = user;
+      const anterior = store.getSetting('syncEmail') || '';
+      setState({
+        status: 'error', user: null,
+        cambioCuenta: { anterior, nueva: user.email || '' },
+        error: `Este dispositivo tiene cambios sin subir de otra cuenta${anterior ? ` (${anterior})` : ''}. No he entrado ni he borrado nada.`,
+      });
+      return;
+    }
+    await store._clearLocal();
+  }
+  forzarCambio = false;
 
   // Primera vez de esta cuenta en este dispositivo: combinar datos locales con la nube
-  // También si hubo cambios sin conexión a la nube desde la última vez
-  if ((prevUid !== user.uid || store._isDirty()) && store._hasLocalData()) {
+  // También si hubo cambios sin conexión a la nube desde la última vez (incluidos borrados)
+  const primera = prevUid !== user.uid;
+  if ((primera || store._isDirty()) && (store._hasLocalData() || store._hayBorrados())) {
     const ops = [];
+    const desde = primera ? 0 : store._dirtySince();
+    const borrados = primera ? {} : store._borrados();
     for (const c of SYNC_COLLECTIONS) {
       const local = store.list(c);
-      if (!local.length) continue;
-      const snap = await fb.fs.getDocs(colRef(c));
-      const remote = new Map(snap.docs.map((d) => [d.id, d.data()]));
-      for (const item of local) {
-        const r = remote.get(item.id);
-        if (!r || (item.updatedAt || 0) > (r.updatedAt || 0)) ops.push([docRef(c, item.id), clean(item)]);
+      const bc = Array.isArray(borrados[c]) ? borrados[c] : [];
+      if (!local.length && !bc.length) continue;
+      // Se pregunta al servidor: la caché podría no saber que algo se borró en otro dispositivo.
+      // Si no responde, se usa la caché y se sube todo lo que falte (más vale que algo reviva que perderlo).
+      let snap = null;
+      if (navigator.onLine !== false) {
+        try { snap = await Promise.race([fb.fs.getDocsFromServer(colRef(c)), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))]); }
+        catch { snap = null; }
       }
+      const delServidor = !!snap;
+      if (!snap) snap = await fb.fs.getDocs(colRef(c));
+      const remoto = new Map(snap.docs.map((d) => [d.id, d.data()]));
+      const plan = planCombinar({ local, remoto, borrados: bc, desde: delServidor ? desde : 0 });
+      plan.subir.forEach((item) => ops.push([docRef(c, item.id), clean(item)]));
+      plan.borrar.forEach((id) => ops.push([docRef(c, id), null]));
     }
     const remoteSettings = await fb.fs.getDoc(settingsRef);
     const existing = remoteSettings.exists() ? remoteSettings.data() : {};
@@ -206,6 +255,7 @@ async function attach(user) {
     if (Object.keys(missing).length) await fb.fs.setDoc(settingsRef, clean(missing), { merge: true });
   }
   store.setSetting('syncUid', user.uid);
+  store.setSetting('syncEmail', user.email || '');
   store._clearDirty();
 
   // A partir de aquí, cada cambio local se envía a la nube
@@ -239,6 +289,7 @@ function detach() {
   unsubs = [];
   store._setRemote(null);
   if (state.enabled) setState({ status: 'signed-out', user: null });
+  if (!auth || !auth.currentUser) enEspera = null;
 }
 
 /**

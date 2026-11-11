@@ -14,6 +14,20 @@ Módulos y estructura: ver `README.md`.
 
 ## Últimos cambios
 
+- **2026-11-11 · Borrados que reaparecían y cambio de cuenta**
+  - *Marcas de borrado*: lo borrado con la cuenta asociada pero sin conexión con la nube se apunta
+    (`tabula:v1:borrados`) y al reconectar se borra también de la nube (salvo que allí se editara después).
+    Deshacer quita la marca. Además se guarda desde cuándo hay cambios sin enviar (`tabula:v1:dirtySince`,
+    con 10 min de margen): lo que no está en la nube y es anterior se borró en otro dispositivo y ya no revive.
+    Al combinar se pregunta al servidor (`getDocsFromServer`, 8 s); si no responde, se usa la caché y se sube
+    todo lo que falte (más vale que algo reviva que perderlo). Restaurar una copia sin conexión sube todo.
+    Lógica pura en `planCombinar` / `nuevoDesde` (`js/datos-model.js`); `js/store.js`, `js/sync.js`.
+  - *Entrar con otra cuenta*: si el dispositivo tiene cambios sin subir de la cuenta anterior, ya no se borran:
+    no entra y Ajustes → Cuenta avisa con «Descargar copia», «Entrar con la cuenta anterior», «Cancelar» o
+    «Borrar y entrar» (con doble confirmación). Sin cambios pendientes, todo sigue igual. Se guarda el correo
+    de la cuenta (`syncEmail`, solo local). Archivos: `js/sync.js` (`resolverCambioCuenta`),
+    `js/views/ajustes/cambio-cuenta.js`, `js/views/ajustes.js`.
+  - Probado en Chrome sin cabeza con un Firebase simulado (reconectar con borrados, otra cuenta, forzar).
 - **2026-11-11 · Seguridad de los datos (auditoría)**
   - *Cerrar sesión ya no borra a ciegas*: `signOutAndClear` espera `waitForPendingWrites` (8 s máx.) y revisa red,
     estado de error, cambios sin combinar y archivos sin subir. Si no puede asegurar que todo está en la nube, no cierra
@@ -47,13 +61,9 @@ Módulos y estructura: ver `README.md`.
 ## Pendiente / ideas
 
 - **Datos (de la auditoría, sin hacer)**:
-  - Borrados que reaparecen: al combinar con la nube (`attach` en `js/sync.js`) lo borrado sin conexión vuelve,
-    porque no hay marcas de borrado (tombstones). Hay que guardar los borrados y aplicarlos al fusionar. *Opus.*
   - La copia de seguridad se arma entera en memoria (`createBackup`/`makeZip`/`readZip`): con muchos archivos puede
     agotar la memoria del móvil. Escribirla y leerla por partes (streams). *Opus.*
   - Cifrado opcional de la copia con contraseña, reutilizando `js/codigos-crypto.js`. *Opus o Sonnet.*
-  - Al iniciar sesión con otra cuenta distinta de la última (`prevUid` en `attach`), los datos locales se borran sin
-    comprobar si estaban subidos. Aplicar la misma comprobación que al cerrar sesión. *Sonnet.*
 - Arreglar: en móvil estrecho (~390 px) los botones de la cabecera de Documentos («Crear ficha», «Pegar de Claude»,
   «Drive», «Añadir enlace», «Subir») no caben y desbordan por la derecha (la página se ensancha a ~415 px).
 - «Imprimir juntos»: no probado aún en iPad/iPhone ni con impresora real.
@@ -61,6 +71,8 @@ Módulos y estructura: ver `README.md`.
 
 ## Problemas conocidos
 
+- Las marcas de borrado solo cubren lo borrado *sin conexión con la nube*; si dos dispositivos editan y borran
+  el mismo elemento a la vez, gana la edición. Sin probar aún con Firebase real ni en iPhone/iPad.
 - «Estado de tus datos» y los avisos del almacén solo están probados en Chrome (simulando los fallos); falta iPhone/iPad.
 - pdf.js se carga desde cdnjs: sin conexión la primera vez no hay miniaturas de PDF ni «Imprimir juntos» con PDF.
 - Las fichas de Charta no se imprimen desde Tabula (se abren en Charta).

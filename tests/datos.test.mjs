@@ -1,8 +1,9 @@
 // Tabula · pruebas de la seguridad de los datos (cierre de sesión, almacén, estado)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
-import { conLimite, riesgoAlBorrar, decidirAlmacen, unirPorId, formatoBytes, textoCopia, debePedirPersistencia, filasEstado } from '../js/datos-model.js';
+import { conLimite, riesgoAlBorrar, decidirAlmacen, unirPorId, formatoBytes, textoCopia, debePedirPersistencia, filasEstado, planCombinar, nuevoDesde, MARGEN_SIN_ENVIAR } from '../js/datos-model.js';
 
 test('conLimite: ok, error y tiempo agotado (nunca rechaza)', async () => {
   assert.equal(await conLimite(Promise.resolve(1), 50), 'ok');
@@ -170,4 +171,86 @@ test('estado de los datos: filas del panel y sus tonos', () => {
   assert.equal(d.almacen.tono, 'mal');
   // Sin datos del navegador
   assert.equal(por(filasEstado({})).espacio.valor, 'No disponible');
+});
+
+// ---------- Combinar con la nube lo hecho sin conexión ----------
+
+test('combinar: lo borrado aquí sin conexión se borra de la nube (salvo que allí cambiara después)', () => {
+  const remoto = new Map([['a', { id: 'a', updatedAt: 100 }], ['b', { id: 'b', updatedAt: 900 }], ['c', { id: 'c', updatedAt: 100 }]]);
+  const plan = planCombinar({ local: [{ id: 'c', updatedAt: 100 }], remoto,
+    borrados: [{ id: 'a', at: 500 }, { id: 'b', at: 500 }, { id: 'c', at: 500 }, { id: 'zz', at: 500 }], desde: 400 });
+  assert.deepEqual(plan.borrar, ['a'], 'b se editó en otro dispositivo después; c se recuperó (Deshacer); zz ya no está');
+  assert.deepEqual(plan.subir, []);
+});
+
+test('combinar: lo borrado en otro dispositivo no revive; lo nuevo sin conexión sí se sube', () => {
+  const remoto = new Map([['x', { id: 'x', updatedAt: 100 }]]);
+  const local = [
+    { id: 'x', updatedAt: 600 },            // editado aquí sin conexión → se sube
+    { id: 'viejo', updatedAt: 200 },        // ya estuvo en la nube y se borró desde otro sitio → no se sube
+    { id: 'nuevo', createdAt: 700, updatedAt: 700 }, // creado sin conexión → se sube
+    { id: 'sinFecha' },                     // sin fecha: se trata como antiguo
+  ];
+  assert.deepEqual(planCombinar({ local, remoto, desde: 500 }).subir.map((i) => i.id), ['x', 'nuevo']);
+  // desde = 0 (primera vez, copia restaurada o datos antiguos): se sube todo lo que falte
+  assert.deepEqual(planCombinar({ local, remoto, desde: 0 }).subir.map((i) => i.id), ['x', 'viejo', 'nuevo', 'sinFecha']);
+});
+
+test('combinar: «desde» se queda con el momento más antiguo, con margen, y 0 gana siempre', () => {
+  assert.equal(nuevoDesde(null, 1e12), 1e12 - MARGEN_SIN_ENVIAR);
+  assert.equal(nuevoDesde(5e11, 1e12), 5e11);
+  assert.equal(nuevoDesde(null, 0), 0);
+  assert.equal(nuevoDesde(5e11, 0), 0);
+  assert.equal(nuevoDesde(0, 1e12), 0);
+  assert.equal(nuevoDesde('basura', 1e12), 0);
+  assert.ok(nuevoDesde(null, 5) >= 1, 'un cambio real nunca deja «desde» en 0');
+});
+
+test('store: sin conexión con la nube guarda marcas de borrado y «desde»; Deshacer las quita', async () => {
+  const store = await storeCon({ idb: undefined, ls: { 'tabula:v1:set:syncUid': '"u1"' } });
+  const antes = Date.now();
+  const a = store.add('tasks', { title: 'a' });
+  const b = store.add('tasks', { title: 'b' });
+  assert.equal(store._isDirty(), true);
+  assert.ok(store._dirtySince() <= antes - MARGEN_SIN_ENVIAR + 50 && store._dirtySince() > 0);
+  const quitado = store.remove('tasks', a.id);
+  store.remove('tasks', b.id);
+  assert.deepEqual(store._borrados().tasks.map((x) => x.id), [a.id, b.id]);
+  store.restore('tasks', quitado);
+  assert.deepEqual(store._borrados().tasks.map((x) => x.id), [b.id]);
+  assert.equal(store._hayBorrados(), true);
+  assert.deepEqual(store.list('borrados'), [], 'las marcas no son una colección');
+  // Restaurar una copia sin conexión: en la próxima conexión se sube todo lo que falte
+  await store.importAll(store.exportAll());
+  assert.equal(store._dirtySince(), 0);
+  assert.equal(localStorage.getItem('tabula:v1:borrados') !== null, true, 'la copia no borra las marcas pendientes');
+  store._clearDirty();
+  assert.equal(store._isDirty(), false);
+  assert.equal(store._hayBorrados(), false);
+  assert.equal(localStorage.getItem('tabula:v1:dirtySince'), null);
+  delete globalThis.localStorage;
+});
+
+test('store: sin cuenta asociada no se guardan marcas de borrado', async () => {
+  const store = await storeCon({ idb: undefined, ls: {} });
+  const a = store.add('tasks', { title: 'a' });
+  store.remove('tasks', a.id);
+  assert.equal(store._isDirty(), false);
+  assert.equal(store._hayBorrados(), false);
+  delete globalThis.localStorage;
+});
+
+test('sync: aplica el plan al reconectar y no borra datos de otra cuenta con cambios sin subir', () => {
+  const src = readFileSync(new URL('../js/sync.js', import.meta.url), 'utf8');
+  assert.match(src, /planCombinar\(/);
+  assert.match(src, /batch\.delete\(ref\)/);
+  assert.match(src, /getDocsFromServer/);
+  assert.match(src, /_hayBorrados\(\)/);
+  assert.match(src, /cambioCuenta:/);
+  assert.match(src, /export async function resolverCambioCuenta/);
+  // El borrado por cambio de cuenta va detrás de la comprobación
+  const i = src.indexOf('_isDirty() || store._hayBorrados()'), j = src.indexOf('await store._clearLocal();\n  }');
+  assert.ok(i > 0 && j > i, 'primero se comprueba, después se borra');
+  const ajustes = readFileSync(new URL('../js/views/ajustes.js', import.meta.url), 'utf8');
+  assert.match(ajustes, /cambioCuentaBox\(st\.cambioCuenta\)/);
 });
