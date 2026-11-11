@@ -191,7 +191,7 @@ export async function storageUsageMB() {
 // ---------- Miniaturas ----------
 const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174';
 let pdfjsP = null;
-function loadPdfJs() {
+export function loadPdfJs() {
   if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
   if (!pdfjsP) {
     pdfjsP = new Promise((resolve, reject) => {

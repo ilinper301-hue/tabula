@@ -1,11 +1,13 @@
 // Tabula · Documentos · pestaña «Biblioteca»
 import { store } from '../../store.js';
-import { h, icon } from '../../ui.js';
+import { h, icon, toast } from '../../ui.js';
 import { filterDocs, facets, kindOf, KINDS } from '../../documents.js';
 import { getGroups, getGroup } from '../../school.js';
 import { thumb, metaLine } from './common.js';
 import { pendingFileIds, uploadPending, onPendingChange } from '../../files.js';
 import { cloud, onSyncChange } from '../../sync.js';
+import { canCombine } from '../../combine-model.js';
+import { openCombineSheet } from './combine.js';
 
 export const libState = { q: '', carpeta: '', etiqueta: '', kind: '', groupId: '', favoritos: false, sort: 'recientes' };
 
@@ -22,8 +24,32 @@ export function mountLibrary(ctx) {
   const gridBox = h('div', { class: 'dc-grid-box' });
   const count = h('p', { class: 'dc-count', 'aria-live': 'polite' });
 
+  // Selección para «Imprimir juntos» (null = sin seleccionar). El orden de los toques es el orden de impresión.
+  let sel = null;
+  const selBtn = h('button', { type: 'button', class: 'btn dc-sel-btn', onclick: () => setSelecting(!sel) });
+  const selBar = h('div', { class: 'dc-selbar', role: 'region', 'aria-label': 'Selección', hidden: true });
+  function setSelecting(on) { sel = on ? [] : null; paintSel(); paintGrid(); }
+  function paintSel() {
+    selBtn.replaceChildren(...(sel ? [icon('x', 16), 'Cancelar'] : [icon('printer', 16), h('span', { class: 'dc-btn-text' }, 'Imprimir juntos')]));
+    selBtn.setAttribute('aria-pressed', String(!!sel));
+    selBtn.title = sel ? 'Salir de la selección' : 'Elegir varios documentos para imprimirlos en un solo trabajo';
+    selBar.hidden = !sel;
+    if (!sel) return;
+    const n = sel.length;
+    selBar.replaceChildren(
+      h('span', { class: 'dc-selbar-text' }, n ? `${n} ${n === 1 ? 'seleccionado' : 'seleccionados'}` : 'Toca los documentos en el orden en que quieras imprimirlos'),
+      h('div', { class: 'dc-actions' },
+        h('button', { type: 'button', class: 'btn btn-ghost', onclick: () => setSelecting(false) }, 'Cancelar'),
+        h('button', { type: 'button', class: 'btn btn-primary', disabled: !n, onclick: () => openCombineSheet(sel.slice(), { onPrinted: () => setSelecting(false) }) }, icon('printer', 16), 'Continuar')));
+  }
+  function toggleSel(d) {
+    if (!canCombine(d)) { toast('Solo se pueden combinar PDF, imágenes y fichas'); return; }
+    sel = sel.includes(d.id) ? sel.filter((x) => x !== d.id) : [...sel, d.id];
+    paintSel(); paintGrid();
+  }
+
   const toolbar = h('div', { class: 'dc-toolbar' },
-    h('div', { class: 'dc-search' }, icon('search', 18), search), sortSel);
+    h('div', { class: 'dc-search' }, icon('search', 18), search), sortSel, selBtn);
 
   search.addEventListener('input', () => { s.q = search.value; paintGrid(); paintPills(); });
   sortSel.addEventListener('change', () => { s.sort = sortSel.value; paintGrid(); });
@@ -63,8 +89,15 @@ export function mountLibrary(ctx) {
 
   function card(d) {
     const g = d.groupId ? getGroup(d.groupId) : null;
-    return h('article', { class: 'dc-card' },
-      h('button', { type: 'button', class: 'dc-card-open', 'aria-label': `Abrir ${d.titulo}`, onclick: () => ctx.onOpen(d.id) },
+    const pos = sel ? sel.indexOf(d.id) : -1;
+    const off = sel && !canCombine(d);
+    return h('article', { class: `dc-card${pos >= 0 ? ' is-sel' : ''}${off ? ' is-off' : ''}` },
+      h('button', {
+        type: 'button', class: 'dc-card-open',
+        'aria-label': sel ? `${pos >= 0 ? 'Quitar de la selección' : 'Seleccionar'}: ${d.titulo}` : `Abrir ${d.titulo}`,
+        'aria-pressed': sel ? String(pos >= 0) : null, 'aria-disabled': off ? 'true' : null,
+        onclick: () => (sel ? toggleSel(d) : ctx.onOpen(d.id)),
+      },
         thumb(d),
         h('span', { class: 'dc-card-body' },
           h('span', { class: 'dc-card-title' }, d.titulo || 'Sin título'),
@@ -72,7 +105,7 @@ export function mountLibrary(ctx) {
           d.carpeta || g ? h('span', { class: 'dc-card-tags' },
             d.carpeta ? h('span', { class: 'dc-card-folder' }, icon('folder', 12), d.carpeta) : null,
             g ? h('span', { class: 'dc-card-folder' }, g.nombre) : null) : null)),
-      h('button', {
+      sel ? h('span', { class: 'dc-selmark', 'aria-hidden': 'true' }, pos >= 0 ? String(pos + 1) : '') : h('button', {
         type: 'button', class: 'dc-fav', 'data-fav': d.id, 'aria-pressed': String(!!d.favorito),
         'aria-label': d.favorito ? `Quitar «${d.titulo}» de favoritos` : `Marcar «${d.titulo}» como favorito`,
         title: d.favorito ? 'Quitar de favoritos' : 'Favorito',
@@ -96,6 +129,7 @@ export function mountLibrary(ctx) {
         h('p', { class: 'dc-hint' }, 'Los archivos se guardan en este dispositivo y, si has iniciado sesión, también en tu cuenta para verlos en otros.')));
       return;
     }
+    if (sel) sel = sel.filter((id) => all.some((d) => d.id === id));
     const list = filterDocs(all, { ...s, strictGroup: true }, s.sort);
     count.textContent = hasFilters() ? `${list.length} de ${all.length} documentos` : `${all.length} ${all.length === 1 ? 'documento' : 'documentos'}`;
     if (!list.length) {
@@ -125,7 +159,8 @@ export function mountLibrary(ctx) {
       } }, 'Subir ahora'));
   }
 
-  const el = h('div', { class: 'dc-library' }, pendingBox, toolbar, pills, count, gridBox);
+  const el = h('div', { class: 'dc-library' }, pendingBox, toolbar, pills, count, gridBox, selBar);
+  paintSel();
   const repaint = () => { paintPills(); paintGrid(); paintPending(); };
   repaint();
   uploadPending().catch(() => {});

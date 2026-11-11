@@ -6,6 +6,8 @@ import { isLectivo } from '../../planning.js';
 import { getGroup } from '../../school.js';
 import { thumb, docsById, itemSummary, printItem, markPrinted, removeItemWithUndo, printDoc, getDoc, plural, weekdayLong, dateLabel, openDoc } from './common.js';
 import { openScheduleSheet } from './schedule.js';
+import { canCombine } from '../../combine-model.js';
+import { openCombineSheet } from './combine.js';
 
 let confirmIds = []; // elementos recién impresos en bloque, pendientes de «marcar como impresos»
 
@@ -41,6 +43,14 @@ export function mountQueue(ctx) {
     if (opened) toast('Algunos se han abierto: usa Compartir → Imprimir');
     else if (!done.length) toast('No se pudo imprimir');
     paint();
+  }
+  // Todo lo de hoy en un solo trabajo (p. ej. dos fichas en el mismo folio, una por cada cara)
+  function combineAll() {
+    const byId = docsById();
+    const items = dueNow(liveQueue(), todayISO()).filter((i) => canCombine(byId[i.documentoId]));
+    const ids = [...new Set(items.map((i) => i.documentoId))];
+    if (!ids.length) { toast('Nada que se pueda combinar: solo PDF, imágenes y fichas'); return; }
+    openCombineSheet(ids, { onPrinted: () => { confirmIds = items.map((i) => i.id); paint(); } });
   }
   // En bloque no se marca cada uno: se pregunta al final (la impresión del sistema no dice si se canceló)
   async function printItemQuiet(it) {
@@ -124,7 +134,9 @@ export function mountQueue(ctx) {
       h('div', { class: 'dc-summary-text' },
         h('strong', {}, due.length ? `${plural(due.length, 'documento', 'documentos')} para hoy` : 'Nada para hoy'),
         h('span', {}, due.length ? `Unas ${plural(dueSheets, 'hoja', 'hojas')} en total${sec.atrasados.length ? ` · ${sec.atrasados.length} atrasado${sec.atrasados.length > 1 ? 's' : ''}` : ''}` : `${plural(pendientes.length, 'pendiente', 'pendientes')} para más adelante`)),
-      due.length ? h('button', { type: 'button', class: 'btn btn-primary', disabled: busy, onclick: printAll }, icon('printer', 16), busy ? 'Imprimiendo…' : 'Imprimir todo lo de hoy') : null));
+      due.length ? h('div', { class: 'dc-actions' },
+        due.length > 1 ? h('button', { type: 'button', class: 'btn', disabled: busy, onclick: combineAll, title: 'Unir lo de hoy en un solo trabajo de impresión (por ejemplo, a doble cara)' }, 'Imprimir juntos') : null,
+        h('button', { type: 'button', class: 'btn btn-primary', disabled: busy, onclick: printAll }, icon('printer', 16), busy ? 'Imprimiendo…' : 'Imprimir todo lo de hoy')) : null));
 
     out.push(
       section('Atrasados', sec.atrasados, byId, { cls: 'alert', showDate: true }),

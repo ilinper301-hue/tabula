@@ -335,3 +335,45 @@
 .dc-pending { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; margin-bottom: 14px; border-radius: 12px; background: var(--accent-soft); border: 1px solid var(--accent-line); font-size: 14px; }
 .dc-pending[hidden] { display: none; }
 .dc-pending > span { flex: 1; min-width: 200px; }
+
+/* ---------- Imprimir juntos (varios documentos en un trabajo) ---------- */
+.dc-sel-btn { white-space: nowrap; min-height: 44px; }
+.dc-sel-btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent-text); }
+.dc-card.is-sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.dc-card.is-off { opacity: .45; }
+.dc-selmark {
+  position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; pointer-events: none;
+  border: 2px solid var(--surface); background: rgba(0, 0, 0, .28); box-shadow: var(--shadow-sm);
+  color: var(--on-accent); font-weight: 600; font-size: 14px; font-variant-numeric: tabular-nums;
+}
+.dc-card.is-sel .dc-selmark { background: var(--accent); }
+.dc-selbar {
+  position: sticky; bottom: 16px; z-index: 5; margin-top: 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 12px 14px 12px 18px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--accent-line); box-shadow: var(--shadow-md);
+}
+.dc-selbar[hidden] { display: none; }
+.dc-selbar-text { font-size: 14px; color: var(--text-2); }
+.dc-cb { display: flex; flex-direction: column; gap: 14px; }
+.dc-cb-lead, .dc-cb-warn { line-height: 1.5; }
+.dc-cb-warn { color: var(--accent-text); }
+.dc-cb-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.dc-cb-row { display: flex; align-items: center; gap: 12px; padding: 10px 8px 10px 12px; }
+.dc-cb-row + .dc-cb-row { border-top: 1px solid var(--divider); }
+.dc-cb-n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.dc-cb-thumb { width: 36px; height: 48px; flex-shrink: 0; border-radius: 6px; border: 1px solid var(--border); overflow: hidden; background: var(--surface-2); }
+.dc-cb-thumb .dc-thumb { aspect-ratio: auto; height: 100%; border: none; gap: 0; }
+.dc-cb-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dc-cb-title { font-weight: 500; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dc-cb-sub { font-size: 12.5px; color: var(--muted); }
+.dc-cb-tools { display: flex; flex-shrink: 0; }
+.dc-cb-tools .icon-btn:disabled { opacity: .3; cursor: default; }
+.dc-cb-sum { margin: 0; font-size: 14px; font-weight: 500; }
+@media (max-width: 680px) {
+  .dc-sel-btn .dc-btn-text { display: none; }
+  .dc-sel-btn { padding-inline: 13px; }
+  .dc-selbar { bottom: calc(var(--nav-h) + 12px + env(safe-area-inset-bottom)); }
+  .dc-selbar .dc-actions { width: 100%; }
+  .dc-selbar .dc-actions .btn { flex: 1; }
+  .dc-cb-row { gap: 10px; padding-left: 10px; }
+  .dc-cb-thumb { display: none; }
+}
