@@ -5,7 +5,6 @@ import { h, icon, logoLockup } from './ui.js';
 import { initSync, getSyncState, onSyncChange, SYNC_LABELS } from './sync.js';
 import './plan-sync.js';
 import { initLock, setForgotHandler, resetLock } from './lock.js';
-import { signOutAndClear } from './sync.js';
 import { SECTIONS, AJUSTES, NAV_BLOCKS, APPS_AMIGAS, normalizeMobileNav } from './nav-model.js';
 import { openSearch, initSearch, searchHint } from './views/search-ui.js';
 
@@ -189,9 +188,14 @@ setForgotHandler((card) => {
   const account = getSyncState().user;
   const box = h('div', { class: 'lock-reset confirm-box' });
   if (account) {
-    box.append(
-      h('p', {}, `Puedes cerrar la sesión de ${account.email} y borrar los datos de este dispositivo. Tus datos siguen en tu cuenta: al volver a iniciar sesión se recuperan.`),
-      h('button', { class: 'btn btn-danger', onclick: async () => { resetLock(); await signOutAndClear(); } }, 'Cerrar sesión y borrar'));
+    // No se ofrece copia aquí: descargarla sin PIN sería saltarse el bloqueo. El PIN solo se quita si de verdad se borra.
+    import('./views/ajustes/cerrar-sesion.js').then(({ cerrarSesionBox }) => {
+      box.classList.remove('confirm-box');
+      box.append(cerrarSesionBox({
+        copia: false, antesDeBorrar: resetLock,
+        texto: `Puedes cerrar la sesión de ${account.email} y borrar los datos de este dispositivo. Tus datos siguen en tu cuenta: al volver a iniciar sesión se recuperan. Antes comprobaré que todo esté subido.`,
+      }).el);
+    });
   } else {
     const input = h('input', { class: 'input', id: 'lock-borrar', autocomplete: 'off', placeholder: 'BORRAR' });
     box.append(

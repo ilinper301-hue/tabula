@@ -3,7 +3,9 @@
 import { store } from '../store.js';
 import { h, icon, toast, googleButton } from '../ui.js';
 import { applyTheme, applyAccent, ACCENTS } from '../app.js';
-import { getSyncState, onSyncChange, signIn, signOutAndClear, SYNC_LABELS } from '../sync.js';
+import { getSyncState, onSyncChange, signIn, SYNC_LABELS } from '../sync.js';
+import { cerrarSesionBox } from './ajustes/cerrar-sesion.js';
+import { descargarCopia } from './ajustes/copia.js';
 import {
   isLockEnabled, setPin, verifyPin, disableLock, isValidPin, lockTimeout, setLockTimeout, TIMEOUTS,
   biometricAvailable, enableBiometric, disableBiometric, hasBiometric, lockNow, onLockConfigChange,
@@ -75,12 +77,8 @@ export function render(container) {
   paintBackupStatus();
   const exportData = async () => {
     try {
-      const { createBackup } = await import('../backup.js');
-      const { blob, nombre, archivos, faltan } = await createBackup((t) => paintBackupStatus(t));
-      const a = h('a', { href: URL.createObjectURL(blob), download: nombre });
-      document.body.append(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-      toast(faltan ? `Copia descargada (${faltan} ${faltan === 1 ? 'archivo no estaba' : 'archivos no estaban'} en este dispositivo)` : `Copia descargada${archivos ? ` con ${archivos} ${archivos === 1 ? 'archivo' : 'archivos'}` : ''}`);
+      const { mensaje } = await descargarCopia((t) => paintBackupStatus(t));
+      toast(mensaje);
       paintBackupStatus();
     } catch (e) { console.warn(e); toast('No se pudo crear la copia'); paintBackupStatus(); }
   };
@@ -107,6 +105,9 @@ export function render(container) {
 
   // --- Sincronización ---
   const syncBody = h('div');
+  // La caja de cerrar sesión se crea una sola vez: así no se pierde el aviso si cambia el estado de la sincronización
+  const salir = cerrarSesionBox({ onCancel: () => { salir.el.hidden = true; } });
+  salir.el.hidden = true;
   function paintSync() {
     const st = getSyncState();
     const parts = [];
@@ -118,11 +119,6 @@ export function render(container) {
         h('div', { class: 'settings-actions' },
           googleButton(() => signIn().catch(() => {}), { disabled: st.status === 'loading' })));
     } else {
-      const confirmOut = h('div', { class: 'confirm-box', hidden: true },
-        h('p', {}, 'Al cerrar sesión se borrarán los datos de este dispositivo. Seguirán guardados en tu cuenta.'),
-        h('div', { class: 'settings-actions' },
-          h('button', { class: 'btn btn-danger', onclick: () => signOutAndClear() }, 'Cerrar sesión y borrar'),
-          h('button', { class: 'btn btn-ghost', onclick: () => { confirmOut.hidden = true; } }, 'Cancelar')));
       parts.push(
         h('div', { class: 'sync-account' },
           h('span', { class: 'avatar', 'aria-hidden': 'true' }, (st.user.name || st.user.email || '?')[0].toUpperCase()),
@@ -130,11 +126,11 @@ export function render(container) {
             h('span', { class: 'user-name' }, st.user.name || st.user.email),
             h('span', { class: `user-sub sync-${st.status}` }, `${st.user.email} · ${SYNC_LABELS[st.status]}`))),
         st.status === 'offline' ? h('p', { class: 'settings-text' }, 'Sin conexión: los cambios se guardan y se subirán al recuperar la red.') : null,
-        h('div', { class: 'settings-actions' }, h('button', { class: 'btn', onclick: () => { confirmOut.hidden = false; } }, 'Cerrar sesión')),
-        confirmOut);
+        h('div', { class: 'settings-actions' }, h('button', { class: 'btn', onclick: () => { salir.el.hidden = false; } }, 'Cerrar sesión')),
+        salir.el);
     }
     if (st.error) parts.push(h('p', { class: 'sync-error', role: 'alert' }, st.error));
-    syncBody.replaceChildren(...parts);
+    syncBody.replaceChildren(...parts.filter(Boolean)); // sin filtrar se veía «null» en pantalla
   }
   paintSync();
   const unsubSync = onSyncChange(paintSync);

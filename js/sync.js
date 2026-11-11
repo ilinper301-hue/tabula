@@ -11,10 +11,12 @@
 //   por suscripción en tiempo real. Firestore guarda en cola lo que se hace sin conexión.
 // - La primera vez que se inicia sesión en un dispositivo con datos, se combinan con la nube
 //   (gana la versión modificada más recientemente).
-// - Al cerrar sesión se borran los datos del dispositivo (pensado para ordenadores compartidos).
+// - Al cerrar sesión se borran los datos del dispositivo (pensado para ordenadores compartidos),
+//   pero solo tras comprobar que todo está subido (o con confirmación expresa si no se puede comprobar).
 
 import { store, SYNC_COLLECTIONS } from './store.js';
 import { firebaseConfig, FIREBASE_SDK } from './firebase-config.js';
+import { conLimite, riesgoAlBorrar } from './datos-model.js';
 
 const ROOT = ['apps', 'tabula', 'users'];
 const BATCH_LIMIT = 400;
@@ -23,6 +25,7 @@ let fb = null;      // módulos del SDK
 let auth = null;
 let db = null;
 let unsubs = [];
+let conectado = false; // true cuando los cambios locales ya se envían a la nube
 let state = { enabled: !!firebaseConfig, status: firebaseConfig ? 'loading' : 'off', user: null, error: null };
 const listeners = new Set();
 
@@ -117,9 +120,36 @@ export async function signIn() {
   }
 }
 
-/** Cierra sesión y borra los datos de este dispositivo (siguen en la nube). */
-export async function signOutAndClear() {
-  if (!auth) return;
+/**
+ * Comprueba si queda algo de este dispositivo sin subir a la nube.
+ * Espera (con tiempo límite) a que Firestore confirme las escrituras pendientes.
+ * @returns { seguro, motivos: [texto…] }
+ */
+export async function pendingStatus(ms = 8000) {
+  if (!auth || !db || !state.user) return { seguro: true, motivos: [] };
+  try { await store.flush(); } catch {}
+  const online = typeof navigator === 'undefined' || navigator.onLine !== false;
+  // Sin red no merece la pena esperar: Firestore no puede confirmar nada
+  const escrituras = online ? await conLimite(fb.fs.waitForPendingWrites(db), ms) : 'timeout';
+  let archivos = 0;
+  try { archivos = (await (await import('./files.js')).pendingFileIds()).length; } catch {}
+  return riesgoAlBorrar({ online, status: state.status, conectado, escrituras, sinEnviar: store._isDirty(), archivos });
+}
+
+/**
+ * Cierra sesión y borra los datos de este dispositivo (siguen en la nube).
+ * Antes comprueba que todo esté subido: si no puede asegurarlo, NO borra nada y devuelve
+ * { hecho: false, motivos } para que la interfaz avise y ofrezca una copia.
+ * Con { forzar: true } (confirmación expresa del usuario) borra sin comprobar.
+ * @param antesDeBorrar función opcional que se ejecuta justo antes de borrar (ya sin vuelta atrás)
+ */
+export async function signOutAndClear({ forzar = false, antesDeBorrar = null } = {}) {
+  if (!auth) return { hecho: false, motivos: [] };
+  if (!forzar) {
+    const r = await pendingStatus();
+    if (!r.seguro) return { hecho: false, motivos: r.motivos };
+  }
+  if (antesDeBorrar) { try { antesDeBorrar(); } catch {} }
   detach();
   await fb.auth.signOut(auth);
   await store._clearLocal();
@@ -127,6 +157,7 @@ export async function signOutAndClear() {
   // Se recarga para vaciar también la caché interna de Firestore
   try { await fb.fs.terminate(db); await fb.fs.clearIndexedDbPersistence(db); } catch {}
   location.reload();
+  return { hecho: true, motivos: [] };
 }
 
 // ---------- Conexión de una cuenta ----------
@@ -184,6 +215,7 @@ async function attach(user) {
     putSetting: (k, v) => { fb.fs.setDoc(settingsRef, { [k]: v === undefined ? null : clean({ v }).v }, { merge: true }).catch(onWriteError); },
     putMany: (c, items) => { writeMany(items.map((it) => [docRef(c, it.id), clean(it)])).catch(onWriteError); },
   });
+  conectado = true;
 
   // Y cada cambio en la nube (de este u otros dispositivos) llega aquí
   for (const c of SYNC_COLLECTIONS) {
@@ -202,6 +234,7 @@ async function attach(user) {
 }
 
 function detach() {
+  conectado = false;
   unsubs.forEach((u) => { try { u(); } catch {} });
   unsubs = [];
   store._setRemote(null);

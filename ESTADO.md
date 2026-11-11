@@ -14,6 +14,14 @@ Módulos y estructura: ver `README.md`.
 
 ## Últimos cambios
 
+- **2026-11-11 · Seguridad de los datos (auditoría)**
+  - *Cerrar sesión ya no borra a ciegas*: `signOutAndClear` espera `waitForPendingWrites` (8 s máx.) y revisa red,
+    estado de error, cambios sin combinar y archivos sin subir. Si no puede asegurar que todo está en la nube, no cierra
+    sesión ni borra: avisa con los motivos y ofrece «Descargar copia», «Volver a comprobar», «Cancelar» o
+    «Borrar de todos modos». En la pantalla de bloqueo igual, pero sin copia (saltaría el PIN) y el PIN solo se quita
+    si de verdad se borra. Archivos: `js/datos-model.js` (lógica pura), `js/sync.js` (`pendingStatus`),
+    `js/views/ajustes/cerrar-sesion.js`, `js/views/ajustes/copia.js`, `tests/datos.test.mjs`.
+    De paso: se veía la palabra «null» en Ajustes → Cuenta con sesión iniciada; corregido.
 - **2026-11-11 · Documentos → «Imprimir juntos»**: elegir varios documentos (PDF, imágenes, fichas HTML)
   e imprimirlos en un solo trabajo, en el orden elegido; con «Doble cara» en la ventana de impresión salen
   uno por delante y otro por detrás del mismo folio. Opción «Cada documento en una hoja nueva» (añade blancas).
