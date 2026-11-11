@@ -8,8 +8,6 @@
 .cuaderno-view .page-title { font-size: 30px; }
 
 /* ---------- Cabecera y selectores ---------- */
-.cb-actions-top { display: flex; gap: 8px; flex-wrap: wrap; }
-.cb-actions-top .btn { min-height: 44px; }
 .cb-toolbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; flex-shrink: 0; }
 .cb-tb-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; min-width: 0; }
 @media (min-width: 1000px) {
@@ -284,13 +282,7 @@ tbody tr:focus-within > td.cb-cell .cb-in:focus { background: var(--surface); }
 @media (max-width: 680px) {
   .view.cuaderno-view { padding: 14px 12px calc(var(--nav-h) + 12px); }
   .cuaderno-view .page-title { font-size: 26px; }
-  .cuaderno-view .page-head { margin-bottom: 8px; align-items: center; flex-wrap: nowrap; }
-  .cb-actions-top { flex-wrap: nowrap; }
-  .cb-actions-top .btn { padding: 0 12px; }
-  .cb-btn-icon .cb-lbl { display: none; }
-  .cb-btn-icon { width: 44px; padding: 0 !important; }
-  .cb-actions-top .btn-primary span { display: none; }
-  .cb-actions-top .btn-primary { width: 44px; padding: 0; }
+  .cuaderno-view .page-head { margin-bottom: 8px; }
   .cb-toolbar { flex-direction: row; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; align-items: center; }
   .cb-tb-row { display: contents; }
   .cb-group { order: 1; flex: 0 0 auto; min-width: 92px; width: 104px; }

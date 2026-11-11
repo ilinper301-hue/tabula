@@ -9,6 +9,7 @@
 //   export.js         CSV
 import { store } from '../store.js';
 import { h, icon, openSheet, toast } from '../ui.js';
+import { pageHead } from '../ui-kit.js';
 import { getGroups, getGroup, AREAS, areaShort, areaColor, currentSchoolYear } from '../school.js';
 import { EVALUACIONES, configWarnings } from '../grading.js';
 import {
@@ -80,17 +81,17 @@ export function render(container, params = new URLSearchParams()) {
   const openConfig = () => { const c = fresh(); openConfigSheet({ gb: c.gb, activities: c.all }); };
 
   // ---------- Pintado ----------
-  function pageHead(group) {
-    return h('header', { class: 'page-head cb-head' },
-      h('div', {}, h('div', { class: 'eyebrow' }, group ? `${group.nombre} · curso ${group.cursoEscolar || currentSchoolYear()}` : `Curso ${currentSchoolYear()}`),
-        h('h1', { class: 'page-title' }, 'Cuaderno')),
-      ctx.gb ? h('div', { class: 'cb-actions-top' },
-        h('button', { type: 'button', class: 'btn btn-primary', onclick: newActivity, 'aria-label': 'Nueva actividad' }, icon('plus', 16), h('span', {}, 'Nueva actividad')),
-        h('button', { type: 'button', class: 'btn cb-btn-icon', onclick: openConfig, 'aria-label': 'Configurar cuaderno' }, icon('ajustes', 16), h('span', { class: 'cb-lbl' }, 'Configurar')),
-        h('button', { type: 'button', class: 'btn cb-btn-icon', 'aria-label': 'Traer notas de Calculi', title: 'Traer notas de Calculi (cálculo mental)', onclick: () => openCalculiSheet({ gb: fresh().gb, group: getGroup(st.groupId), ev: st.ev }) },
-          icon('upload', 16), h('span', { class: 'cb-lbl' }, 'Calculi')),
-        h('button', { type: 'button', class: 'btn cb-btn-icon', 'aria-label': 'Exportar a CSV', onclick: () => downloadCsv(fresh(), getGroup(st.groupId), st.area, st.ev) },
-          icon('download', 16), h('span', { class: 'cb-lbl' }, 'Exportar'))) : null);
+  function head(group) {
+    return pageHead({
+      eyebrow: group ? `${group.nombre} · curso ${group.cursoEscolar || currentSchoolYear()}` : `Curso ${currentSchoolYear()}`,
+      title: 'Cuaderno', className: 'cb-head',
+      primary: ctx.gb ? { label: 'Nueva actividad', short: 'Actividad', run: newActivity } : null,
+      menu: ctx.gb ? [
+        { icon: 'ajustes', label: 'Configurar cuaderno', run: openConfig },
+        { icon: 'upload', label: 'Traer notas de Calculi', desc: 'Cálculo mental', run: () => openCalculiSheet({ gb: fresh().gb, group: getGroup(st.groupId), ev: st.ev }) },
+        { icon: 'download', label: 'Exportar a CSV', run: () => downloadCsv(fresh(), getGroup(st.groupId), st.area, st.ev) },
+      ] : null,
+    });
   }
 
   function toolbar(groups) {
@@ -200,11 +201,11 @@ export function render(container, params = new URLSearchParams()) {
     resolveSelection();
     const groups = getGroups();
     grid = null;
-    if (!groups.length) { ctx = { gb: null, students: [], all: [], visible: [], gradesByAct: {}, results: {}, ev: st.ev }; panel.close(); container.replaceChildren(pageHead(null), emptyNoGroups()); return; }
+    if (!groups.length) { ctx = { gb: null, students: [], all: [], visible: [], gradesByAct: {}, results: {}, ev: st.ev }; panel.close(); container.replaceChildren(head(null), emptyNoGroups()); return; }
     const group = getGroup(st.groupId);
     ctx = loadContext(st);
     if (ctx.gb && ctx.gb.modo !== 'criterios') st.vista = 'actividades';
-    const parts = [pageHead(group), toolbar(groups)];
+    const parts = [head(group), toolbar(groups)];
     if (!ctx.gb) { panel.close(); parts.push(emptyNoGradebook(group)); }
     else parts.push(warningsBanner(), gridBody());
     container.replaceChildren(...parts.filter(Boolean));

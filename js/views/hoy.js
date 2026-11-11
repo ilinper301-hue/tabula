@@ -2,6 +2,7 @@
 
 import { store } from '../store.js';
 import { h, icon, longDate, greeting, todayISO, relativeDay, toast } from '../ui.js';
+import { pageHead } from '../ui-kit.js';
 import { getSessionsForDate, getEventsForDate, getGroup, getAttendance, sessionLabel, areaShort, toMin, EVENT_TYPES } from '../school.js';
 import { getPrograms } from '../programs.js';
 import { matchProgramForSession, isCoordSession } from './programas/common.js';
@@ -35,7 +36,7 @@ export function render(container) {
 
   // --- Tarjeta de tareas (se refresca sola) ---
   const tasksBody = h('div');
-  const tasksCount = h('span', { class: 'eyebrow' });
+  const tasksCount = h('span');
   const tasksCard = h('section', { class: 'hy-sec', 'aria-labelledby': 'hoy-tareas-t' },
     h('div', { class: 'hy-sec-head' },
       h('h2', { class: 'hy-sec-title', id: 'hoy-tareas-t' }, 'Tareas'),
@@ -314,11 +315,10 @@ export function render(container) {
   import('./bandeja.js').then((m) => { if (alive) asistenteOff = m.mountHoyCard(asistenteSlot); }).catch(() => {});
 
   container.replaceChildren(h('div', { class: 'hy' },
-    h('header', { class: 'page-head hy-head' },
-      h('div', { class: 'hy-head-text' },
-        h('div', { class: 'eyebrow' }, longDate(), ' · ', tasksCount),
-        h('h1', { class: 'page-title' }, firstName ? `${greeting()}, ${firstName}` : greeting())),
-      h('a', { class: 'icon-btn hy-aula', href: '#/aula', 'aria-label': 'En clase: herramientas del aula', title: 'En clase' }, icon('aula', 20))),
+    pageHead({
+      eyebrow: [longDate(), ' · ', tasksCount], title: firstName ? `${greeting()}, ${firstName}` : greeting(), className: 'hy-head',
+      menu: [{ icon: 'aula', label: 'En clase', desc: 'Herramientas del aula', href: '#/aula' }],
+    }),
     composer,
     asistenteSlot,
     nowSlot,

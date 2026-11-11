@@ -1,5 +1,6 @@
 // Tabula · Encuestas · listado (#/encuestas)
 import { h, icon, openSheet } from '../../ui.js';
+import { pageHead } from '../../ui-kit.js';
 import { store } from '../../store.js';
 import { createSurvey, getResponses } from '../../surveys.js';
 import { getPrograms } from '../../programs.js';
@@ -58,9 +59,7 @@ export function renderList(container) {
     const programs = getPrograms({ includeArchived: true });
     const items = store.list('encuestas').sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     container.replaceChildren(
-      h('header', { class: 'page-head' },
-        h('div', {}, h('div', { class: 'eyebrow' }, 'Preguntas para el claustro'), h('h1', { class: 'page-title' }, 'Encuestas')),
-        h('button', { type: 'button', class: 'btn btn-primary enc-new', onclick: newSurveySheet }, icon('plus', 18), 'Nueva encuesta')),
+      pageHead({ eyebrow: 'Preguntas para el claustro', title: 'Encuestas', primary: { label: 'Nueva encuesta', short: 'Nueva', run: () => newSurveySheet(), className: 'enc-new' } }),
       items.length ? h('div', { class: 'enc-cards' }, ...items.map((s) => card(s, programs))) : welcome());
   };
   const repaint = debounce(paint, 60);

@@ -2,6 +2,7 @@
 
 import { store } from '../store.js';
 import { h, icon, toast, googleButton } from '../ui.js';
+import { pageHead } from '../ui-kit.js';
 import { applyTheme, applyAccent, ACCENTS } from '../app.js';
 import { getSyncState, onSyncChange, signIn, SYNC_LABELS } from '../sync.js';
 import { cerrarSesionBox } from './ajustes/cerrar-sesion.js';
@@ -198,7 +199,7 @@ export function render(container) {
   const asis = asistenteCard();
   const datos = estadoDatosCard();
   container.replaceChildren(
-    h('header', { class: 'page-head' }, h('div', {}, h('h1', { class: 'page-title' }, 'Ajustes'))),
+    pageHead({ eyebrow: 'Perfil, apariencia y tus datos', title: 'Ajustes' }),
     h('div', { class: 'settings' },
       h('section', { class: 'card' },
         h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Perfil')),

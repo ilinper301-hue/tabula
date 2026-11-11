@@ -1,7 +1,6 @@
 /* Tabula · Documentos (solo variables de app.css; sirve en claro y oscuro) */
 
 /* ---------- Cabecera y pestañas ---------- */
-.dc-head-actions { display: flex; gap: 10px; align-items: center; }
 .dc-tabs { margin-bottom: 22px; }
 .dc-tabs button { display: inline-flex; align-items: center; gap: 8px; }
 .dc-badge {
@@ -264,9 +263,6 @@
 
 /* ---------- Responsive ---------- */
 @media (max-width: 680px) {
-  .dc-head .eyebrow { display: none; }
-  .dc-head-actions { width: 100%; }
-  .dc-head-actions .btn { flex: 1; }
   .dc-tabs { display: flex; width: 100%; }
   .dc-tabs button { flex: 1; justify-content: center; }
   .dc-sort { flex: 0 0 132px; min-width: 0; padding-left: 10px; padding-right: 4px; font-size: 14px; }
@@ -315,16 +311,6 @@
 .dc-cl-note { margin: 0; font-size: 13px; color: var(--muted); }
 .dc-k-ficha { --k-bg: var(--t3-bg); --k-fg: var(--t3-fg); }
 
-.dc-head-actions .btn { white-space: nowrap; }
-@media (max-width: 680px) {
-  .dc-head-actions { gap: 8px; }
-  .dc-head-actions .btn:is([aria-label="Añadir enlace"], [aria-label="Añadir desde Google Drive"]) .dc-btn-text { display: none; }
-  .dc-head-actions .btn:is([aria-label="Añadir enlace"], [aria-label="Añadir desde Google Drive"]) { flex: 0 0 auto; padding-inline: 13px; }
-}
-@media (max-width: 420px) {
-  .dc-head-actions .btn[aria-label="Pegar de Claude"] .dc-btn-text { display: none; }
-  .dc-head-actions .btn[aria-label="Pegar de Claude"] { flex: 0 0 auto; padding-inline: 13px; }
-}
 .dc-cl-pdf { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px dashed var(--border-strong); border-radius: 12px; }
 .dc-cl-pdf-ic { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--t1-bg); color: var(--t1-fg); flex-shrink: 0; }
 .dc-cl-pdf-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }

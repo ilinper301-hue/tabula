@@ -7,6 +7,7 @@
 
 import { store } from '../store.js';
 import { h, icon, toast, openSheet } from '../ui.js';
+import { pageHead } from '../ui-kit.js';
 import { isLockEnabled, verifyPin } from '../lock.js';
 import { newVault, openVault, encryptText, decryptText, validPassphrase } from '../codigos-crypto.js';
 
@@ -259,9 +260,10 @@ export function render(container) {
   }
 
   container.replaceChildren(
-    h('header', { class: 'page-head' },
-      h('div', {}, h('div', { class: 'eyebrow' }, 'Libros digitales, impresora, wifi…'), h('h1', { class: 'page-title' }, 'Códigos')),
-      h('button', { type: 'button', class: 'btn btn-primary', id: 'cd-nuevo', onclick: () => editSheet() }, icon('plus', 16), 'Nuevo código')),
+    pageHead({
+      eyebrow: 'Libros digitales, impresora, wifi…', title: 'Códigos',
+      primary: { label: 'Nuevo código', short: 'Nuevo', id: 'cd-nuevo', run: () => editSheet() },
+    }),
     vaultBox,
     h('div', { class: 'cd-tools' }, search, chips),
     list,

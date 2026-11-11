@@ -208,7 +208,6 @@
 /* ---------- Móvil ---------- */
 @media (max-width: 680px) {
   .plan-view .page-title { font-size: 28px; }
-  .pl-new { width: 100%; }
   .pl-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
   .pl-group { width: 100%; }
   .pl-cards { grid-template-columns: minmax(0, 1fr); }
@@ -233,7 +232,6 @@
 /* =====================================================================
    Programación (semana y mes) · prefijo pr-
    ===================================================================== */
-.pr-head-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .pr-tabs button { min-height: 40px; }
 .pr-tabs button[aria-current="page"], .pr-modo button[aria-pressed="true"] {
   background: var(--surface); color: var(--text); font-weight: 500; box-shadow: var(--shadow-sm);
@@ -415,7 +413,6 @@
 .pr-mrow-sits .pr-sit.chip { max-width: 100%; }
 
 @media (max-width: 680px) {
-  .pr-head-actions { width: 100%; }
   .pr-tabs { width: 100%; }
   .pr-tabs button { flex: 1; }
   .pr-bar { gap: 10px; }

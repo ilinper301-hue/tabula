@@ -8,6 +8,7 @@
 // Submódulos en ./documentos/ · estilos en css/documentos.css · modelo puro en js/documents.js
 import { store } from '../store.js';
 import { h, icon, todayISO } from '../ui.js';
+import { pageHead } from '../ui-kit.js';
 import { dueNow } from '../documents.js';
 import { mountLibrary, libState } from './documentos/library.js';
 import { mountQueue, liveQueue } from './documentos/queue.js';
@@ -72,14 +73,16 @@ export function render(container, params = new URLSearchParams()) {
   }
 
   container.replaceChildren(
-    h('header', { class: 'page-head dc-head' },
-      h('div', {}, h('div', { class: 'eyebrow' }, 'Fichas, exámenes y recursos'), h('h1', { class: 'page-title' }, 'Documentos')),
-      h('div', { class: 'dc-head-actions' },
-        h('button', { type: 'button', class: 'btn', onclick: () => { location.href = urlCrearFicha({ groupId: libState.groupId || '' }); }, 'aria-label': 'Crear ficha con Charta', title: 'Crear una ficha con Charta' }, icon('sparkle', 16), h('span', { class: 'dc-btn-text' }, 'Crear ficha')),
-        h('button', { type: 'button', class: 'btn', onclick: () => openPasteSheet({ carpeta: libState.carpeta || '', onSaved: () => { if (tab !== 'biblioteca') showTab('biblioteca'); } }), 'aria-label': 'Pegar de Claude', title: 'Pegar una ficha hecha con Claude' }, icon('sparkle', 16), h('span', { class: 'dc-btn-text' }, 'Pegar de Claude')),
-        h('button', { type: 'button', class: 'btn', onclick: fromDrive, 'aria-label': 'Añadir desde Google Drive', title: 'Elegir archivos de tu Google Drive' }, icon('drive', 16), h('span', { class: 'dc-btn-text' }, 'Drive')),
-        h('button', { type: 'button', class: 'btn', onclick: addLink, 'aria-label': 'Añadir enlace' }, icon('link', 16), h('span', { class: 'dc-btn-text' }, 'Añadir enlace')),
-        h('button', { type: 'button', class: 'btn btn-primary', onclick: chooseFiles }, icon('upload', 16), 'Subir'))),
+    pageHead({
+      eyebrow: 'Fichas, exámenes y recursos', title: 'Documentos', className: 'dc-head',
+      primary: { label: 'Subir', icon: 'upload', run: chooseFiles, ariaLabel: 'Subir archivos' },
+      menu: [
+        { icon: 'sparkle', label: 'Crear ficha con Charta', run: () => { location.href = urlCrearFicha({ groupId: libState.groupId || '' }); } },
+        { icon: 'edit', label: 'Pegar de Claude', desc: 'Una ficha hecha con Claude', run: () => openPasteSheet({ carpeta: libState.carpeta || '', onSaved: () => { if (tab !== 'biblioteca') showTab('biblioteca'); } }) },
+        { icon: 'drive', label: 'Desde Google Drive', run: fromDrive },
+        { icon: 'link', label: 'Añadir enlace', run: addLink },
+      ],
+    }),
     tabs, status, panel);
 
   // ---------- Arrastrar y soltar ----------

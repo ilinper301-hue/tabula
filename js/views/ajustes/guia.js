@@ -1,7 +1,7 @@
 // Tabula · Ajustes · tarjeta «Guía rápida» (ayudas por sección y datos de ejemplo)
 import { store } from '../../store.js';
 import { h, icon, toast } from '../../ui.js';
-import { loadGuide } from '../../guide.js';
+import { loadGuide, refreshGuide } from '../../guide.js';
 
 const saveGuide = (g) => store.setSetting('guia', g);
 
@@ -10,11 +10,12 @@ export function guiaCard() {
   const confirmBox = h('div', { class: 'confirm-box', hidden: true });
   let busy = false;
 
-  const toggle = h('input', { type: 'checkbox', class: 'switch', id: 'aj-guia', checked: loadGuide().activa, 'aria-label': 'Mostrar la guía rápida',
-    onchange: (e) => { const g = loadGuide(); saveGuide({ ...g, activa: e.target.checked }); toast(e.target.checked ? 'Guía activada' : 'Guía desactivada'); } });
-  const reset = h('button', { type: 'button', class: 'btn', onclick: () => {
-    saveGuide({ activa: true, vistas: {} }); toggle.checked = true; toast('Volverás a ver todas las ayudas');
-  } }, icon('sparkle', 18), 'Volver a mostrar todas las ayudas');
+  const toggle = h('input', { type: 'checkbox', class: 'switch', id: 'aj-guia', checked: loadGuide().activa, 'aria-label': 'Mostrar «¿Cómo funciona?» en cada sección',
+    onchange: (e) => {
+      saveGuide({ activa: e.target.checked });
+      refreshGuide();
+      toast(e.target.checked ? 'Guía activada' : 'Guía desactivada');
+    } });
 
   async function paintDemo() {
     const { hasDemo } = await import('./demo.js');
@@ -57,8 +58,7 @@ export function guiaCard() {
 
   const card = h('section', { class: 'card gd-card', id: 'ajustes-guia' },
     h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Guía rápida')),
-    h('label', { class: 'switch-row' }, h('span', {}, 'Mostrar ayudas en cada sección', h('span', { class: 'gd-sub' }, 'Una nota breve arriba de cada pantalla, que puedes cerrar con «Entendido».')), toggle),
-    h('div', { class: 'settings-actions' }, reset),
+    h('label', { class: 'switch-row' }, h('span', {}, 'Mostrar «¿Cómo funciona?» en cada sección', h('span', { class: 'gd-sub' }, 'Un enlace discreto en la cabecera (o en el menú «⋯») que abre una ayuda breve de la pantalla.')), toggle),
     h('hr'), demoBox, confirmBox);
   paintDemo();
   return card;

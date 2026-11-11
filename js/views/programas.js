@@ -5,6 +5,7 @@
 //   #/programas?id=<id>[&tab=diario|objetivos|tareas|equipo|memoria]
 import { store } from '../store.js';
 import { h, icon, relativeDay } from '../ui.js';
+import { pageHead } from '../ui-kit.js';
 import { PROGRAM_TYPES, ROLES, getPrograms, programStats, fmtDuration } from '../programs.js';
 import { currentSchoolYear } from '../school.js';
 import { colorOf, go, hrefTo, plural } from './programas/common.js';
@@ -36,9 +37,7 @@ function renderList(container) {
   const body = h('div', { class: 'pg-list-body' });
   const openNew = (prefill) => openProgramSheet(null, { prefill, onSaved: (p) => go({ id: p.id }) });
   container.replaceChildren(
-    h('header', { class: 'page-head' },
-      h('div', {}, h('div', { class: 'eyebrow' }, `Curso ${currentSchoolYear()}`), h('h1', { class: 'page-title' }, 'Planes y programas')),
-      h('button', { type: 'button', class: 'btn btn-primary', onclick: () => openNew() }, icon('plus', 16), 'Nuevo programa')),
+    pageHead({ eyebrow: `Curso ${currentSchoolYear()}`, title: 'Planes y programas', primary: { label: 'Nuevo programa', short: 'Nuevo', run: () => openNew() } }),
     body);
 
   function card(p) {
@@ -99,7 +98,7 @@ function renderList(container) {
 function renderDetail(container, program, params) {
   const programaId = program.id;
   const tab = TABS.some(([k]) => k === params.get('tab')) ? params.get('tab') : 'diario';
-  const head = h('header', { class: 'page-head pg-head' });
+  let head = h('div'); // se sustituye por la cabecera en paintHead()
   const tabs = h('div', { class: 'segmented pg-tabs', role: 'tablist', 'aria-label': 'Secciones del programa' },
     TABS.map(([k, label]) => h('a', { role: 'tab', class: 'pg-tab', href: hrefTo({ id: programaId, tab: k }), 'aria-selected': String(k === tab) }, label)));
   const panel = h('div', { class: 'pg-panel', role: 'tabpanel' });
@@ -108,17 +107,17 @@ function renderDetail(container, program, params) {
     const p = store.get('programas', programaId);
     if (!p) { go(); return; } // eliminado (p. ej. desde otro dispositivo)
     const c = colorOf(p);
-    head.replaceChildren(
-      h('div', {},
-        h('a', { class: 'link-btn pg-back', href: '#/programas' }, icon('chevronLeft', 14), 'Planes y programas'),
-        h('h1', { class: 'page-title' }, p.nombre),
-        h('div', { class: 'pg-head-meta' },
-          h('span', { class: `chip ${c}` }, PROGRAM_TYPES[p.tipo] || 'Programa'),
-          h('span', { class: 'chip pg-chip-neutral' }, ROLES[p.rol] || ''),
-          h('span', { class: 'eyebrow' }, `Curso ${p.cursoEscolar} · #${p.etiqueta}`),
-          p.archivado ? h('span', { class: 'chip t5' }, 'Archivado') : null),
-        p.descripcion ? h('p', { class: 'pg-desc' }, p.descripcion) : null),
-      h('button', { type: 'button', class: 'btn', onclick: () => openProgramSheet(p, { onDeleted: () => go() }) }, 'Editar programa'));
+    const next = pageHead({
+      back: { href: '#/programas', label: 'Planes y programas' }, title: p.nombre, className: 'pg-head',
+      meta: [h('div', { class: 'pg-head-meta' },
+        h('span', { class: `chip ${c}` }, PROGRAM_TYPES[p.tipo] || 'Programa'),
+        h('span', { class: 'chip pg-chip-neutral' }, ROLES[p.rol] || ''),
+        h('span', { class: 'eyebrow' }, `Curso ${p.cursoEscolar} · #${p.etiqueta}`),
+        p.archivado ? h('span', { class: 'chip t5' }, 'Archivado') : null),
+      p.descripcion ? h('p', { class: 'pg-desc' }, p.descripcion) : null],
+      menu: [{ icon: 'edit', label: 'Editar programa', run: () => { const cur = store.get('programas', programaId); if (cur) openProgramSheet(cur, { onDeleted: () => go() }); } }],
+    });
+    head.replaceWith(next); head = next;
   }
   paintHead();
   container.replaceChildren(head, tabs, panel);

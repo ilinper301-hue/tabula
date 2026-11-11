@@ -10,6 +10,7 @@
 //   session-sheet.js  hoja de una sesión (exporta openSessionSheet, reutilizable por Hoy y Calendario)
 import { store } from '../store.js';
 import { h, icon } from '../ui.js';
+import { pageHead } from '../ui-kit.js';
 import { getGroups, getGroup, AREAS, areaShort, areaColor, currentSchoolYear } from '../school.js';
 import { hasSlots } from '../planning.js';
 import {
@@ -51,13 +52,12 @@ export function render(container, params = new URLSearchParams()) {
   const go = (patch) => { location.hash = href({ ...sel(), ...patch }).slice(1); };
 
   // ---------- Pintado ----------
-  function pageHead(group) {
-    return h('header', { class: 'page-head' },
-      h('div', {}, h('div', { class: 'eyebrow' }, group ? `${group.nombre} · ${areaShort(st.area)} · curso ${group.cursoEscolar || currentSchoolYear()}` : `Curso ${currentSchoolYear()}`),
-        h('h1', { class: 'page-title' }, 'Planificación')),
-      h('div', { class: 'pr-head-actions' }, viewTabs('situaciones', { grupo: st.groupId }),
-        group ? h('button', { type: 'button', class: 'btn btn-primary pl-new', onclick: newSituacion },
-          icon('plus', 16), h('span', {}, 'Nueva situación de aprendizaje')) : null));
+  function head(group) {
+    return [pageHead({
+      eyebrow: group ? `${group.nombre} · ${areaShort(st.area)} · curso ${group.cursoEscolar || currentSchoolYear()}` : `Curso ${currentSchoolYear()}`,
+      title: 'Planificación',
+      primary: group ? { label: 'Nueva situación de aprendizaje', short: 'Nueva', run: newSituacion, className: 'pl-new' } : null,
+    }), h('div', { class: 'ph-subnav' }, viewTabs('situaciones', { grupo: st.groupId }))];
   }
 
   function newSituacion() {
@@ -100,12 +100,12 @@ export function render(container, params = new URLSearchParams()) {
     if (keepScroll) tlScroll = keepScroll.scrollLeft;
     resolveSelection();
     const groups = getGroups();
-    if (!groups.length) { container.replaceChildren(pageHead(null), emptyNoGroups()); return; }
+    if (!groups.length) { container.replaceChildren(...head(null), emptyNoGroups()); return; }
     const group = getGroup(st.groupId);
     const ctx = ctxFor(st.groupId, st.area);
     const sits = situacionesOf(st.groupId, st.area);
     const sesiones = sesionesOf(st.groupId, st.area);
-    const parts = [pageHead(group), toolbar(groups)];
+    const parts = [...head(group), toolbar(groups)];
     if (!hasSlots(ctx)) parts.push(noSlotsNotice());
     const env = {
       groupId: st.groupId, area: st.area, sits, sesiones, schedule: ctx.schedule, go, newSituacion, repaint: paint, prevTlScroll: tlScroll,

@@ -6,6 +6,7 @@
 // Módulos: prog-model.js (datos), prog-sheet.js (hoja «Planificar»), prog-print.js (semana imprimible).
 import { store } from '../../store.js';
 import { h, icon, todayISO, addDaysISO, fromISO, DIAS } from '../../ui.js';
+import { pageHead } from '../../ui-kit.js';
 import { areaShort, areaColor, EVENT_TYPES, currentSchoolYear } from '../../school.js';
 import { openSessionSheet } from './session-sheet.js';
 import { openPlanSheet } from './prog-sheet.js';
@@ -256,9 +257,8 @@ export function renderProgramacion(container, params = new URLSearchParams()) {
 
   // ---------- Pintado ----------
   function head() {
-    return h('header', { class: 'page-head' },
-      h('div', {}, h('div', { class: 'eyebrow' }, `Curso ${currentSchoolYear()}`), h('h1', { class: 'page-title' }, 'Planificación')),
-      viewTabs('programacion', { grupo: groupFilter }));
+    return [pageHead({ eyebrow: `Curso ${currentSchoolYear()}`, title: 'Planificación' }),
+      h('div', { class: 'ph-subnav' }, viewTabs('programacion', { grupo: groupFilter }))];
   }
 
   function emptyNoSchedule() {
@@ -273,7 +273,7 @@ export function renderProgramacion(container, params = new URLSearchParams()) {
     const scrollLeft = keep ? keep.scrollLeft : 0;
     const groups = teacherGroups();
     if (groupFilter && !groups.some((g) => g.id === groupFilter)) groupFilter = '';
-    const parts = [head()];
+    const parts = [...head()];
     if (!groups.length) { container.replaceChildren(...parts, emptyNoSchedule()); return; }
 
     const data = readData();

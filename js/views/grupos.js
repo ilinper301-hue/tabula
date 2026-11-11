@@ -6,6 +6,7 @@
 //   #/grupos?id=<id>&tab=asistencia&fecha=YYYY-MM-DD   pasar lista de esa fecha (por defecto hoy)
 import { store } from '../store.js';
 import { h, icon, todayISO } from '../ui.js';
+import { pageHead } from '../ui-kit.js';
 import { getGroups, getGroup, getStudents, getAttendance } from '../school.js';
 import { colorOf, plural, go } from './grupos/common.js';
 import { openGroupSheet } from './grupos/sheets.js';
@@ -34,13 +35,10 @@ export function render(container, params = new URLSearchParams()) {
 // ============================================================
 function renderList(container) {
   const body = h('div', { class: 'gr-list-body' });
-  const newBtn = h('button', { type: 'button', class: 'btn btn-primary', onclick: () => openNew() }, icon('plus', 16), 'Nuevo grupo');
   const openNew = () => openGroupSheet(null, { onSaved: (g) => go({ id: g.id }) });
 
   container.replaceChildren(
-    h('header', { class: 'page-head' },
-      h('div', {}, h('div', { class: 'eyebrow' }, 'Tu alumnado'), h('h1', { class: 'page-title' }, 'Grupos')),
-      newBtn),
+    pageHead({ eyebrow: 'Tu alumnado', title: 'Grupos', primary: { label: 'Nuevo grupo', short: 'Nuevo', run: () => openNew() } }),
     body);
 
   function card(g) {
@@ -103,7 +101,7 @@ function renderDetail(container, group, params) {
   const groupId = group.id;
   const tab = TABS.some(([k]) => k === params.get('tab')) ? params.get('tab') : 'alumnado';
 
-  const head = h('header', { class: 'page-head gr-head' });
+  let head = h('div'); // se sustituye por la cabecera en paintHead()
   const tabs = h('div', { class: 'segmented gr-tabs', role: 'tablist', 'aria-label': 'Secciones del grupo' },
     TABS.map(([k, label]) => h('a', {
       role: 'tab', href: href({ id: groupId, tab: k }), 'aria-selected': String(k === tab), class: 'gr-tab',
@@ -114,16 +112,17 @@ function renderDetail(container, group, params) {
     const g = getGroup(groupId);
     if (!g) { go(); return; } // el grupo ya no existe
     const c = colorOf(g);
-    head.replaceChildren(
-      h('div', {},
-        h('a', { class: 'link-btn gr-back', href: '#/grupos' }, icon('chevronLeft', 14), 'Grupos'),
-        h('h1', { class: 'page-title' }, g.nombre),
-        h('div', { class: 'gr-head-meta' }, h('span', { class: 'eyebrow' }, `${g.curso}º de Primaria · curso ${g.cursoEscolar}`),
-          g.tutoria ? h('span', { class: `chip ${c}` }, 'Tutoría') : null,
-          g.archivado ? h('span', { class: 'chip t5' }, 'Archivado') : null)),
-      h('div', { class: 'gr-head-actions', style: { display: 'flex', gap: '10px', flexWrap: 'wrap' } },
-        h('button', { type: 'button', class: 'btn', onclick: () => { location.href = urlCrearFicha({ groupId }); } }, icon('sparkle', 16), 'Crear ficha con Charta'),
-        h('button', { type: 'button', class: 'btn', onclick: () => openGroupSheet(g) }, 'Editar grupo')));
+    const next = pageHead({
+      back: { href: '#/grupos', label: 'Grupos' }, title: g.nombre, className: 'gr-head',
+      meta: h('div', { class: 'gr-head-meta' }, h('span', { class: 'eyebrow' }, `${g.curso}º de Primaria · curso ${g.cursoEscolar}`),
+        g.tutoria ? h('span', { class: `chip ${c}` }, 'Tutoría') : null,
+        g.archivado ? h('span', { class: 'chip t5' }, 'Archivado') : null),
+      menu: [
+        { icon: 'edit', label: 'Editar grupo', run: () => openGroupSheet(getGroup(groupId)) },
+        { icon: 'sparkle', label: 'Crear ficha con Charta', run: () => { location.href = urlCrearFicha({ groupId }); } },
+      ],
+    });
+    head.replaceWith(next); head = next;
   }
   paintHead();
   container.replaceChildren(head, tabs, panel);

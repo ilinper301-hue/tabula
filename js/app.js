@@ -2,6 +2,7 @@
 
 import { store } from './store.js';
 import { h, icon, logoLockup } from './ui.js';
+import { pageHead } from './ui-kit.js';
 import { initSync, getSyncState, onSyncChange, SYNC_LABELS } from './sync.js';
 import './plan-sync.js';
 import { initLock, setForgotHandler, resetLock } from './lock.js';
@@ -127,9 +128,7 @@ function placeholder(route) {
   return {
     render(container) {
       container.replaceChildren(
-        h('header', { class: 'page-head' },
-          h('div', {}, h('div', { class: 'eyebrow' }, `Fase ${route.fase}`),
-            h('h1', { class: 'page-title' }, route.label))),
+        pageHead({ eyebrow: `Fase ${route.fase}`, title: route.label }),
         h('div', { class: 'card' },
           h('div', { class: 'empty' }, icon(route.icon, 40),
             h('strong', {}, 'Este módulo está en preparación'),

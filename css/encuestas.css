@@ -45,13 +45,12 @@
 .enc-blank { margin-top: 10px; }
 
 /* ---------- Cabecera del editor ---------- */
-.enc-head { margin-bottom: 14px; align-items: flex-start; position: relative; }
-.enc-head-main { min-width: 0; flex: 1; }
-.enc-back { display: inline-flex; align-items: center; gap: 2px; padding-left: 0; text-decoration: none; margin-left: -4px; }
+.enc-head { margin-bottom: 14px; }
 .enc-title { overflow-wrap: anywhere; font-size: 30px; }
 .enc-title.is-untitled { color: var(--muted); }
 .enc-head-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-.enc-save { font-size: 13px; color: var(--muted); position: absolute; right: 0; top: 6px; }
+.enc-save { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.enc-save:empty { display: none; }
 .enc-tabs { display: flex; width: 100%; max-width: 460px; margin-bottom: 20px; }
 .enc-tabs button { flex: 1; min-height: 44px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .enc-badge[hidden] { display: none; }
@@ -211,7 +210,6 @@
   .enc-card { padding: 14px; gap: 10px; }
   .enc-card-count { min-width: 52px; }
   .enc-big { width: 100%; }
-  .enc-head { flex-direction: column; gap: 4px; }
   .enc-bar-row .btn { width: 100%; }
   .enc-q-foot { gap: 0; }
 }

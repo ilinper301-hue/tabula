@@ -6,6 +6,7 @@
 // Datos: colecciones 'reuniones' y 'medidas' (lógica pura en js/tutoria.js). Estilos: css/tutoria.css.
 import { store } from '../store.js';
 import { h, icon } from '../ui.js';
+import { pageHead } from '../ui-kit.js';
 import { getGroups, getGroup } from '../school.js';
 import { mountFamilias } from './tutoria/familias.js';
 import { mountReuniones } from './tutoria/reuniones.js';
@@ -41,8 +42,7 @@ function pickGroup(groups, params) {
 function paint(container, params) {
   const groups = getGroups();
   const group = pickGroup(groups, params);
-  const head = (right) => h('header', { class: 'page-head' },
-    h('div', {}, h('div', { class: 'eyebrow' }, 'Familias y atención a la diversidad'), h('h1', { class: 'page-title' }, 'Tutoría')), right);
+  const head = () => pageHead({ eyebrow: 'Familias y atención a la diversidad', title: 'Tutoría' });
 
   if (!group) {
     container.replaceChildren(head(), h('div', { class: 'card' }, h('div', { class: 'empty' }, icon('tutoria', 44),
@@ -63,7 +63,7 @@ function paint(container, params) {
     TABS.map(([k, label]) => h('a', { role: 'tab', class: 'tu-tab', href: href({ grupo: group.id, tab: k }), 'aria-selected': String(k === tab) }, label)));
   const panel = h('div', { class: 'tu-panel', role: 'tabpanel' });
 
-  container.replaceChildren(head(groups.length > 1 ? select : null), tabs, panel);
+  container.replaceChildren(head(), groups.length > 1 ? h('div', { class: 'ph-subnav tu-ctx' }, select) : '', tabs, panel);
   const stop = MOUNT[tab](panel, { groupId: group.id });
   // Enlaces profundos: se abre una sola vez, al entrar
   if (rid && store.get('reuniones', rid)) openReunion({ groupId: group.id, reunionId: rid });

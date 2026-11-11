@@ -3,6 +3,7 @@
 // Usa todos los cuadernos del grupo en el curso escolar.
 import { store } from '../../store.js';
 import { h, icon } from '../../ui.js';
+import { pageHead } from '../../ui-kit.js';
 import { getGroups, getGroup, currentSchoolYear } from '../../school.js';
 import { EVALUACIONES } from '../../grading.js';
 import { currentEv } from './model.js';
@@ -40,11 +41,10 @@ export function renderInformes(container, params = new URLSearchParams()) {
 
   function header() {
     const group = getGroup(st.groupId);
-    return h('header', { class: 'page-head cb-head cb-noprint' },
-      h('div', {},
-        h('a', { class: 'cb-inf-back', href: backHref() }, icon('chevronLeft', 16), 'Volver al cuaderno'),
-        h('h1', { class: 'page-title' }, 'Informes'),
-        h('div', { class: 'eyebrow' }, group ? `${group.nombre} · curso ${group.cursoEscolar || currentSchoolYear()}` : '')));
+    return pageHead({
+      back: { href: backHref(), label: 'Volver al cuaderno' }, title: 'Informes', className: 'cb-head cb-noprint',
+      eyebrow: group ? `${group.nombre} · curso ${group.cursoEscolar || currentSchoolYear()}` : null,
+    });
   }
 
   function toolbar() {
@@ -83,7 +83,7 @@ export function renderInformes(container, params = new URLSearchParams()) {
   function paintAll() {
     const g2 = getGroup(st.groupId);
     if (!g2) {
-      container.replaceChildren(h('header', { class: 'page-head' }, h('div', {}, h('h1', { class: 'page-title' }, 'Informes'))),
+      container.replaceChildren(pageHead({ back: { href: backHref(), label: 'Volver al cuaderno' }, title: 'Informes' }),
         h('div', { class: 'card' }, h('div', { class: 'empty cb-empty' }, icon('grupos', 44), h('strong', {}, 'Primero crea un grupo'),
           'Los informes necesitan un grupo con su alumnado.', h('div', { class: 'cb-empty-actions' }, h('a', { class: 'btn btn-primary', href: '#/grupos' }, 'Ir a Grupos')))));
       return;

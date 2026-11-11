@@ -1,6 +1,7 @@
 // Tabula · vista «Tareas»
 import { store } from '../store.js';
 import { h, icon, todayISO, diffDays, fromISO, toISO, DIAS, MESES, toast } from '../ui.js';
+import { pageHead } from '../ui-kit.js';
 import { parseQuickInput, createTask, sortTasks, allTags, isOverdue, taskRow } from '../tasks-model.js';
 
 const VISTAS = [['hoy', 'Hoy'], ['proximas', 'Próximas'], ['todas', 'Todas']];
@@ -51,7 +52,7 @@ export function render(container, params = new URLSearchParams()) {
   };
 
   // ---- Cabecera (estática: el composer conserva el foco al re-renderizar la lista)
-  const eyebrow = h('div', { class: 'eyebrow' });
+  const eyebrow = h('span');
   const input = h('input', {
     type: 'text', id: 'tareas-quick', autocomplete: 'off', enterkeyhint: 'done',
     placeholder: 'Nueva tarea… ej. «corregir dictado mañana #lengua»',
@@ -88,9 +89,8 @@ export function render(container, params = new URLSearchParams()) {
   const panel = h('div', { id: 'tareas-panel', role: 'tabpanel', 'aria-labelledby': `tab-${vista}`, class: 'tareas-panel' });
 
   container.replaceChildren(h('div', { class: 'tareas-view' },
-    h('header', { class: 'page-head' },
-      h('div', {}, eyebrow, h('h1', { class: 'page-title' }, 'Tareas')),
-      composer),
+    pageHead({ eyebrow, title: 'Tareas' }),
+    composer,
     tabs, panel));
 
   // ---- Parte dinámica: etiquetas + listas

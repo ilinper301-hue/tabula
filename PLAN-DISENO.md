@@ -37,7 +37,11 @@ Problemas comunes a toda la app:
 - **Menos cajas**: las listas van sin tarjeta, con separadores finos; tarjeta solo para bloques independientes.
 - Ninguna ruta puede tener desplazamiento horizontal a 360 px ni a 390 px.
 
-## Fase 1 · Piezas comunes — *Opus, esfuerzo alto*
+## Fase 1 · Piezas comunes — *Opus, esfuerzo alto* — ✅ hecha (2026-11-11)
+
+> Hecho: `js/ui-kit.js` (`pageHead`, `openMenu`, `openActionSheet`), estilos en `css/app.css`, guía en hoja,
+> `pageHead` en todas las vistas y `tests/diseno.test.mjs` + `tests/desbordamiento.py`. Queda para las fases 2–5:
+> mostrar la guía desplegada dentro de los estados vacíos (al rehacer cada uno).
 
 Base de todo lo demás. No cambia funciones, solo estructura visual.
 

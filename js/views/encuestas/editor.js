@@ -1,5 +1,6 @@
 // Tabula · Encuestas · editor (cabecera, pestañas, guardado automático y suscripciones)
-import { h, icon } from '../../ui.js';
+import { h } from '../../ui.js';
+import { pageHead } from '../../ui-kit.js';
 import { store } from '../../store.js';
 import { onSyncChange } from '../../sync.js';
 import { getResponses, publishSurvey, setSurveyOpen } from '../../surveys.js';
@@ -96,11 +97,7 @@ export function renderEditor(container, id, wantedTab) {
       label, t === 'resultados' ? h('span', { class: 'enc-badge', hidden: true }) : null))));
 
   container.replaceChildren(
-    h('header', { class: 'page-head enc-head' },
-      h('div', { class: 'enc-head-main' },
-        h('a', { class: 'link-btn enc-back', href: '#/encuestas' }, icon('chevronLeft', 16), 'Encuestas'),
-        titleEl, metaEl),
-      stateEl),
+    pageHead({ back: { href: '#/encuestas', label: 'Encuestas' }, title: titleEl, meta: metaEl, aside: stateEl, className: 'enc-head' }),
     tabs, panelHost);
   go(tab, { replace: false });
 

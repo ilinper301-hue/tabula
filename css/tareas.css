@@ -1,6 +1,7 @@
 /* Tabula · estilos del módulo Tareas (usa solo variables de app.css) */
 
-.tareas-view .page-head { margin-bottom: 18px; }
+.tareas-view .page-head { margin-bottom: var(--s-4); }
+.tareas-view > .composer { margin-bottom: var(--s-4); }
 .tareas-tabs { margin-bottom: 18px; max-width: 100%; }
 .tareas-tabs button { min-height: 40px; }
 

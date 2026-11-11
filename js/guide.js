@@ -1,9 +1,12 @@
 // Tabula · guía rápida (ayudas por sección).
 // Contrato: mountGuide(routeId, viewEl, params) — app.js la llama tras pintar cada vista.
-// Ajuste 'guia': { activa: true, vistas: { [routeId]: true } } (vistas = secciones ya entendidas).
-// Se coloca justo después de la primera .page-head (o al principio) y no se duplica al repintar.
+// Ajuste 'guia': { activa: true } (el antiguo campo «vistas» ya no se usa).
+// Ya no es una tarjeta: es un enlace discreto «¿Cómo funciona?» en la cabecera (pageHead) o, si la
+// cabecera ya tiene acciones, una entrada del menú «⋯». Abre la ayuda en una hoja (openGuide).
+// No se duplica al repintar: la cabecera queda marcada con data-guide.
 import { store } from './store.js';
-import { h, icon, toast } from './ui.js';
+import { h, icon, openSheet } from './ui.js';
+import { addHeadMenuItems, removeHeadMenuItems, headHasMenu, helpPlacement } from './ui-kit.js';
 
 export const GUIDE_TIPS = {
   hoy: {
@@ -117,63 +120,75 @@ export const loadGuide = () => {
   const g = store.getSetting(KEY, null);
   return { activa: g ? g.activa !== false : true, vistas: g && typeof g.vistas === 'object' && g.vistas ? g.vistas : {} };
 };
-const saveGuide = (g) => store.setSetting(KEY, g);
+
+export const HELP_LABEL = '¿Cómo funciona?';
+
+/** Abre la ayuda de una sección en una hoja. */
+export function openGuide(routeId) {
+  const tip = GUIDE_TIPS[routeId];
+  if (!tip) return null;
+  return openSheet(HELP_LABEL, h('div', { class: 'gd-sheet' },
+    h('p', { class: 'gd-text' }, tip.text),
+    h('ul', { class: 'gd-how', 'aria-label': 'Cómo…' }, ...tip.how.map(([t, d]) => h('li', {}, h('strong', {}, `${t}: `), d))),
+    h('p', { class: 'gd-foot' }, 'Puedes ocultar estas ayudas en Ajustes → Guía rápida.')), { className: 'gd-sheet-panel' });
+}
 
 let observer = null;
 let current = null; // { routeId, viewEl }
 
-function buildTip(routeId, tip) {
-  const el = h('aside', { class: 'gd-tip', 'data-route': routeId, role: 'note', 'aria-label': 'Guía rápida' },
-    h('span', { class: 'gd-ic', 'aria-hidden': 'true' }, icon('sparkle', 18)),
-    h('div', { class: 'gd-main' },
-      h('div', { class: 'gd-eyebrow' }, 'Guía rápida'),
-      h('p', { class: 'gd-text' }, tip.text),
-      h('ul', { class: 'gd-how', 'aria-label': 'Cómo…' },
-        ...tip.how.map(([t, d]) => h('li', {}, h('strong', {}, `${t}: `), d))),
-      h('div', { class: 'gd-actions' },
-        h('button', { type: 'button', class: 'btn btn-sm gd-ok', onclick: () => {
-          const g = loadGuide(); g.vistas = { ...g.vistas, [routeId]: true }; saveGuide(g); stop(); el.remove();
-        } }, icon('check', 15), 'Entendido'),
-        h('button', { type: 'button', class: 'link-btn gd-off', onclick: () => {
-          const g = loadGuide(); saveGuide({ ...g, activa: false }); stop(); el.remove();
-          toast('Guía desactivada. Puedes volver a activarla en Ajustes.', { label: 'Deshacer', run: () => saveGuide({ ...g, activa: true }) });
-        } }, 'Desactivar la guía'))));
-  return el;
-}
+const isHelp = (it) => it && it.guide === true;
 
-function place(viewEl, tip) {
+function attach(routeId, viewEl) {
   const head = viewEl.querySelector('.page-head');
-  if (head) head.after(tip); else viewEl.prepend(tip);
+  if (!head || head.dataset.guide) return;
+  const actions = head.querySelector('.ph-actions');
+  if (!actions) return; // cabecera sin pageHead: no hay sitio para el enlace
+  head.dataset.guide = routeId;
+  const run = () => openGuide(routeId);
+  if (helpPlacement({ hasMenu: headHasMenu(head), actions: actions.children.length }) === 'menu') {
+    addHeadMenuItems(head, [{ icon: 'help', label: HELP_LABEL, run, guide: true }]);
+  } else {
+    actions.append(h('button', { type: 'button', class: 'link-btn ph-help', 'aria-haspopup': 'dialog', onclick: run }, icon('help', 16), HELP_LABEL));
+  }
 }
 
-function stop() { if (observer) { observer.disconnect(); observer = null; } current = null; }
+function detach(viewEl) {
+  viewEl.querySelectorAll('.page-head[data-guide]').forEach((head) => {
+    head.querySelectorAll('.ph-help').forEach((n) => n.remove());
+    removeHeadMenuItems(head, isHelp);
+    delete head.dataset.guide;
+  });
+}
+
+function stop() { if (observer) { observer.disconnect(); observer = null; } }
 
 function currentRoute() { return (location.hash.replace(/^#\/?/, '').split('?')[0]) || 'hoy'; }
 
-/** Pinta (si procede) la ayuda de la sección. Se puede llamar varias veces: nunca se duplica. */
+/** Pone (si procede) el enlace «¿Cómo funciona?» en la cabecera de la sección. Nunca se duplica. */
 export function mountGuide(routeId, viewEl) {
   stop();
+  current = viewEl ? { routeId, viewEl } : null;
   if (!viewEl) return;
-  viewEl.querySelectorAll('.gd-tip').forEach((n) => n.remove());
-  const tip = GUIDE_TIPS[routeId];
-  const g = loadGuide();
-  if (!tip || !g.activa || g.vistas[routeId]) return;
-  place(viewEl, buildTip(routeId, tip));
-  // Si la vista se repinta sin pasar por app.js, la ayuda vuelve a su sitio
+  detach(viewEl);
+  if (!GUIDE_TIPS[routeId] || !loadGuide().activa) return;
+  attach(routeId, viewEl);
+  // Si la vista repinta su cabecera sin pasar por app.js, el enlace vuelve a su sitio
   if (typeof MutationObserver === 'undefined') return;
-  current = { routeId, viewEl };
   let queued = false;
+  const cur = current;
   observer = new MutationObserver(() => {
     if (queued) return;
     queued = true;
     requestAnimationFrame(() => {
       queued = false;
-      if (!current || current.viewEl.querySelector('.gd-tip')) return;
-      const route = currentRoute();
-      const now = loadGuide();
-      if ((route || 'hoy') !== current.routeId || !now.activa || now.vistas[current.routeId]) return;
-      place(current.viewEl, buildTip(current.routeId, GUIDE_TIPS[current.routeId]));
+      if (current !== cur || currentRoute() !== cur.routeId || !loadGuide().activa) return;
+      attach(cur.routeId, cur.viewEl);
     });
   });
   observer.observe(viewEl, { childList: true, subtree: true });
+}
+
+/** Vuelve a aplicar el ajuste en la pantalla actual (al activar o desactivar la guía en Ajustes). */
+export function refreshGuide() {
+  if (current) mountGuide(current.routeId, current.viewEl);
 }

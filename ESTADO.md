@@ -14,6 +14,17 @@ Módulos y estructura: ver `README.md`.
 
 ## Últimos cambios
 
+- **2026-11-11 · Rediseño, fase 1 (piezas comunes y cabecera única)**
+  - Piezas nuevas en `js/ui-kit.js`: `pageHead` (línea superior + título; a la derecha solo acción principal y «⋯»),
+    `openMenu` (menú «⋯» accesible) y `openActionSheet` (hoja de acciones sobre `openSheet`). Todas las vistas usan
+    `pageHead`; lo que sobraba en las cabeceras va al «⋯» (Documentos: Crear ficha, Pegar de Claude, Drive, Enlace;
+    Cuaderno: Configurar, Calculi, Exportar; Hoy: En clase; En clase: Dictar y Modo pizarra; Grupo y Programa: Editar…).
+    Documentos ya no desborda a 390 px.
+  - Guía rápida: ya no es una tarjeta; es «¿Cómo funciona?» en la cabecera (o en «⋯») y abre una hoja. Sin
+    «Entendido / Desactivar»; el interruptor de Ajustes sigue mandando. `js/guide.js`, `js/views/ajustes/guia.js`.
+  - `css/app.css`: escala `--s-1…--s-6`, botón normal con relleno suave sin borde (`btn-outline` para contorno),
+    lista sin tarjeta (`.list`), estilos de menú y hoja de acciones.
+  - Pruebas: `tests/diseno.test.mjs`; comprobación en navegador `tests/desbordamiento.py` (ninguna ruta desborda a 360/390).
 - **2026-11-11 · Plan de rediseño**: análisis de la interfaz en móvil y plan por fases en `PLAN-DISENO.md`
   (más minimalista: una acción principal por pantalla, menos botones, Documentos primero). Sin cambios de código.
 - **2026-11-11 · Borrados que reaparecían y cambio de cuenta**
@@ -62,14 +73,13 @@ Módulos y estructura: ver `README.md`.
 
 ## Pendiente / ideas
 
-- **Rediseño**: ejecutar las fases de `PLAN-DISENO.md` (1 piezas comunes → 2 Documentos → 3 Cuaderno/Planificación
-  → 4 Ajustes y Más → 5 resto → 6 repaso). La fase 2 resuelve el desbordamiento de Documentos de abajo.
+- **Rediseño**: fase 1 hecha. Siguen las fases de `PLAN-DISENO.md` (2 Documentos → 3 Cuaderno/Planificación
+  → 4 Ajustes y Más → 5 resto → 6 repaso). Pendiente de la fase 1: la guía «desplegada dentro de los estados vacíos»
+  (se hará al rehacer cada estado vacío en su fase).
 - **Datos (de la auditoría, sin hacer)**:
   - La copia de seguridad se arma entera en memoria (`createBackup`/`makeZip`/`readZip`): con muchos archivos puede
     agotar la memoria del móvil. Escribirla y leerla por partes (streams). *Opus.*
   - Cifrado opcional de la copia con contraseña, reutilizando `js/codigos-crypto.js`. *Opus o Sonnet.*
-- Arreglar: en móvil estrecho (~390 px) los botones de la cabecera de Documentos («Crear ficha», «Pegar de Claude»,
-  «Drive», «Añadir enlace», «Subir») no caben y desbordan por la derecha (la página se ensancha a ~415 px).
 - «Imprimir juntos»: no probado aún en iPad/iPhone ni con impresora real.
 - App con QR para que el profesorado envíe evidencias de STEAM 4.0 y lleguen a Tabula (idea del usuario).
 

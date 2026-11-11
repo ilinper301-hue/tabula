@@ -1,6 +1,7 @@
 // Tabula · «En clase»: caja de herramientas para el aula (proyectable en la pizarra digital o en tableta)
 import { store } from '../store.js';
 import { h, icon, longDate } from '../ui.js';
+import { pageHead } from '../ui-kit.js';
 import { getGroups, getGroup } from '../school.js';
 import { absentIds, defaultGroupId, svg } from './aula/common.js';
 
@@ -26,15 +27,21 @@ export function render(container, params) {
   // ---------- Cabecera ----------
   const groupSel = h('select', { class: 'select au-group-sel', id: 'au-grupo', 'aria-label': 'Grupo', onchange: (e) => setGroup(e.target.value) },
     groups.map((g) => h('option', { value: g.id, selected: g.id === groupId }, g.nombre)));
-  const boardBtn = h('button', { type: 'button', class: 'btn au-board-btn', 'aria-pressed': 'false', onclick: () => toggleBoard() });
+  // En modo pizarra, la salida queda siempre a la vista (la entrada está en «⋯»)
+  const boardBtn = h('button', { type: 'button', class: 'btn btn-primary au-board-exit', onclick: () => toggleBoard() }, svg('shrink', 20), 'Salir de la pizarra');
   const tabs = h('div', { class: 'au-tabs', role: 'tablist', 'aria-label': 'Herramientas' });
   const stage = h('div', { class: 'au-stage' });
+  const dictar = () => import('./voz.js').then((m) => m.openVoz({ groupId }));
   const root = h('div', { class: 'au-root' },
-    h('header', { class: 'page-head au-head' },
-      h('div', {}, h('div', { class: 'eyebrow' }, longDate()), h('h1', { class: 'page-title' }, 'En clase')),
-      h('div', { class: 'au-head-tools' }, groups.length ? h('div', { class: 'au-group' }, h('label', { class: 'sr-only', for: 'au-grupo' }, 'Grupo'), groupSel) : null,
-        h('button', { type: 'button', class: 'btn au-dictar', id: 'au-dictar', 'aria-label': 'Dictar observaciones o tareas de este grupo', onclick: () => import('./voz.js').then((m) => m.openVoz({ groupId })) }, icon('mic', 17), h('span', { class: 'au-dictar-txt' }, 'Dictar')),
-        boardBtn)),
+    pageHead({
+      eyebrow: longDate(), title: 'En clase', className: 'au-head', aside: boardBtn,
+      menu: () => [
+        { icon: 'mic', label: 'Dictar', desc: 'Observaciones o tareas de este grupo', run: dictar },
+        board ? { icon: 'slides', label: 'Salir de la pizarra', run: () => toggleBoard() }
+          : { icon: 'slides', label: 'Modo pizarra', desc: 'Pantalla completa para proyectar', run: () => toggleBoard() },
+      ],
+    }),
+    groups.length ? h('div', { class: 'ph-subnav au-group' }, h('label', { class: 'sr-only', for: 'au-grupo' }, 'Grupo'), groupSel) : '',
     tabs, stage);
 
   const ctx = {
@@ -44,8 +51,8 @@ export function render(container, params) {
   };
 
   function paintBoardBtn() {
-    boardBtn.replaceChildren(svg(board ? 'shrink' : 'board', 20), h('span', { class: 'au-board-lbl' }, board ? 'Salir de la pizarra' : 'Modo pizarra'));
-    boardBtn.setAttribute('aria-pressed', String(board));
+    boardBtn.hidden = !board;
+    if (!board && root.contains(document.activeElement) && document.activeElement === boardBtn) root.querySelector('.ph-menu')?.focus();
   }
 
   const tabEls = new Map();

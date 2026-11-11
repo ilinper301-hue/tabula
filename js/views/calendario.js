@@ -3,6 +3,7 @@
 // Ajuste 'horarioFranjas': [{inicio, fin, tipo}] con la estructura de franjas del horario.
 import { store } from '../store.js';
 import { h, icon, todayISO, toISO, fromISO, addDaysISO, MESES, toast, openSheet } from '../ui.js';
+import { pageHead } from '../ui-kit.js';
 import {
   AREAS, areaShort, areaColor, EVENT_TYPES, DIAS_LECTIVOS, getGroups, getGroup, sessionLabel, toMin,
 } from '../school.js';
@@ -157,10 +158,10 @@ export function render(container, params = new URLSearchParams()) {
   const body = h('div', { class: 'cal-body', id: 'cal-body' });
   const banner = calendarBanner();
   container.replaceChildren(h('div', { class: 'cal-view' },
-    h('header', { class: 'page-head' },
-      h('div', {}, h('div', { class: 'eyebrow' }, eyebrowText), h('h1', { class: 'page-title' }, 'Calendario')),
-      h('button', { type: 'button', class: 'btn btn-primary', onclick: () => openEventEditor(null, { fecha: vista === 'mes' ? selDay : (validISO(fecha) ? fecha : todayISO()) }) },
-        icon('plus', 18), 'Nuevo evento')),
+    pageHead({
+      eyebrow: eyebrowText, title: 'Calendario',
+      primary: { label: 'Nuevo evento', short: 'Evento', run: () => openEventEditor(null, { fecha: vista === 'mes' ? selDay : (validISO(fecha) ? fecha : todayISO()) }) },
+    }),
     banner.el,
     h('div', { class: 'cal-toolbar' }, nav || h('span'), tabs),
     body));
