@@ -7,31 +7,10 @@
 .cuaderno-view .page-head { margin-bottom: 12px; gap: 12px; }
 .cuaderno-view .page-title { font-size: 30px; }
 
-/* ---------- Cabecera y selectores ---------- */
-.cb-toolbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; flex-shrink: 0; }
-.cb-tb-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; min-width: 0; }
-@media (min-width: 1000px) {
-  .cb-toolbar { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
-  .cb-toolbar .cb-tb-row:first-child { flex: 1 1 auto; flex-wrap: nowrap; }
-}
+/* ---------- Bajo la cabecera: un solo piso (Actividades / Criterios / Competencias) ---------- */
+.cb-toolbar { display: flex; margin-bottom: 10px; flex-shrink: 0; min-width: 0; }
+/* Selector de grupo de la vista «Informes» */
 .cb-group { width: auto; min-width: 120px; max-width: 100%; min-height: 44px; font-weight: 500; }
-.cb-areas { display: flex; gap: 6px; overflow-x: auto; flex: 1; min-width: 0; padding: 2px; scrollbar-width: none; }
-.cb-areas::-webkit-scrollbar { display: none; }
-.cb-area {
-  flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px;
-  border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-2);
-  cursor: pointer; font-size: 14px; white-space: nowrap;
-}
-.cb-area:hover { background: var(--hover); }
-.cb-area-new { font-size: 11px; color: var(--muted); }
-.cb-area-add { border-style: dashed; color: var(--muted); }
-.cb-area.t1[aria-pressed="true"] { background: var(--t1-bg); color: var(--t1-fg); border-color: var(--t1-fg); }
-.cb-area.t2[aria-pressed="true"] { background: var(--t2-bg); color: var(--t2-fg); border-color: var(--t2-fg); }
-.cb-area.t3[aria-pressed="true"] { background: var(--t3-bg); color: var(--t3-fg); border-color: var(--t3-fg); }
-.cb-area.t4[aria-pressed="true"] { background: var(--t4-bg); color: var(--t4-fg); border-color: var(--t4-fg); }
-.cb-area.t5[aria-pressed="true"] { background: var(--t5-bg); color: var(--t5-fg); border-color: var(--t5-fg); }
-.cb-area.t6[aria-pressed="true"] { background: var(--t6-bg); color: var(--t6-fg); border-color: var(--t6-fg); }
-.cb-area[aria-pressed="true"] { font-weight: 550; }
 .cb-seg button { min-height: 40px; }
 .cb-vista button { padding: 0 12px; }
 
@@ -258,9 +237,6 @@ tbody tr:focus-within > td.cb-cell .cb-in:focus { background: var(--surface); }
 .cb-lv-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; text-align: center; }
 .cb-lv-field .input { text-align: center; padding: 9px 4px; }
 
-.cb-area-list { display: flex; flex-direction: column; gap: 6px; }
-.cb-area-opt { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 10px; text-align: left; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); cursor: pointer; }
-.cb-area-opt:hover { background: var(--hover); }
 
 /* Desglose del alumno */
 .cb-bk-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0 8px; }
@@ -283,15 +259,9 @@ tbody tr:focus-within > td.cb-cell .cb-in:focus { background: var(--surface); }
   .view.cuaderno-view { padding: 14px 12px calc(var(--nav-h) + 12px); }
   .cuaderno-view .page-title { font-size: 26px; }
   .cuaderno-view .page-head { margin-bottom: 8px; }
-  .cb-toolbar { flex-direction: row; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; align-items: center; }
-  .cb-tb-row { display: contents; }
-  .cb-group { order: 1; flex: 0 0 auto; min-width: 92px; width: 104px; }
-  .cb-ev { order: 2; flex: 1 1 auto; display: flex; }
-  .cb-ev button { flex: 1; padding: 0 6px; }
-  .cb-areas { order: 3; flex: 1 1 100%; }
-  .cb-vista { order: 4; flex: 1 1 100%; display: flex; }
-  .cb-vista button { flex: 1; }
-  .cb-vista button { padding: 0 9px; font-size: 13px; }
+  .cb-toolbar { margin-bottom: 8px; }
+  .cb-vista { flex: 1 1 100%; display: flex; }
+  .cb-vista button { flex: 1; padding: 0 9px; font-size: 13px; }
   .cb-gridwrap { scroll-padding: 110px 80px calc(20px + var(--cb-panel-h, 0px)) 128px; border-radius: var(--r-md); }
   .cb-table thead th.cb-corner, .cb-name { min-width: 124px; max-width: 124px; }
   .cb-table thead th.cb-corner { padding: 8px; }

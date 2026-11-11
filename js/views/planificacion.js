@@ -1,39 +1,42 @@
 // Tabula · vista «Planificación» (situaciones de aprendizaje y reparto de sesiones en el horario)
 //
-// Ruta: #/planificacion?grupo=<groupId>&area=<área>&sit=<situacionId>
+// Ruta: #/planificacion?grupo=<groupId>&area=<área>&ev=1|2|3&sit=<situacionId>
+// Grupo, área y evaluación se eligen en la barra de contexto (compartida con el Cuaderno: ./contexto.js).
 // Módulos auxiliares en ./planificacion/ :
 //   model.js          datos, aplicar cambios del motor con «Deshacer», utilidades
 //   overview.js       vista general (sesiones vencidas, próximas, líneas de tiempo, tarjetas)
 //   timeline.js       franja de semanas de la evaluación
 //   detail.js         detalle de una situación (cabecera, criterios, sesiones)
-//   sheets.js         hojas: nueva situación, programar, añadir varias, elegir área
+//   sheets.js         hojas: nueva situación, programar, añadir varias
 //   session-sheet.js  hoja de una sesión (exporta openSessionSheet, reutilizable por Hoy y Calendario)
 import { store } from '../store.js';
 import { h, icon } from '../ui.js';
 import { pageHead } from '../ui-kit.js';
-import { getGroups, getGroup, AREAS, areaShort, areaColor, currentSchoolYear } from '../school.js';
+import { getGroups, getGroup, AREAS, areaShort, currentSchoolYear } from '../school.js';
 import { hasSlots } from '../planning.js';
 import {
   ctxFor, situacionesOf, sesionesOf, areasWithSituaciones, href,
 } from './planificacion/model.js';
 import { renderOverview } from './planificacion/overview.js';
 import { renderDetail } from './planificacion/detail.js';
-import { openNewSituacionSheet, openAreaPicker } from './planificacion/sheets.js';
+import { openNewSituacionSheet } from './planificacion/sheets.js';
 import { renderProgramacion, viewTabs } from './planificacion/programacion.js';
+import { contextBar, openContextSheet } from './contexto.js';
+import { recall, remember, evId } from '../contexto-model.js';
 
 export { openSessionSheet } from './planificacion/session-sheet.js';
 
-// Lo último que eligió el docente, para volver al mismo sitio desde otras secciones.
-const last = { groupId: null, area: null };
+// Lo último que eligió el docente (grupo, área y evaluación) se comparte con el Cuaderno: js/contexto-model.js
 
 export function render(container, params = new URLSearchParams()) {
   // Tercera vista: «Programación» (semana y mes). Sin `vista`, todo sigue como antes.
   if (params.get('vista') === 'programacion') return renderProgramacion(container, params);
   container.classList.add('plan-view');
-  const st = { groupId: null, area: null, sitId: null };
+  const st = { groupId: null, area: null, ev: null, sitId: null };
 
   function resolveSelection() {
     const groups = getGroups();
+    const last = recall();
     // Una situación indicada en la URL manda sobre grupo y área
     const sit = params.get('sit') ? store.get('situaciones', params.get('sit')) : null;
     const wanted = (sit && sit.groupId) || params.get('grupo') || last.groupId;
@@ -45,38 +48,33 @@ export function render(container, params = new URLSearchParams()) {
     const a = (sit && sit.groupId === g.id && sit.area) || params.get('area');
     st.area = (a && AREAS.includes(a) ? a : null) || (last.groupId === g.id && last.area) || withSit.find((x) => AREAS.includes(x)) || AREAS[0];
     st.sitId = sit && sit.groupId === g.id && sit.area === st.area ? sit.id : null;
-    Object.assign(last, { groupId: g.id, area: st.area });
+    // Evaluación: la de la situación abierta, la de la URL o la última elegida (aquí no hay «Final»)
+    st.ev = evId((st.sitId && sit.evaluacion) || params.get('ev') || st.ev || last.ev, { final: false });
+    remember({ groupId: g.id, area: st.area, ev: st.ev });
   }
 
-  const sel = () => ({ grupo: st.groupId, area: st.area, sit: st.sitId });
+  const sel = () => ({ grupo: st.groupId, area: st.area, ev: st.ev, sit: st.sitId });
   const go = (patch) => { location.hash = href({ ...sel(), ...patch }).slice(1); };
 
   // ---------- Pintado ----------
+  function openContext() {
+    openContextSheet({
+      groups: getGroups(), state: { groupId: st.groupId, area: st.area, ev: st.ev },
+      evs: ['1', '2', '3'], areasFor: areasWithSituaciones, dataLabel: 'sin situaciones',
+      onChange: (c) => { location.hash = href({ grupo: c.groupId, area: c.area, ev: c.ev }).slice(1); },
+    });
+  }
+
   function head(group) {
     return [pageHead({
-      eyebrow: group ? `${group.nombre} · ${areaShort(st.area)} · curso ${group.cursoEscolar || currentSchoolYear()}` : `Curso ${currentSchoolYear()}`,
-      title: 'Planificación',
-      primary: group ? { label: 'Nueva situación de aprendizaje', short: 'Nueva', run: newSituacion, className: 'pl-new' } : null,
+      eyebrow: group ? contextBar({ group: group.nombre, area: st.area, ev: st.ev, onOpen: openContext }) : `Curso ${currentSchoolYear()}`,
+      title: 'Planificación', className: group ? 'ph-ctx' : '',
+      primary: group ? { label: 'Nueva situación', short: 'Nueva', ariaLabel: 'Nueva situación de aprendizaje', run: newSituacion, className: 'pl-new' } : null,
     }), h('div', { class: 'ph-subnav' }, viewTabs('situaciones', { grupo: st.groupId }))];
   }
 
   function newSituacion() {
-    openNewSituacionSheet({ groupId: st.groupId, area: st.area, onCreated: (sit) => go({ sit: sit.id }) });
-  }
-
-  function toolbar(groups) {
-    const groupSel = h('select', { class: 'select pl-group', 'aria-label': 'Grupo', onchange: (e) => go({ grupo: e.target.value, area: null, sit: null }) },
-      groups.map((g) => h('option', { value: g.id, selected: g.id === st.groupId }, g.nombre)));
-    const withSit = areasWithSituaciones(st.groupId).filter((a) => AREAS.includes(a))
-      .sort((a, b) => AREAS.indexOf(a) - AREAS.indexOf(b));
-    const shown = [...withSit, ...(withSit.includes(st.area) ? [] : [st.area])];
-    const areaChips = h('div', { class: 'pl-areas', role: 'group', 'aria-label': 'Área' },
-      shown.map((a) => h('button', {
-        type: 'button', class: `pl-area ${areaColor(a)}`, 'aria-pressed': String(a === st.area), title: a,
-        onclick: () => go({ area: a, sit: null }),
-      }, areaShort(a))),
-      AREAS.length > shown.length ? h('button', { type: 'button', class: 'pl-area pl-area-add', onclick: () => openAreaPicker({ exclude: shown, onPick: (a) => go({ area: a, sit: null }) }) }, icon('plus', 14), 'Área') : null);
-    return h('div', { class: 'pl-toolbar' }, groupSel, areaChips);
+    openNewSituacionSheet({ groupId: st.groupId, area: st.area, evaluacion: Number(st.ev), onCreated: (sit) => go({ sit: sit.id }) });
   }
 
   function noSlotsNotice() {
@@ -105,14 +103,14 @@ export function render(container, params = new URLSearchParams()) {
     const ctx = ctxFor(st.groupId, st.area);
     const sits = situacionesOf(st.groupId, st.area);
     const sesiones = sesionesOf(st.groupId, st.area);
-    const parts = [...head(group), toolbar(groups)];
+    const parts = [...head(group)];
     if (!hasSlots(ctx)) parts.push(noSlotsNotice());
     const env = {
-      groupId: st.groupId, area: st.area, sits, sesiones, schedule: ctx.schedule, go, newSituacion, repaint: paint, prevTlScroll: tlScroll,
+      groupId: st.groupId, area: st.area, ev: Number(st.ev), sits, sesiones, schedule: ctx.schedule, go, newSituacion, repaint: paint, prevTlScroll: tlScroll,
     };
     const sit = st.sitId ? sits.find((x) => x.id === st.sitId) : null;
     if (st.sitId && !sit) { // la situación ya no existe: volvemos a la vista general
-      st.sitId = null; params = new URLSearchParams({ grupo: st.groupId, area: st.area });
+      st.sitId = null; params = new URLSearchParams({ grupo: st.groupId, area: st.area, ev: st.ev });
     }
     parts.push(...(sit ? renderDetail({ ...env, sit }) : renderOverview(env)));
     container.replaceChildren(...parts.filter(Boolean).flat());

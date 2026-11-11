@@ -9,26 +9,7 @@
 .pl-error { color: var(--danger); font-size: 13px; margin: -8px 0 12px; }
 .plan-view .card + .card, .plan-view .card + .pl-ev, .plan-view .pl-ev + .pl-ev, .plan-view .pl-notice + .card { margin-top: 18px; }
 
-/* ---------- Selectores ---------- */
-.pl-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; min-width: 0; }
-.pl-group { width: auto; min-width: 120px; min-height: 44px; font-weight: 500; flex-shrink: 0; }
-.pl-areas { display: flex; gap: 6px; overflow-x: auto; flex: 1; min-width: 0; padding: 2px; scrollbar-width: none; }
-.pl-areas::-webkit-scrollbar { display: none; }
-.pl-area {
-  flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px;
-  border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-2);
-  cursor: pointer; font-size: 14px; white-space: nowrap;
-}
-.pl-area:hover { background: var(--hover); }
-.pl-area-add { border-style: dashed; color: var(--muted); }
-.pl-area[aria-pressed="true"] { font-weight: 550; }
-.pl-area.t1[aria-pressed="true"] { background: var(--t1-bg); color: var(--t1-fg); border-color: var(--t1-fg); }
-.pl-area.t2[aria-pressed="true"] { background: var(--t2-bg); color: var(--t2-fg); border-color: var(--t2-fg); }
-.pl-area.t3[aria-pressed="true"] { background: var(--t3-bg); color: var(--t3-fg); border-color: var(--t3-fg); }
-.pl-area.t4[aria-pressed="true"] { background: var(--t4-bg); color: var(--t4-fg); border-color: var(--t4-fg); }
-.pl-area.t5[aria-pressed="true"] { background: var(--t5-bg); color: var(--t5-fg); border-color: var(--t5-fg); }
-.pl-area.t6[aria-pressed="true"] { background: var(--t6-bg); color: var(--t6-fg); border-color: var(--t6-fg); }
-
+/* ---------- Avisos ---------- */
 .pl-notice {
   display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;
   background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--accent-text);
@@ -167,17 +148,16 @@
 .pl-confirm-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .pl-confirm .btn { min-height: 44px; }
 
+/* Línea de tiempo y situaciones de la evaluación elegida en la barra de contexto */
+.pl-tl-ev { font-size: 13px; color: var(--muted); }
+.pl-other-ev { margin: 10px 0 0; font-size: 14px; color: var(--muted); }
+.pl-other-ev .link-btn { padding: 0; min-height: 0; }
+
 /* ---------- Hojas ---------- */
 .pl-sheet-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
 .pl-sheet-actions .btn { min-height: 44px; text-decoration: none; }
 .pl-sheet .pl-hint { margin-bottom: 14px; }
 .pl-sheet .input, .pl-sheet .select { min-height: 44px; }
-.pl-area-list { display: flex; flex-direction: column; gap: 2px; }
-.pl-area-opt {
-  display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 8px; background: none; border: 0; border-radius: 10px;
-  cursor: pointer; text-align: left; font-size: 14px;
-}
-.pl-area-opt:hover { background: var(--hover); }
 
 /* Hoja de sesión */
 .pl-ss .input, .pl-ss .select { min-height: 44px; }
@@ -208,8 +188,6 @@
 /* ---------- Móvil ---------- */
 @media (max-width: 680px) {
   .plan-view .page-title { font-size: 28px; }
-  .pl-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
-  .pl-group { width: 100%; }
   .pl-cards { grid-template-columns: minmax(0, 1fr); }
   .pl-row { flex-wrap: wrap; }
   .pl-row-actions { width: 100%; padding-bottom: 8px; }

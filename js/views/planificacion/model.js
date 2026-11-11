@@ -163,10 +163,11 @@ export function addSession(sit, orden, titulo) {
 
 // ---------- Utilidades de interfaz ----------
 /** Atajo para enlaces de la vista. */
-export function href({ grupo, area, sit } = {}) {
+export function href({ grupo, area, ev, sit } = {}) {
   const p = new URLSearchParams();
   if (grupo) p.set('grupo', grupo);
   if (area) p.set('area', area);
+  if (ev) p.set('ev', String(ev));
   if (sit) p.set('sit', sit);
   return `#/planificacion?${p}`;
 }

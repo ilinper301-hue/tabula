@@ -78,7 +78,13 @@ Archivos: `js/views/documentos.js`, `documentos/library.js`, `queue.js`, `detail
   (doble cara)». Cada fila: «Imprimir» + «⋯» (Marcar como impreso, Editar, Quitar) en vez de 4 botones.
 - Resuelve el desbordamiento a 390 px apuntado en `ESTADO.md`.
 
-## Fase 3 · Cuaderno y Planificación — *Opus, esfuerzo alto (delicado: es la zona de evaluación)*
+## Fase 3 · Cuaderno y Planificación — *Opus, esfuerzo alto (delicado: es la zona de evaluación)* — ✅ hecha (2026-11-12)
+
+> Hecho: `js/contexto-model.js` + `js/views/contexto.js`. La barra va en la línea superior de la cabecera (así no suma
+> un piso) y abre una hoja Grupo · Evaluación · Área; la elección se comparte entre ambas vistas. Cuaderno: «⋯» con
+> Configurar, Importar (Calculi), Exportar, Informes y «Anotar con niveles/notas»; un solo segmentado. Planificación:
+> «Nueva situación» + Situaciones/Programación; la evaluación de la barra manda en la línea de tiempo y en las tarjetas.
+> Tabla del Cuaderno a 390 px: de 8 a 10 filas visibles. Sin tocar: la vista «Informes» (su propio selector de grupo).
 
 - **Barra de contexto única** compartida por ambas vistas: una sola fila «1º Demo · Matemáticas · 1.ª ev.» que
   abre una hoja para cambiar grupo, área y evaluación. Sustituye al desplegable de grupo, las píldoras de área

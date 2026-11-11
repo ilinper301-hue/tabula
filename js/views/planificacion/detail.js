@@ -22,7 +22,7 @@ export function renderDetail(env) {
   const ctx = ctxFor(env.groupId, env.area);
   const slots = hasSlots(ctx);
   return [
-    h('a', { class: 'pl-back', href: href({ grupo: env.groupId, area: env.area }) }, icon('chevronLeft', 16), 'Todas las situaciones'),
+    h('a', { class: 'pl-back', href: href({ grupo: env.groupId, area: env.area, ev: sit.evaluacion || env.ev }) }, icon('chevronLeft', 16), 'Todas las situaciones'),
     headerCard(sit),
     criteriosCard(env, sit),
     sesionesCard(env, sit, own, slots),

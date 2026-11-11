@@ -10,7 +10,8 @@ import { renderTimeline } from './timeline.js';
 import { openSessionSheet } from './session-sheet.js';
 
 /**
- * @param env { groupId, area, sits, sesiones, schedule, go, newSituacion, repaint, prevTlScroll }
+ * @param env { groupId, area, ev, sits, sesiones, schedule, go, newSituacion, repaint, prevTlScroll }
+ *   ev: evaluación de la barra de contexto (1–3): manda en la línea de tiempo y en las tarjetas de situaciones.
  */
 export function renderOverview(env) {
   const { groupId, area, sits, sesiones, schedule } = env;
@@ -67,16 +68,20 @@ export function renderOverview(env) {
       : h('p', { class: 'pl-hint' }, 'No hay sesiones programadas a partir de hoy. Abre una situación y pulsa «Programar en el horario».')));
 
   // ---------- Línea de tiempo ----------
-  parts.push(renderTimeline(sits, sesiones, { groupId, area, onEvChange: env.repaint, prevScroll: env.prevTlScroll }));
+  const ev = [1, 2, 3].includes(env.ev) ? env.ev : 1;
+  parts.push(renderTimeline(sits, sesiones, { groupId, area, ev, prevScroll: env.prevTlScroll }));
 
-  // ---------- Situaciones por evaluación ----------
-  for (const ev of [1, 2, 3]) {
-    const list = sits.filter((s) => (s.evaluacion || 1) === ev);
-    if (!list.length) continue;
-    parts.push(h('section', { class: 'pl-ev', 'aria-label': `${ev}.ª evaluación` },
-      h('h2', { class: 'section-label' }, `${ev}.ª evaluación`),
-      h('div', { class: 'pl-cards' }, list.map((s, i) => sitCard(env, s, i, list)))));
-  }
+  // ---------- Situaciones de la evaluación elegida (las demás, a un toque) ----------
+  const list = sits.filter((s) => (s.evaluacion || 1) === ev);
+  const others = [1, 2, 3].filter((e) => e !== ev).map((e) => [e, sits.filter((s) => (s.evaluacion || 1) === e).length]).filter(([, n]) => n);
+  parts.push(h('section', { class: 'pl-ev', 'aria-label': `Situaciones de la ${ev}.ª evaluación` },
+    h('h2', { class: 'section-label' }, `Situaciones · ${ev}.ª evaluación`),
+    list.length
+      ? h('div', { class: 'pl-cards' }, list.map((s, i) => sitCard(env, s, i, list)))
+      : h('p', { class: 'pl-hint' }, `No hay situaciones en la ${ev}.ª evaluación.`),
+    others.length ? h('p', { class: 'pl-other-ev' }, 'También en ',
+      others.map(([e, n], i) => [i ? ' y ' : null,
+        h('a', { class: 'link-btn', href: href({ grupo: groupId, area, ev: e }) }, `la ${e}.ª (${n})`)]).flat().filter(Boolean)) : null));
   return parts;
 }
 
@@ -97,7 +102,7 @@ function sitCard(env, s, i, list) {
   };
   return h('article', { class: 'card pl-sit' },
     h('div', { class: 'pl-sit-head' },
-      h('a', { class: 'pl-sit-title', href: href({ grupo: env.groupId, area: env.area, sit: s.id }) }, s.titulo || 'Sin título'),
+      h('a', { class: 'pl-sit-title', href: href({ grupo: env.groupId, area: env.area, ev: env.ev, sit: s.id }) }, s.titulo || 'Sin título'),
       h('span', { class: `chip ${ESTADO_SIT_CLASS[s.estado] || 't5'}` }, ESTADOS_SIT[s.estado] || s.estado)),
     h('p', { class: 'pl-sit-dates' }, icon('calendario', 15), dates),
     h('div', { class: 'pl-progress', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': p.total, 'aria-valuenow': p.hechas,
@@ -107,7 +112,7 @@ function sitCard(env, s, i, list) {
       p.sinFecha && p.total ? h('span', { class: 'pl-warn' }, `${p.sinFecha} sin fecha`) : null,
       h('span', {}, plural(nCrit, 'criterio', 'criterios'))),
     h('div', { class: 'pl-sit-foot' },
-      h('a', { class: 'btn btn-sm', href: href({ grupo: env.groupId, area: env.area, sit: s.id }) }, 'Abrir'),
+      h('a', { class: 'btn btn-sm', href: href({ grupo: env.groupId, area: env.area, ev: env.ev, sit: s.id }) }, 'Abrir'),
       h('div', { class: 'pl-move' },
         h('button', { type: 'button', class: 'icon-btn', 'aria-label': `Subir «${s.titulo}»`, disabled: i === 0, onclick: () => move(-1) }, ico('up')),
         h('button', { type: 'button', class: 'icon-btn', 'aria-label': `Bajar «${s.titulo}»`, disabled: i === list.length - 1, onclick: () => move(1) }, ico('down')))));

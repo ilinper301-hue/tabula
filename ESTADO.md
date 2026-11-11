@@ -3,7 +3,7 @@
 Documento vivo. **Cada chat que trabaje en Tabula lo lee al empezar y lo actualiza al terminar**
 (sección «Últimos cambios» arriba del todo, y «Pendiente» / «Problemas conocidos» si cambian).
 
-_Última actualización: 2026-11-11_
+_Última actualización: 2026-11-12_
 
 ## Resumen
 
@@ -14,6 +14,21 @@ Módulos y estructura: ver `README.md`.
 
 ## Últimos cambios
 
+- **2026-11-12 · Rediseño, fase 3 (Cuaderno y Planificación)**
+  - *Barra de contexto compartida*: una sola fila «1º Demo · Matemáticas · 1.ª ev. ▾» en la línea superior de la cabecera
+    (no ocupa piso propio). Abre una hoja con Grupo · Evaluación · Área (primero las áreas con cuaderno/situaciones);
+    cada toque se aplica al momento y «Listo» queda fijo abajo. Sustituye al desplegable de grupo, las píldoras de área
+    (y su «+ Área») y el selector de trimestre. La última elección se comparte entre ambas vistas.
+    Archivos: `js/contexto-model.js` (lógica pura), `js/views/contexto.js` (barra y hoja), estilos `.ctx-*` y `.ph-ctx` en `css/app.css`.
+  - *Cuaderno*: «+ Actividad» y «⋯» (Configurar, Importar notas de Calculi, Exportar a CSV, Informes del grupo,
+    «Anotar con niveles / con notas» con Deshacer). Bajo la cabecera solo el segmentado Actividades / Criterios / Competencias.
+    Con los datos de ejemplo a 390 px la tabla sube de 243 a 164 px: 10 filas visibles en vez de 8.
+  - *Planificación*: «Nueva situación» como acción principal; segmentado Situaciones / Programación. La evaluación de la
+    barra manda en la línea de tiempo (fuera su selector propio) y en las tarjetas («Situaciones · 1.ª evaluación», con
+    enlaces a las otras evaluaciones que tengan situaciones). La URL lleva `ev`; una situación nueva nace en esa evaluación.
+    Programación (semana/mes) no cambia. Fuera `openAreaPicker`.
+  - Pruebas: `tests/contexto.test.mjs`; `tests/desbordamiento.py` mide también la hoja de contexto y el «⋯» del Cuaderno.
+    `sw.js` → `tabula-v49`.
 - **2026-11-11 · Rediseño, fase 2 (Documentos)**
   - Cabecera: una sola acción «Añadir» que abre una hoja (Subir archivo · Google Drive · Enlace · Crear ficha (Charta) ·
     Pegar de Claude, cada una con su icono y explicación); el estado vacío usa el mismo botón. «⋯» → Seleccionar.
@@ -88,8 +103,8 @@ Módulos y estructura: ver `README.md`.
 
 ## Pendiente / ideas
 
-- **Rediseño**: fases 1 y 2 hechas. Siguen las fases de `PLAN-DISENO.md` (3 Cuaderno/Planificación
-  → 4 Ajustes y Más → 5 resto → 6 repaso). Pendiente de la fase 1: la guía «desplegada dentro de los estados vacíos»
+- **Rediseño**: fases 1, 2 y 3 hechas. Siguen las fases de `PLAN-DISENO.md` (4 Ajustes y Más → 5 resto → 6 repaso).
+  Fase 3: la vista «Informes» del Cuaderno conserva su propio desplegable de grupo y segmentado (sin tocar). Pendiente de la fase 1: la guía «desplegada dentro de los estados vacíos»
   (tampoco se puso en los de Documentos). Documentos: la pulsación larga solo está probada en Chrome con toque simulado;
   falta probarla en iPhone/iPad y Android reales. «Mover a carpeta» en la selección, sin hacer.
 - **Datos (de la auditoría, sin hacer)**:

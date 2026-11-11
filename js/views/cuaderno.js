@@ -8,9 +8,9 @@
 //   sheet-*.js        hojas: actividad, configuración, desglose del alumno
 //   export.js         CSV
 import { store } from '../store.js';
-import { h, icon, openSheet, toast } from '../ui.js';
+import { h, icon, toast } from '../ui.js';
 import { pageHead } from '../ui-kit.js';
-import { getGroups, getGroup, AREAS, areaShort, areaColor, currentSchoolYear } from '../school.js';
+import { getGroups, getGroup, AREAS, areaShort, currentSchoolYear } from '../school.js';
 import { EVALUACIONES, configWarnings } from '../grading.js';
 import {
   currentEv, loadContext, areasWithGradebook, createGradebook, evaluacionDefaults,
@@ -22,10 +22,11 @@ import { openConfigSheet } from './cuaderno/sheet-config.js';
 import { openStudentSheet } from './cuaderno/sheet-student.js';
 import { downloadCsv } from './cuaderno/export.js';
 import { openCalculiSheet } from './cuaderno/sheet-calculi.js';
-import { href, segmented, plural } from './cuaderno/common.js';
+import { href, segmented } from './cuaderno/common.js';
+import { contextBar, openContextSheet } from './contexto.js';
+import { recall, remember, evId } from '../contexto-model.js';
 
-// Lo último que eligió el docente, para volver al mismo sitio desde otras secciones.
-const last = { groupId: null, area: null, ev: null };
+// Lo último que eligió el docente (grupo, área y evaluación) se comparte con Planificación: js/contexto-model.js
 let lastVista = 'actividades';
 
 export function render(container, params = new URLSearchParams()) {
@@ -41,6 +42,7 @@ export function render(container, params = new URLSearchParams()) {
   const st = { groupId: null, area: null, ev: null, vista: lastVista };
   function resolveSelection() {
     const groups = getGroups();
+    const last = recall();
     const wanted = params.get('grupo') || last.groupId;
     const g = groups.find((x) => x.id === st.groupId) || groups.find((x) => x.id === wanted)
       || groups.find((x) => x.tutoria) || groups[0] || null;
@@ -51,8 +53,8 @@ export function render(container, params = new URLSearchParams()) {
     st.area = (a && AREAS.includes(a) ? a : null) || st.area
       || (last.groupId === g.id && last.area) || withGb[0] || AREAS[0];
     const e = params.get('ev') || last.ev;
-    st.ev = EVALUACIONES.some((x) => x.id === e) ? e : (st.ev || currentEv());
-    Object.assign(last, { groupId: g.id, area: st.area, ev: st.ev });
+    st.ev = EVALUACIONES.some((x) => x.id === e) ? e : (st.ev || evId(null, { fallback: currentEv() }));
+    remember({ groupId: g.id, area: st.area, ev: st.ev });
   }
   resolveSelection();
 
@@ -81,58 +83,56 @@ export function render(container, params = new URLSearchParams()) {
   const openConfig = () => { const c = fresh(); openConfigSheet({ gb: c.gb, activities: c.all }); };
 
   // ---------- Pintado ----------
-  function head(group) {
-    return pageHead({
-      eyebrow: group ? `${group.nombre} · curso ${group.cursoEscolar || currentSchoolYear()}` : `Curso ${currentSchoolYear()}`,
-      title: 'Cuaderno', className: 'cb-head',
-      primary: ctx.gb ? { label: 'Nueva actividad', short: 'Actividad', run: newActivity } : null,
-      menu: ctx.gb ? [
-        { icon: 'ajustes', label: 'Configurar cuaderno', run: openConfig },
-        { icon: 'upload', label: 'Traer notas de Calculi', desc: 'Cálculo mental', run: () => openCalculiSheet({ gb: fresh().gb, group: getGroup(st.groupId), ev: st.ev }) },
-        { icon: 'download', label: 'Exportar a CSV', run: () => downloadCsv(fresh(), getGroup(st.groupId), st.area, st.ev) },
-      ] : null,
+  const informesHref = () => `#/cuaderno?${new URLSearchParams({ grupo: st.groupId, vista: 'informes', ev: st.ev })}`;
+
+  /** Cambia la escala de anotación (niveles ↔ notas). Las notas se guardan igual (0–10): solo cambia cómo se ven. */
+  function toggleEscala() {
+    const gb = fresh().gb;
+    const prev = gb.escala;
+    const next = prev === 'niveles' ? 'numerica' : 'niveles';
+    store.update('gradebooks', gb.id, { escala: next });
+    toast(next === 'niveles' ? 'Ahora anotas con niveles (IN–SB)' : 'Ahora anotas con notas (0–10)',
+      { label: 'Deshacer', run: () => store.update('gradebooks', gb.id, { escala: prev }) });
+  }
+
+  function headMenu() {
+    if (!ctx.gb) return [{ icon: 'table', label: 'Informes del grupo', href: informesHref() }];
+    const niveles = ctx.gb.escala === 'niveles';
+    return [
+      { icon: 'ajustes', label: 'Configurar cuaderno', desc: 'Instrumentos, criterios y cálculo', run: openConfig },
+      { icon: 'upload', label: 'Importar notas de Calculi', desc: 'Cálculo mental', run: () => openCalculiSheet({ gb: fresh().gb, group: getGroup(st.groupId), ev: st.ev }) },
+      { icon: 'download', label: 'Exportar a CSV', run: () => downloadCsv(fresh(), getGroup(st.groupId), st.area, st.ev) },
+      { icon: 'table', label: 'Informes del grupo', desc: 'Perfil competencial, Séneca, familias', href: informesHref() },
+      '-',
+      { icon: 'cuaderno', label: niveles ? 'Anotar con notas (0–10)' : 'Anotar con niveles (IN–SB)', desc: 'Cambia cómo se ve la tabla', run: toggleEscala },
+    ];
+  }
+
+  function openContext() {
+    openContextSheet({
+      groups: getGroups(), state: { groupId: st.groupId, area: st.area, ev: st.ev },
+      evs: EVALUACIONES.map((e) => e.id), areasFor: areasWithGradebook, dataLabel: 'sin cuaderno',
+      onChange: (c) => { location.hash = href({ grupo: c.groupId, area: c.area, ev: c.ev }).slice(1); },
     });
   }
 
-  function toolbar(groups) {
-    const groupSel = h('select', { class: 'select cb-group', 'aria-label': 'Grupo', onchange: (e) => go({ grupo: e.target.value, area: null }) },
-      groups.map((g) => h('option', { value: g.id, selected: g.id === st.groupId }, g.nombre)));
-
-    const withGb = areasWithGradebook(st.groupId);
-    const shown = [...withGb.filter((a) => AREAS.includes(a)), ...(withGb.includes(st.area) ? [] : [st.area])];
-    const areaChips = h('div', { class: 'cb-areas', role: 'group', 'aria-label': 'Área' },
-      shown.map((a) => h('button', {
-        type: 'button', class: `cb-area ${areaColor(a)}`, 'aria-pressed': String(a === st.area), title: a,
-        onclick: () => go({ area: a }),
-      }, areaShort(a), withGb.includes(a) ? null : h('span', { class: 'cb-area-new' }, 'sin cuaderno'))),
-      AREAS.length > shown.length ? h('button', { type: 'button', class: 'cb-area cb-area-add', onclick: openAreaPicker }, icon('plus', 14), 'Área') : null);
-
-    const evSeg = segmented(EVALUACIONES.map((e) => [e.id, e.id === 'final' ? 'Final' : e.label.replace(' evaluación', '')]),
-      st.ev, (v) => go({ ev: v }), 'Evaluación');
-    evSeg.classList.add('cb-ev');
-    evSeg.querySelectorAll('button').forEach((b, i) => { b.setAttribute('aria-label', EVALUACIONES[i].label); });
-
-    const informes = h('a', { class: 'btn cb-informes-btn', href: `#/cuaderno?${new URLSearchParams({ grupo: st.groupId, vista: 'informes', ev: st.ev })}`, 'aria-label': 'Informes del grupo' },
-      icon('table', 16), h('span', { class: 'cb-lbl' }, 'Informes'));
-    const row2 = [evSeg];
-    if (ctx.gb && ctx.gb.modo === 'criterios') {
-      const vSeg = segmented([['actividades', 'Actividades'], ['criterios', 'Criterios'], ['competencias', 'Competencias']], st.vista, (v) => {
-        st.vista = lastVista = v; paint();
-      }, 'Ver por');
-      vSeg.classList.add('cb-vista');
-      row2.push(vSeg);
-    }
-    return h('div', { class: 'cb-toolbar' },
-      h('div', { class: 'cb-tb-row' }, groupSel, areaChips, informes), h('div', { class: 'cb-tb-row' }, row2));
+  function head(group) {
+    return pageHead({
+      eyebrow: group ? contextBar({ group: group.nombre, area: st.area, ev: st.ev, onOpen: openContext }) : `Curso ${currentSchoolYear()}`,
+      title: 'Cuaderno', className: group ? 'cb-head ph-ctx' : 'cb-head',
+      primary: ctx.gb ? { label: 'Nueva actividad', short: 'Actividad', run: newActivity } : null,
+      menu: group ? headMenu : null,
+    });
   }
 
-  function openAreaPicker() {
-    const withGb = areasWithGradebook(st.groupId);
-    const rest = AREAS.filter((a) => !withGb.includes(a) && a !== st.area);
-    const close = openSheet('Añadir área', h('div', { class: 'cb-area-list' },
-      h('p', { class: 'cb-hint' }, 'Elige el área para la que quieres llevar un cuaderno.'),
-      rest.map((a) => h('button', { type: 'button', class: 'cb-area-opt', onclick: () => { close(); go({ area: a }); } },
-        h('span', { class: `chip ${areaColor(a)}` }, areaShort(a)), h('span', {}, a)))));
+  /** Un solo piso bajo la cabecera: «Actividades / Criterios / Competencias» (solo en el modo por criterios). */
+  function toolbar() {
+    if (!(ctx.gb && ctx.gb.modo === 'criterios')) return null;
+    const vSeg = segmented([['actividades', 'Actividades'], ['criterios', 'Criterios'], ['competencias', 'Competencias']], st.vista, (v) => {
+      st.vista = lastVista = v; paint();
+    }, 'Ver por');
+    vSeg.classList.add('cb-vista');
+    return h('div', { class: 'cb-toolbar' }, vSeg);
   }
 
   function emptyNoGroups() {
@@ -205,7 +205,7 @@ export function render(container, params = new URLSearchParams()) {
     const group = getGroup(st.groupId);
     ctx = loadContext(st);
     if (ctx.gb && ctx.gb.modo !== 'criterios') st.vista = 'actividades';
-    const parts = [head(group), toolbar(groups)];
+    const parts = [head(group), toolbar()];
     if (!ctx.gb) { panel.close(); parts.push(emptyNoGradebook(group)); }
     else parts.push(warningsBanner(), gridBody());
     container.replaceChildren(...parts.filter(Boolean));

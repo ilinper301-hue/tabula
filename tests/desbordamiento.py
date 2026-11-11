@@ -6,7 +6,7 @@
 # Sale con código 1 si alguna ruta desborda. Con carpeta, guarda una captura a 390 × 844 por ruta.
 # Además, en Documentos (con varios documentos de prueba, sin datos reales) mide también con las hojas y menús
 # abiertos: Añadir, Filtros, filtros activos, selección, ficha (con «Detalles» y «⋯»), menú de una fila de la cola
-# e «Imprimir lo de hoy».
+# e «Imprimir lo de hoy». En Cuaderno y Planificación, con la hoja de contexto y el menú «⋯» abiertos.
 import asyncio, sys
 from playwright.async_api import async_playwright
 
@@ -42,6 +42,9 @@ DOC_STATES = [
     ('documentos', 'ficha + Detalles + ⋯', [('click', '.dc-card-open'), ('click', '.dc-details > summary'), ('click', '.dc-more')]),
     ('documentos?tab=imprimir', 'menú de una fila', [('click', '.dc-row-more')]),
     ('documentos?tab=imprimir', 'Imprimir lo de hoy', [('click', '.dc-today')]),
+    ('cuaderno', 'hoja de contexto', [('click', '.ctx-bar')]),
+    ('cuaderno', 'menú ⋯', [('click', '.ph-menu')]),
+    ('planificacion', 'hoja de contexto', [('click', '.ctx-bar')]),
 ]
 
 

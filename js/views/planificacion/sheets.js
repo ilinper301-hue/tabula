@@ -1,7 +1,7 @@
-// Tabula · Planificación · hojas (nueva situación, programar, añadir varias, elegir área)
+// Tabula · Planificación · hojas (nueva situación, programar, añadir varias)
 import { store } from '../../store.js';
 import { h, icon, openSheet, toast, todayISO, addDaysISO } from '../../ui.js';
-import { AREAS, areaShort, areaColor, getGroup } from '../../school.js';
+import { areaShort, getGroup } from '../../school.js';
 import { scheduleSituacion, hasSlots } from '../../planning.js';
 import {
   ctxFor, sesionesOf, sesionesOfSit, situacionesOf, applyChanges, addSession, currentEvaluacion, field,
@@ -9,11 +9,11 @@ import {
 } from './model.js';
 
 /** Hoja "Nueva situación de aprendizaje". onCreated(situacion) se llama tras crearla. */
-export function openNewSituacionSheet({ groupId, area, onCreated }) {
+export function openNewSituacionSheet({ groupId, area, evaluacion = null, onCreated }) {
   const g = getGroup(groupId);
   const titulo = h('input', { class: 'input', type: 'text', placeholder: 'Por ejemplo: Los cuentos de la tradición oral', maxlength: 140 });
   const ev = h('select', { class: 'select' },
-    [1, 2, 3].map((n) => h('option', { value: n, selected: n === currentEvaluacion() }, `${n}.ª evaluación`)));
+    [1, 2, 3].map((n) => h('option', { value: n, selected: n === (evaluacion || currentEvaluacion()) }, `${n}.ª evaluación`)));
   const desc = h('textarea', { class: 'textarea', rows: 3, placeholder: 'Opcional: de qué trata y qué se quiere lograr' });
   const err = h('p', { class: 'pl-error', role: 'alert', hidden: true }, 'Escribe un título para la situación.');
   const submit = () => {
@@ -96,12 +96,3 @@ export function openAddManySheet(sit) {
   return close;
 }
 
-/** Hoja para elegir otra área. */
-export function openAreaPicker({ exclude, onPick }) {
-  const rest = AREAS.filter((a) => !exclude.includes(a));
-  const close = openSheet('Añadir área', h('div', { class: 'pl-area-list' },
-    h('p', { class: 'pl-hint' }, 'Elige el área en la que quieres planificar.'),
-    rest.map((a) => h('button', { type: 'button', class: 'pl-area-opt', onclick: () => { close(); onPick(a); } },
-      h('span', { class: `chip ${areaColor(a)}` }, areaShort(a)), h('span', {}, a)))));
-  return close;
-}
