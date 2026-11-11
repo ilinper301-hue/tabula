@@ -10,7 +10,9 @@
 - Maestro de Primaria en Andalucía; escribe en español. Responde en español, breve y por partes.
 - Trabaja **solo desde el móvil** (no tiene ordenador): nada de pasos que exijan terminal o PC.
 - No pide confirmación para cosas pequeñas: implementa, prueba y publica.
-- Avisa cuando el chat se alargue demasiado y convenga abrir otro (indicando esfuerzo recomendado).
+- Avisa cuando el chat se alargue demasiado y convenga abrir otro, indicando el esfuerzo recomendado y
+  qué modelo usar: **Opus** para funciones nuevas grandes o delicadas, **Sonnet** para arreglos y cambios pequeños.
+- Al proponer una tarea, di también si conviene hacerla en Opus o en Sonnet.
 
 ## Cómo trabajar en el código
 - HTML + JavaScript (módulos ES) + CSS, **sin compilación ni dependencias npm**. Librerías externas solo por CDN
