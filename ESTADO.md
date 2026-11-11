@@ -14,6 +14,8 @@ Módulos y estructura: ver `README.md`.
 
 ## Últimos cambios
 
+- **2026-11-11 · Plan de rediseño**: análisis de la interfaz en móvil y plan por fases en `PLAN-DISENO.md`
+  (más minimalista: una acción principal por pantalla, menos botones, Documentos primero). Sin cambios de código.
 - **2026-11-11 · Borrados que reaparecían y cambio de cuenta**
   - *Marcas de borrado*: lo borrado con la cuenta asociada pero sin conexión con la nube se apunta
     (`tabula:v1:borrados`) y al reconectar se borra también de la nube (salvo que allí se editara después).
@@ -60,6 +62,8 @@ Módulos y estructura: ver `README.md`.
 
 ## Pendiente / ideas
 
+- **Rediseño**: ejecutar las fases de `PLAN-DISENO.md` (1 piezas comunes → 2 Documentos → 3 Cuaderno/Planificación
+  → 4 Ajustes y Más → 5 resto → 6 repaso). La fase 2 resuelve el desbordamiento de Documentos de abajo.
 - **Datos (de la auditoría, sin hacer)**:
   - La copia de seguridad se arma entera en memoria (`createBackup`/`makeZip`/`readZip`): con muchos archivos puede
     agotar la memoria del móvil. Escribirla y leerla por partes (streams). *Opus.*
