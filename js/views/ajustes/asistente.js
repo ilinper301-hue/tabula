@@ -20,7 +20,7 @@ const CAN = [
 
 /** Lleva a Ajustes y destaca la tarjeta (desde Hoy: «Un dispositivo quiere usar tu acceso»). */
 export function goToAsistenteCard() {
-  location.hash = '#/ajustes';
+  location.hash = '#/ajustes/seguridad';
   let tries = 0;
   const t = setInterval(() => {
     const card = document.getElementById('ajustes-asistente');
@@ -70,7 +70,7 @@ export function asistenteCard() {
       parts.push(
         h('p', { class: 'settings-text' }, NEED_CLOUD),
         h('div', { class: 'settings-actions' }, h('button', { type: 'button', class: 'btn', onclick: () => {
-          const c = document.getElementById('ajustes-cuenta'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          location.hash = '#/ajustes/cuenta';
         } }, 'Ir a Cuenta y sincronización')));
       body.replaceChildren(...parts.filter(Boolean));
       return;

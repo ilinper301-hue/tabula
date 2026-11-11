@@ -135,7 +135,7 @@ export function createEditPanel(ctx) {
       parts.push(h('div', { class: 'enc-bar-row' },
         h('p', { class: 'enc-bar-text' }, errors.length ? 'Puedes seguir editando; se guarda solo.' : 'Todo listo. Publica la encuesta para obtener el enlace.'),
         h('button', { type: 'button', class: 'btn btn-primary', disabled: !!errors.length, onclick: () => ctx.go('compartir') }, eicon('send', 18), 'Publicar y obtener enlace')));
-      if (!errors.length && !canPublish()) parts.push(h('p', { class: 'enc-note' }, NEED_CLOUD, ' ', h('a', { href: '#/ajustes' }, 'Ir a Ajustes')));
+      if (!errors.length && !canPublish()) parts.push(h('p', { class: 'enc-note' }, NEED_CLOUD, ' ', h('a', { href: '#/ajustes/cuenta' }, 'Ir a Ajustes')));
     } else {
       const dirty = st.publicadaSig !== publicSig(s);
       parts.push(h('div', { class: 'enc-bar-row' },
@@ -143,7 +143,7 @@ export function createEditPanel(ctx) {
         dirty
           ? h('button', { type: 'button', class: 'btn btn-primary', disabled: !!errors.length || busy || !canPublish(), onclick: doUpdate }, busy ? 'Actualizando…' : 'Actualizar encuesta publicada')
           : h('button', { type: 'button', class: 'btn', onclick: () => ctx.go('compartir') }, eicon('link', 18), 'Ver enlace')));
-      if (dirty && !canPublish()) parts.push(h('p', { class: 'enc-note' }, NEED_CLOUD, ' ', h('a', { href: '#/ajustes' }, 'Ir a Ajustes')));
+      if (dirty && !canPublish()) parts.push(h('p', { class: 'enc-note' }, NEED_CLOUD, ' ', h('a', { href: '#/ajustes/cuenta' }, 'Ir a Ajustes')));
     }
     bar.replaceChildren(...parts);
   }

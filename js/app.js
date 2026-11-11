@@ -7,6 +7,7 @@ import { initSync, getSyncState, onSyncChange, SYNC_LABELS } from './sync.js';
 import './plan-sync.js';
 import { initLock, setForgotHandler, resetLock } from './lock.js';
 import { SECTIONS, AJUSTES, NAV_BLOCKS, APPS_AMIGAS, normalizeMobileNav } from './nav-model.js';
+import { splitRuta } from './ajustes-model.js';
 import { openSearch, initSearch, searchHint } from './views/search-ui.js';
 
 // Datos del dispositivo (IndexedDB) cargados antes de pintar nada
@@ -50,8 +51,11 @@ let currentId = null;
 function parseHash() {
   const raw = location.hash.replace(/^#\/?/, '');
   const [path, query = ''] = raw.split('?');
-  const id = ALL.some((r) => r.id === path) ? path : 'hoy';
-  return { id, params: new URLSearchParams(query) };
+  const { id: seg, sub } = splitRuta(path);
+  const id = ALL.some((r) => r.id === seg) ? seg : 'hoy';
+  const params = new URLSearchParams(query);
+  if (sub) params.set('seccion', sub);   // «#/ajustes/cuenta» → seccion=cuenta
+  return { id, params };
 }
 
 function pendingCount() {
@@ -159,7 +163,8 @@ async function navigate() {
   cleanup = mod.render(viewEl, params) || null;
   // Guía rápida (si está activada)
   import('./guide.js').then((g) => { if (parseHash().id === id) g.mountGuide(id, viewEl, params); }).catch(() => {});
-  if (currentId !== id) { window.scrollTo(0, 0); currentId = id; }
+  const clave = `${id}/${params.get('seccion') || ''}`;
+  if (currentId !== clave) { window.scrollTo(0, 0); currentId = clave; }
 }
 
 window.addEventListener('hashchange', navigate);
@@ -279,23 +284,7 @@ initSync();
 // Acceso de asistente (solo hace algo si se ha activado en Ajustes)
 import('./asistente.js').then((m) => m.initAssistant()).catch(() => {});
 
-// Recordatorio de copia de seguridad: sin cuenta conectada y más de 30 días sin copia (como mucho, una vez por semana)
-const backupReminder = async (intento = 0) => {
-  try {
-    if (store.getSetting('syncUid') || !store._hasLocalData()) return;
-    // No pisar otro aviso (p. ej. un «Deshacer»): se espera a que no haya ninguno visible
-    if (document.querySelector('#toast.show') || document.querySelector('.overlay') || document.body.classList.contains('has-entrada')) { if (intento < 10) setTimeout(() => backupReminder(intento + 1), 8000); return; }
-    const { daysSinceBackup } = await import('./backup.js');
-    const d = daysSinceBackup();
-    const last = store.getSetting('backup:aviso', 0);
-    if ((d === null || d > 30) && Date.now() - last > 7 * 86400000) {
-      store.setSetting('backup:aviso', Date.now());
-      const { toast } = await import('./ui.js');
-      toast(d === null ? 'Aún no tienes copia de seguridad de tus datos' : `Tu última copia es de hace ${d} días`, { label: 'Hacer copia', run: () => { location.hash = '#/ajustes'; } });
-    }
-  } catch {}
-};
-setTimeout(backupReminder, 6000);
+// El recordatorio de copia de seguridad es una línea discreta en «Hoy» (js/views/hoy.js), no un aviso flotante.
 
 // Pedir al navegador que conserve los datos aunque falte espacio. Sin molestar: Chrome y Safari lo deciden
 // solos, sin preguntar; Firefox muestra un permiso, así que allí se pide desde Ajustes → «Estado de tus datos».

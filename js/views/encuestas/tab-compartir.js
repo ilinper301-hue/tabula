@@ -24,7 +24,7 @@ export function createSharePanel(ctx) {
     busy = false; paint();
   }
 
-  const needCloud = () => h('p', { class: 'enc-note', role: 'status' }, NEED_CLOUD, ' ', h('a', { href: '#/ajustes' }, 'Ir a Ajustes'));
+  const needCloud = () => h('p', { class: 'enc-note', role: 'status' }, NEED_CLOUD, ' ', h('a', { href: '#/ajustes/cuenta' }, 'Ir a Ajustes'));
   const errBox = () => (error ? h('p', { class: 'enc-error', role: 'alert' }, error) : null);
 
   // ---------- Borrador: publicar ----------

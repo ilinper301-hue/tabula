@@ -163,7 +163,7 @@ function detach(viewEl) {
 
 function stop() { if (observer) { observer.disconnect(); observer = null; } }
 
-function currentRoute() { return (location.hash.replace(/^#\/?/, '').split('?')[0]) || 'hoy'; }
+function currentRoute() { return (location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[0]) || 'hoy'; }
 
 /** Pone (si procede) el enlace «¿Cómo funciona?» en la cabecera de la sección. Nunca se duplica. */
 export function mountGuide(routeId, viewEl) {

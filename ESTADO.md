@@ -14,6 +14,21 @@ Módulos y estructura: ver `README.md`.
 
 ## Últimos cambios
 
+- **2026-11-12 · Rediseño, fase 4 (Ajustes y «Más»)**
+  - *Ajustes* es ahora un índice de 7 filas con subpantallas en `#/ajustes/<seccion>` (Perfil · Apariencia · Evaluación ·
+    Curso · Seguridad · Cuenta y datos · Ayuda), cada una con «‹ Ajustes» para volver. Cada sección crea solo lo suyo
+    (y limpia sus suscripciones). Apariencia incluye la barra inferior; Curso, calendario escolar y nuevo curso;
+    Seguridad, bloqueo y acceso de asistente; Cuenta y datos, sesión, estado de tus datos y restaurar copia.
+    El router (`parseHash` en `js/app.js`) pasa la subsección como `?seccion=`; la búsqueda y los enlaces
+    (Encuestas «Ir a Ajustes», «Revisar» del asistente, «Ir a Cuenta…») van directos a su sección.
+    Lógica pura en `js/ajustes-model.js`; vista en `js/views/ajustes.js`.
+  - *Más*: cuadrícula de 2 columnas con icono y nombre (sin descripciones), apps amigas en fila de 4, y «Ajustes» + «Barra
+    inferior» al final; cabe entera en 390 × 844 con la barra inferior visible.
+  - *Recordatorio de copia*: desaparece el aviso flotante; ahora es una línea discreta en «Hoy» («Aún no tienes copia… ·
+    Hacer copia» → `#/ajustes/cuenta`, con ✕ que lo silencia una semana). Mismas condiciones que antes (sin cuenta, con
+    datos, más de 30 días sin copia).
+  - Pruebas: `tests/ajustes.test.mjs`; `tests/desbordamiento.py` mide también las 7 subpantallas de Ajustes.
+    `sw.js` → `tabula-v50`.
 - **2026-11-12 · Rediseño, fase 3 (Cuaderno y Planificación)**
   - *Barra de contexto compartida*: una sola fila «1º Demo · Matemáticas · 1.ª ev. ▾» en la línea superior de la cabecera
     (no ocupa piso propio). Abre una hoja con Grupo · Evaluación · Área (primero las áreas con cuaderno/situaciones);
@@ -103,7 +118,7 @@ Módulos y estructura: ver `README.md`.
 
 ## Pendiente / ideas
 
-- **Rediseño**: fases 1, 2 y 3 hechas. Siguen las fases de `PLAN-DISENO.md` (4 Ajustes y Más → 5 resto → 6 repaso).
+- **Rediseño**: fases 1 a 4 hechas. Siguen las fases de `PLAN-DISENO.md` (5 resto de pantallas → 6 repaso).
   Fase 3: la vista «Informes» del Cuaderno conserva su propio desplegable de grupo y segmentado (sin tocar). Pendiente de la fase 1: la guía «desplegada dentro de los estados vacíos»
   (tampoco se puso en los de Documentos). Documentos: la pulsación larga solo está probada en Chrome con toque simulado;
   falta probarla en iPhone/iPad y Android reales. «Mover a carpeta» en la selección, sin hacer.

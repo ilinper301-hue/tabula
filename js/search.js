@@ -9,6 +9,7 @@
 //   go: { hash } | { open: 'ficha'|'tarea', id } | { action: 'nueva-tarea'|…} | { ajuste: 'Título de la tarjeta' }
 
 import { SECTIONS, AJUSTES, NAV_BLOCKS } from './nav-model.js';
+import { seccionDeTarjeta } from './ajustes-model.js';
 import { MEDIDAS, TIPOS_REUNION } from './tutoria.js';
 import { KINDS, kindOf } from './documents.js';
 
@@ -72,7 +73,7 @@ export function staticItems() {
   out.push({ key: 'seccion:ajustes', type: 'seccion', title: AJUSTES.label, sub: 'Configuración', go: { hash: '#/ajustes' }, kw: AJUSTES.desc });
 
   const aj = (id, title, card, kw, extra = {}) =>
-    out.push({ key: `ajuste:${id}`, type: 'ajuste', title, sub: 'Ajustes', go: { ajuste: card }, kw, ...extra });
+    out.push({ key: `ajuste:${id}`, type: 'ajuste', title, sub: 'Ajustes', go: { ajuste: card, seccion: seccionDeTarjeta(card) }, kw, ...extra });
   aj('perfil', 'Perfil', 'Perfil', 'nombre centro');
   aj('apariencia', 'Color de la app y tema', 'Apariencia', 'color acento tema oscuro claro modo apariencia');
   aj('evaluacion', 'Evaluación por defecto', 'Evaluación', 'escala notas niveles porcentajes criterios cuadernos');

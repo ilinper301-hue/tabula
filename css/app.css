@@ -697,3 +697,30 @@ html.is-locked .app, html.is-locked .bottom-nav { visibility: hidden; }
 .datos-row .btn { margin-top: 2px; }
 .datos-estado { margin-bottom: 12px; }
 @media (max-width: 380px) { .datos-row { grid-template-columns: 1fr; } }
+
+/* ---------- Más: cuadrícula de 2 columnas (fase 4) ---------- */
+.more-blocks { gap: 12px; }
+.more-block .section-label { margin: 0 0 6px 4px; }
+.more-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.more-tile { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text); text-decoration: none; font: inherit; text-align: left; cursor: pointer; min-width: 0; }
+.more-tile:hover { background: var(--hover); }
+.more-tile .more-icon { width: 34px; height: 34px; }
+.more-tile .more-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.more-tile .more-app-ico { width: 34px; height: 34px; }
+.more-grid.more-apps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 681px) { .more-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* ---------- Hoy: recordatorio de copia (línea discreta) ---------- */
+.hy-copia { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 0 2px; font-size: 13px; color: var(--muted); }
+.hy-copia > .icon { flex-shrink: 0; }
+.hy-copia-t { flex: 1; min-width: 0; }
+.hy-copia-t a { color: var(--accent-text); font-weight: 500; white-space: nowrap; }
+.hy-copia-x { width: 32px; height: 32px; color: var(--muted); }
+.more-tile { min-height: 46px; padding: 5px 10px; }
+.more-tile .more-label { white-space: normal; line-height: 1.2; font-size: 15px; }
+.more-tile .more-icon { width: 32px; height: 32px; }
+.more-grid.more-apps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.more-apps .more-tile { flex-direction: column; justify-content: center; gap: 4px; min-height: 64px; padding: 6px 4px; text-align: center; }
+.more-apps .more-label { font-size: 13px; }
+.more-apps .more-app-ico { width: 30px; height: 30px; }
+.more-blocks { gap: 10px; }

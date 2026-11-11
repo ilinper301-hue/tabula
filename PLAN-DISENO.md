@@ -94,7 +94,11 @@ Archivos: `js/views/documentos.js`, `documentos/library.js`, `queue.js`, `detail
 - Planificación: «Nueva situación» como acción principal de la cabecera; segmentado Situaciones / Programación.
 - Comprobar con datos de ejemplo que la tabla gana al menos dos filas visibles en móvil.
 
-## Fase 4 · Ajustes y «Más» — *Sonnet, esfuerzo medio*
+## Fase 4 · Ajustes y «Más» — *Sonnet, esfuerzo medio* — ✅ hecha (2026-11-12)
+
+> Hecho: índice de Ajustes con 7 subpantallas (`#/ajustes/<seccion>`, `js/ajustes-model.js`), «Más» en cuadrícula que cabe
+> en una pantalla y recordatorio de copia como línea en «Hoy» (sin aviso flotante). Queda a medias: la guía desplegada
+> en estados vacíos (fase 1) sigue pendiente.
 
 - **Ajustes** como índice de filas (estilo ajustes del teléfono) con subpantallas:
   Perfil · Apariencia (modo, color, barra inferior) · Evaluación · Curso (calendario escolar, nuevo curso) ·

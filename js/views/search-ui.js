@@ -81,7 +81,7 @@ function run(go) {
   else if (go.open === 'ficha') import('./grupos/sheets.js').then((m) => m.openFicha(go.id));
   else if (go.open === 'tarea') import('../tasks-model.js').then((m) => m.openTaskEditor(go.id));
   else if (go.ajuste) {
-    goHash('#/ajustes');
+    goHash(go.seccion ? `#/ajustes/${go.seccion}` : '#/ajustes');
     afterRoute(() => {
       const t = [...document.querySelectorAll('#view .card-title')].find((x) => x.textContent.trim() === go.ajuste);
       const card = t && t.closest('.card');

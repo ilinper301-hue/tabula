@@ -14,7 +14,8 @@ PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8790
 SHOTS = sys.argv[2] if len(sys.argv) > 2 else None
 ROUTES = ['hoy', 'tareas', 'calendario', 'aula', 'grupos', 'tutoria', 'cuaderno', 'planificacion',
           'planificacion?vista=programacion', 'documentos', 'documentos?tab=imprimir', 'programas',
-          'encuestas', 'codigos', 'ajustes', 'mas']
+          'encuestas', 'codigos', 'ajustes', 'ajustes/perfil', 'ajustes/apariencia', 'ajustes/evaluacion', 'ajustes/curso',
+          'ajustes/seguridad', 'ajustes/cuenta', 'ajustes/ayuda', 'mas']
 WIDTHS = (360, 390)
 
 # Documentos de prueba (ficticios): fichas HTML, un enlace y uno con título largo; dos para hoy en la cola

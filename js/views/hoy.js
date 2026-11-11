@@ -10,6 +10,7 @@ import { dueNow, canPrint } from '../documents.js';
 import { splitReuniones, reviewsDue, TIPOS_REUNION, MEDIDAS } from '../tutoria.js';
 import { parseQuickInput, createTask, sortTasks, taskRow, isOverdue } from '../tasks-model.js';
 import { quietStudents } from '../observations.js';
+import { recordatorioCopia } from '../ajustes-model.js';
 
 export function render(container) {
   const profile = store.getSetting('profile', { nombre: '' });
@@ -314,12 +315,29 @@ export function render(container) {
   let alive = true, asistenteOff = null;
   import('./bandeja.js').then((m) => { if (alive) asistenteOff = m.mountHoyCard(asistenteSlot); }).catch(() => {});
 
+  // --- Recordatorio de copia: una línea discreta, solo si procede (sin cuenta y más de 30 días sin copia) ---
+  const copiaSlot = h('div', { class: 'hy-copia-slot' });
+  const paintCopia = async () => {
+    const { daysSinceBackup } = await import('../backup.js');
+    const d = daysSinceBackup();
+    const r = recordatorioCopia({
+      conCuenta: !!store.getSetting('syncUid'), hayDatos: store._hasLocalData(),
+      ultimaCopia: d === null ? null : Date.now() - d * 86400000, silenciadoEn: store.getSetting('backup:aviso', 0),
+    });
+    if (!alive) return;
+    copiaSlot.replaceChildren(...(r ? [h('p', { class: 'hy-copia', role: 'status' },
+      icon('download', 15), h('span', { class: 'hy-copia-t' }, r.texto, ' ', h('a', { href: '#/ajustes/cuenta' }, 'Hacer copia')),
+      h('button', { type: 'button', class: 'icon-btn hy-copia-x', 'aria-label': 'Recordármelo dentro de una semana', onclick: () => { store.setSetting('backup:aviso', Date.now()); copiaSlot.replaceChildren(); } }, icon('x', 15)))] : []));
+  };
+  paintCopia().catch(() => {});
+
   container.replaceChildren(h('div', { class: 'hy' },
     pageHead({
       eyebrow: [longDate(), ' · ', tasksCount], title: firstName ? `${greeting()}, ${firstName}` : greeting(), className: 'hy-head',
       menu: [{ icon: 'aula', label: 'En clase', desc: 'Herramientas del aula', href: '#/aula' }],
     }),
     composer,
+    copiaSlot,
     asistenteSlot,
     nowSlot,
     h('div', { class: 'today-grid hy-grid' },

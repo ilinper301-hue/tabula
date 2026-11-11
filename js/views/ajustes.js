@@ -1,4 +1,4 @@
-// Tabula · Ajustes: perfil, apariencia y copia de seguridad
+// Tabula · Ajustes: índice de secciones y una subpantalla por sección (#/ajustes/<seccion>)
 
 import { store } from '../store.js';
 import { h, icon, toast, googleButton } from '../ui.js';
@@ -17,11 +17,11 @@ import { nuevoCursoCard } from './ajustes/nuevo-curso.js';
 import { guiaCard } from './ajustes/guia.js';
 import { menuCard } from './ajustes/menu.js';
 import { asistenteCard } from './ajustes/asistente.js';
+import { AJ_SECCIONES, seccionAjustes } from '../ajustes-model.js';
 
-export function render(container) {
-  const profile = store.getSetting('profile', { nombre: '', centro: '' });
+// ---------- Secciones (cada una crea solo lo suyo y devuelve { nodes, destroy }) ----------
 
-  // --- Perfil ---
+function seccionPerfil() {
   const nombre = h('input', { class: 'input', id: 'aj-nombre', value: profile.nombre || '', placeholder: 'Tu nombre', autocomplete: 'name' });
   const centro = h('input', { class: 'input', id: 'aj-centro', value: profile.centro || '', placeholder: 'Ej. 1º A · CEIP …' });
   const saveProfile = () => {
@@ -30,6 +30,16 @@ export function render(container) {
   };
   [nombre, centro].forEach((el) => el.addEventListener('change', saveProfile));
 
+  return {
+    nodes: [h('section', { class: 'card' },
+      h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Perfil')),
+      h('div', { class: 'field' }, h('label', { for: 'aj-nombre' }, 'Nombre'), nombre),
+      h('div', { class: 'field' }, h('label', { for: 'aj-centro' }, 'Grupo y centro'), centro))],
+    destroy() {},
+  };
+}
+
+function seccionApariencia() {
   // --- Tema ---
   const current = store.getSetting('theme', 'system');
   const themeBtns = [['system', 'Automático'], ['light', 'Claro'], ['dark', 'Oscuro']].map(([val, label]) =>
@@ -52,6 +62,19 @@ export function render(container) {
       },
     }, h('span', { class: 'swatch-dot', style: { background: hex } }, icon('check', 16)), label)));
 
+  return {
+    nodes: [
+      h('section', { class: 'card' },
+        h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Apariencia')),
+        h('div', { class: 'field' }, h('span', { class: 'field-label' }, 'Modo'),
+          h('div', { class: 'segmented', role: 'tablist', 'aria-label': 'Tema' }, ...themeBtns)),
+        h('div', { class: 'field', style: { marginBottom: '0' } }, h('span', { class: 'field-label' }, 'Color'), swatches)),
+      menuCard()],
+    destroy() {},
+  };
+}
+
+function seccionEvaluacion() {
   // --- Evaluación: valores por defecto para cuadernos nuevos ---
   const evDef = store.getSetting('evaluacionDefaults', { escala: 'numerica', modo: 'porcentajes', final: 'continua' });
   const evSeg = (key, label, options) => h('div', { class: 'field' },
@@ -67,64 +90,23 @@ export function render(container) {
         },
       }, text))));
 
-  // --- Restaurar copia (la descarga y el estado están en la tarjeta «Estado de tus datos») ---
-  const backupStatus = h('p', { class: 'settings-text', role: 'status', 'aria-live': 'polite', hidden: true });
-  const paintBackupStatus = (txt) => { backupStatus.textContent = txt || ''; backupStatus.hidden = !txt; };
-  const fileInput = h('input', { type: 'file', accept: '.zip,application/zip,application/json,.json', class: 'sr-only', id: 'aj-import' });
-  const importBox = h('div', { class: 'confirm-box', hidden: true });
-  fileInput.addEventListener('change', () => {
-    const f = fileInput.files[0];
-    if (!f) return;
-    // Confirmación dentro de la página
-    importBox.replaceChildren(
-      h('p', {}, `¿Restaurar «${f.name}»? Se sustituirán los datos actuales${getSyncState().user ? ' (también en la nube)' : ''}.`),
-      h('div', { class: 'settings-actions' },
-        h('button', { class: 'btn btn-primary', onclick: async () => {
-          try {
-            const { restoreBackup } = await import('../backup.js');
-            const r = await restoreBackup(f, (t) => paintBackupStatus(t));
-            toast(r.archivos ? `Copia restaurada con ${r.archivos} archivos` : 'Copia restaurada');
-            setTimeout(() => location.reload(), 700);
-          } catch (e) { toast(e.message || 'No se pudo leer el archivo'); paintBackupStatus(); }
-        } }, 'Restaurar'),
-        h('button', { class: 'btn btn-ghost', onclick: () => { importBox.hidden = true; fileInput.value = ''; } }, 'Cancelar')));
-    importBox.hidden = false;
-  });
+  return {
+    nodes: [h('section', { class: 'card' },
+      h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Evaluación')),
+      h('p', { class: 'settings-text' }, 'Configuración que tendrán los cuadernos nuevos. Cada cuaderno puede cambiarla después.'),
+      evSeg('escala', 'Forma de calificar', [['numerica', 'Notas (0–10)'], ['niveles', 'Niveles (IN–SB)']]),
+      evSeg('modo', 'Cálculo de la nota', [['porcentajes', 'Por porcentajes'], ['criterios', 'Por criterios (Séneca)']]),
+      evSeg('final', 'Nota final', [['continua', 'Evaluación continua'], ['media', 'Media de evaluaciones']]))],
+    destroy() {},
+  };
+}
 
-  // --- Sincronización ---
-  const syncBody = h('div');
-  // La caja de cerrar sesión se crea una sola vez: así no se pierde el aviso si cambia el estado de la sincronización
-  const salir = cerrarSesionBox({ onCancel: () => { salir.el.hidden = true; } });
-  salir.el.hidden = true;
-  function paintSync() {
-    const st = getSyncState();
-    const parts = [];
-    if (!st.enabled) {
-      parts.push(h('p', { class: 'settings-text' }, 'Tus datos se guardan solo en este dispositivo. Cuando se configure la conexión con la nube, podrás iniciar sesión con Google y usarlos en el móvil, la tablet y el ordenador.'));
-    } else if (st.cambioCuenta) {
-      parts.push(cambioCuentaBox(st.cambioCuenta));
-    } else if (!st.user) {
-      parts.push(
-        h('p', { class: 'settings-text' }, 'Inicia sesión con tu cuenta de Google para tener tus datos en todos tus dispositivos. Lo que ya tengas en este dispositivo se subirá a tu cuenta.'),
-        h('div', { class: 'settings-actions' },
-          googleButton(() => signIn().catch(() => {}), { disabled: st.status === 'loading' })));
-    } else {
-      parts.push(
-        h('div', { class: 'sync-account' },
-          h('span', { class: 'avatar', 'aria-hidden': 'true' }, (st.user.name || st.user.email || '?')[0].toUpperCase()),
-          h('span', { class: 'user-label' },
-            h('span', { class: 'user-name' }, st.user.name || st.user.email),
-            h('span', { class: `user-sub sync-${st.status}` }, `${st.user.email} · ${SYNC_LABELS[st.status]}`))),
-        st.status === 'offline' ? h('p', { class: 'settings-text' }, 'Sin conexión: los cambios se guardan y se subirán al recuperar la red.') : null,
-        h('div', { class: 'settings-actions' }, h('button', { class: 'btn', onclick: () => { salir.el.hidden = false; } }, 'Cerrar sesión')),
-        salir.el);
-    }
-    if (st.error && !st.cambioCuenta) parts.push(h('p', { class: 'sync-error', role: 'alert' }, st.error));
-    syncBody.replaceChildren(...parts.filter(Boolean)); // sin filtrar se veía «null» en pantalla
-  }
-  paintSync();
-  const unsubSync = onSyncChange(paintSync);
+function seccionCurso() {
+  const calEsc = calendarioEscolarCard();
+  return { nodes: [calEsc.el, nuevoCursoCard()], destroy: () => calEsc.destroy() };
+}
 
+function seccionSeguridad() {
   // --- Bloqueo ---
   const lockBody = h('div');
   let lockMode = null; // null | 'activar' | 'cambiar' | 'desactivar'
@@ -195,38 +177,82 @@ export function render(container) {
   paintLock();
   const unsubLock = onLockConfigChange(() => { if (!lockMode) paintLock(); });
 
-  const calEsc = calendarioEscolarCard();
   const asis = asistenteCard();
-  const datos = estadoDatosCard();
-  container.replaceChildren(
-    pageHead({ eyebrow: 'Perfil, apariencia y tus datos', title: 'Ajustes' }),
-    h('div', { class: 'settings' },
-      h('section', { class: 'card' },
-        h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Perfil')),
-        h('div', { class: 'field' }, h('label', { for: 'aj-nombre' }, 'Nombre'), nombre),
-        h('div', { class: 'field' }, h('label', { for: 'aj-centro' }, 'Grupo y centro'), centro)),
-      h('section', { class: 'card' },
-        h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Apariencia')),
-        h('div', { class: 'field' }, h('span', { class: 'field-label' }, 'Modo'),
-          h('div', { class: 'segmented', role: 'tablist', 'aria-label': 'Tema' }, ...themeBtns)),
-        h('div', { class: 'field', style: { marginBottom: '0' } }, h('span', { class: 'field-label' }, 'Color'), swatches)),
-      h('section', { class: 'card' },
-        h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Evaluación')),
-        h('p', { class: 'settings-text' }, 'Configuración que tendrán los cuadernos nuevos. Cada cuaderno puede cambiarla después.'),
-        evSeg('escala', 'Forma de calificar', [['numerica', 'Notas (0–10)'], ['niveles', 'Niveles (IN–SB)']]),
-        evSeg('modo', 'Cálculo de la nota', [['porcentajes', 'Por porcentajes'], ['criterios', 'Por criterios (Séneca)']]),
-        evSeg('final', 'Nota final', [['continua', 'Evaluación continua'], ['media', 'Media de evaluaciones']])),
-      menuCard(),
-      calEsc.el,
-      nuevoCursoCard(),
-      guiaCard(),
+  return {
+    nodes: [
       h('section', { class: 'card' },
         h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Bloqueo')),
         lockBody),
+      asis.el],
+    destroy() { unsubLock(); asis.destroy(); },
+  };
+}
+
+function seccionCuenta() {
+  // --- Restaurar copia (la descarga y el estado están en la tarjeta «Estado de tus datos») ---
+  const backupStatus = h('p', { class: 'settings-text', role: 'status', 'aria-live': 'polite', hidden: true });
+  const paintBackupStatus = (txt) => { backupStatus.textContent = txt || ''; backupStatus.hidden = !txt; };
+  const fileInput = h('input', { type: 'file', accept: '.zip,application/zip,application/json,.json', class: 'sr-only', id: 'aj-import' });
+  const importBox = h('div', { class: 'confirm-box', hidden: true });
+  fileInput.addEventListener('change', () => {
+    const f = fileInput.files[0];
+    if (!f) return;
+    // Confirmación dentro de la página
+    importBox.replaceChildren(
+      h('p', {}, `¿Restaurar «${f.name}»? Se sustituirán los datos actuales${getSyncState().user ? ' (también en la nube)' : ''}.`),
+      h('div', { class: 'settings-actions' },
+        h('button', { class: 'btn btn-primary', onclick: async () => {
+          try {
+            const { restoreBackup } = await import('../backup.js');
+            const r = await restoreBackup(f, (t) => paintBackupStatus(t));
+            toast(r.archivos ? `Copia restaurada con ${r.archivos} archivos` : 'Copia restaurada');
+            setTimeout(() => location.reload(), 700);
+          } catch (e) { toast(e.message || 'No se pudo leer el archivo'); paintBackupStatus(); }
+        } }, 'Restaurar'),
+        h('button', { class: 'btn btn-ghost', onclick: () => { importBox.hidden = true; fileInput.value = ''; } }, 'Cancelar')));
+    importBox.hidden = false;
+  });
+
+  // --- Sincronización ---
+  const syncBody = h('div');
+  // La caja de cerrar sesión se crea una sola vez: así no se pierde el aviso si cambia el estado de la sincronización
+  const salir = cerrarSesionBox({ onCancel: () => { salir.el.hidden = true; } });
+  salir.el.hidden = true;
+  function paintSync() {
+    const st = getSyncState();
+    const parts = [];
+    if (!st.enabled) {
+      parts.push(h('p', { class: 'settings-text' }, 'Tus datos se guardan solo en este dispositivo. Cuando se configure la conexión con la nube, podrás iniciar sesión con Google y usarlos en el móvil, la tablet y el ordenador.'));
+    } else if (st.cambioCuenta) {
+      parts.push(cambioCuentaBox(st.cambioCuenta));
+    } else if (!st.user) {
+      parts.push(
+        h('p', { class: 'settings-text' }, 'Inicia sesión con tu cuenta de Google para tener tus datos en todos tus dispositivos. Lo que ya tengas en este dispositivo se subirá a tu cuenta.'),
+        h('div', { class: 'settings-actions' },
+          googleButton(() => signIn().catch(() => {}), { disabled: st.status === 'loading' })));
+    } else {
+      parts.push(
+        h('div', { class: 'sync-account' },
+          h('span', { class: 'avatar', 'aria-hidden': 'true' }, (st.user.name || st.user.email || '?')[0].toUpperCase()),
+          h('span', { class: 'user-label' },
+            h('span', { class: 'user-name' }, st.user.name || st.user.email),
+            h('span', { class: `user-sub sync-${st.status}` }, `${st.user.email} · ${SYNC_LABELS[st.status]}`))),
+        st.status === 'offline' ? h('p', { class: 'settings-text' }, 'Sin conexión: los cambios se guardan y se subirán al recuperar la red.') : null,
+        h('div', { class: 'settings-actions' }, h('button', { class: 'btn', onclick: () => { salir.el.hidden = false; } }, 'Cerrar sesión')),
+        salir.el);
+    }
+    if (st.error && !st.cambioCuenta) parts.push(h('p', { class: 'sync-error', role: 'alert' }, st.error));
+    syncBody.replaceChildren(...parts.filter(Boolean)); // sin filtrar se veía «null» en pantalla
+  }
+  paintSync();
+  const unsubSync = onSyncChange(paintSync);
+
+  const datos = estadoDatosCard();
+  return {
+    nodes: [
       h('section', { class: 'card', id: 'ajustes-cuenta' },
         h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Cuenta y sincronización')),
         syncBody),
-      asis.el,
       datos.el,
       h('section', { class: 'card' },
         h('div', { class: 'card-head' }, h('h2', { class: 'card-title' }, 'Copia de seguridad')),
@@ -234,7 +260,39 @@ export function render(container) {
         backupStatus,
         h('div', { class: 'settings-actions' },
           h('button', { class: 'btn', onclick: () => fileInput.click() }, icon('upload', 18), 'Restaurar copia'), fileInput),
-        importBox)),
-  );
-  return () => { unsubSync(); unsubLock(); calEsc.destroy(); asis.destroy(); datos.destroy(); };
+        importBox)],
+    destroy() { unsubSync(); datos.destroy(); },
+  };
+}
+
+function seccionAyuda() {
+  return { nodes: [guiaCard()], destroy() {} };
+}
+
+const CONSTRUYE = {
+  perfil: seccionPerfil, apariencia: seccionApariencia, evaluacion: seccionEvaluacion, curso: seccionCurso,
+  seguridad: seccionSeguridad, cuenta: seccionCuenta, ayuda: seccionAyuda,
+};
+
+// ---------- Índice ----------
+
+function indice(container) {
+  container.replaceChildren(
+    pageHead({ eyebrow: 'Perfil, apariencia y tus datos', title: 'Ajustes' }),
+    h('nav', { class: 'settings', 'aria-label': 'Secciones de Ajustes' },
+      h('div', { class: 'card more-list' }, ...AJ_SECCIONES.map((s) =>
+        h('a', { class: 'more-item', href: `#/ajustes/${s.id}` },
+          h('span', { class: 'more-icon' }, icon(s.icon, 20)),
+          h('span', { class: 'more-text' }, h('span', { class: 'more-label' }, s.label), h('span', { class: 'more-desc' }, s.desc)),
+          icon('chevronRight', 18, 'more-chevron'))))));
+}
+
+export function render(container, params = new URLSearchParams()) {
+  const sec = seccionAjustes(params.get('seccion'));
+  if (!sec) { indice(container); return null; }
+  const built = CONSTRUYE[sec.id]();
+  container.replaceChildren(
+    pageHead({ back: { href: '#/ajustes', label: 'Ajustes' }, title: sec.label }),
+    h('div', { class: 'settings' }, ...built.nodes));
+  return () => built.destroy();
 }
