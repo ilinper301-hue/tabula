@@ -108,7 +108,9 @@ Archivos: `js/views/documentos.js`, `documentos/library.js`, `queue.js`, `detail
   que quepa en una pantalla; Ajustes y apps amigas al final.
 - Recordatorio de copia: en vez de aviso flotante sobre el contenido, una línea discreta en «Hoy».
 
-## Fase 5 · Resto de pantallas — *Sonnet, esfuerzo medio (una o dos por chat)*
+## Fase 5 · Resto de pantallas — *Sonnet, esfuerzo medio (una o dos por chat)* — ✅ hecha (2026-11-12)
+
+> Hecho: Calendario, En clase (rejilla), Tutoría (píldora) y estados vacíos cortos. Hoy ya no tenía el botón del reloj.
 
 - **Calendario**: «Hoy ‹ ›» y Semana/Mes/Horario en una sola fila; el aviso del calendario escolar se reduce a
   una línea con enlace y desaparece al cargarlo. Quitar «+ Evento» repetido en cada día (se añade tocando el día).

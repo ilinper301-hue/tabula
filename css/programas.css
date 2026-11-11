@@ -17,7 +17,7 @@
 .pg-stack { display: flex; flex-direction: column; gap: 18px; }
 .pg-link { color: var(--accent-text); overflow-wrap: anywhere; }
 .pg-empty-s { padding: 14px 8px; }
-.pg-empty-big { padding: 40px 16px; }
+.pg-empty-big { padding: 24px 16px; }
 .pg-empty-big .icon { color: var(--muted); margin-bottom: 10px; }
 .pg-suggest { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 18px; }
 

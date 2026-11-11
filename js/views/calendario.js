@@ -15,6 +15,7 @@ import { asistenteChip, asistenteDetail } from '../asistente-mark.js';
 const VISTAS = [['semana', 'Semana'], ['mes', 'Mes'], ['horario', 'Horario']];
 const HOUR_PX = 64;                                   // alto de una hora en la rejilla semanal
 const DIAS_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const DIAS_NOMBRE = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 const DIAS_INI = ['L', 'M', 'X', 'J', 'V'];
 const TIPOS_SESION = [['clase', 'Clase'], ['recreo', 'Recreo'], ['otro', 'Otro']];
 const PHONE = '(max-width: 680px)';
@@ -271,10 +272,9 @@ export function render(container, params = new URLSearchParams()) {
           .sort((a, b) => a.at.localeCompare(b.at)),
       ].map((r) => r.node);
       return h('section', { class: `card${iso === today ? ' is-today' : ''}`, 'aria-label': `${cap(DIAS_CORTO[fromISO(iso).getDay()])} ${dayNum(iso)}` },
-        h('div', { class: 'cal-ahead' },
-          h('h2', {}, `${cap(['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][fromISO(iso).getDay()])} ${dayNum(iso)}`),
-          iso === today ? h('span', { class: 'chip' }, 'Hoy') : h('span', { class: 'cal-muted' }, shortDate(iso)),
-          h('button', { type: 'button', class: 'link-btn', style: 'margin-left:auto;min-height:44px', onclick: () => openEventEditor(null, { fecha: iso }) }, '+ Evento')),
+        h('button', { type: 'button', class: 'cal-ahead', 'aria-label': `Añadir evento el ${cap(DIAS_NOMBRE[fromISO(iso).getDay()])} ${dayNum(iso)}`, onclick: () => openEventEditor(null, { fecha: iso }) },
+          h('h2', {}, `${cap(DIAS_NOMBRE[fromISO(iso).getDay()])} ${dayNum(iso)}`),
+          iso === today ? h('span', { class: 'chip' }, 'Hoy') : h('span', { class: 'cal-muted' }, shortDate(iso))),
         rows.length ? rows : h('p', { class: 'cal-muted', style: 'margin:4px 8px 10px' }, 'Sin actividad'),
         tasks.length ? h('a', { class: 'cal-tasks-line', href: '#/tareas' }, plural(tasks.length, 'tarea', 'tareas')) : null);
     }));

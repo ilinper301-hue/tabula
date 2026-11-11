@@ -95,7 +95,7 @@ export function createResultsPanel(ctx) {
     if (!st) return;
     if (!st.publicId) {
       el.replaceChildren(h('div', { class: 'card enc-empty' }, eicon('poll', 40), h('strong', {}, 'Aún no hay resultados'),
-        h('p', {}, 'Publica la encuesta y comparte el enlace; las respuestas aparecerán aquí al momento.'),
+        h('p', {}, 'Publica la encuesta y comparte el enlace.'),
         h('button', { type: 'button', class: 'btn btn-primary', onclick: () => ctx.go('compartir') }, 'Ir a Compartir')));
       return;
     }
@@ -113,7 +113,7 @@ export function createResultsPanel(ctx) {
 
     if (!rs.length) {
       el.replaceChildren(head, h('div', { class: 'card enc-empty' }, eicon('poll', 40), h('strong', {}, 'Todavía no hay respuestas'),
-        h('p', {}, st.estado === 'abierta' ? 'Comparte este enlace con tus compañeros; cuando respondan, los resultados aparecerán aquí sin recargar.' : 'La encuesta está cerrada. Reábrela en la pestaña Compartir para recibir respuestas.'),
+        h('p', {}, st.estado === 'abierta' ? 'Comparte este enlace; los resultados aparecerán aquí.' : 'Encuesta cerrada. Reábrela en Compartir.'),
         input, h('div', { class: 'enc-actions' }, h('button', { type: 'button', class: 'btn btn-primary', onclick: async () => { if (await copyText(link, input)) toast('Enlace copiado'); } }, eicon('copy', 18), 'Copiar enlace'))));
       return;
     }

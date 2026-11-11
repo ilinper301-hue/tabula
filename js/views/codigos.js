@@ -250,9 +250,9 @@ export function render(container) {
     const shown = all.filter((c) => (!filtro || (c.categoria || 'otro') === filtro)
       && (!query || norm(`${c.titulo} ${c.usuario} ${c.notas} ${CATEGORIAS[c.categoria]?.label || ''}`).includes(query)));
     if (!all.length) {
-      list.replaceChildren(h('div', { class: 'card' }, h('div', { class: 'empty' }, icon('lock', 40),
+      list.replaceChildren(h('div', { class: 'card' }, h('div', { class: 'empty' }, icon('lock', 36),
         h('strong', {}, 'Aún no tienes códigos guardados'),
-        'Guarda aquí las licencias de los libros digitales, la clave de la impresora, la del wifi del centro…',
+        'Licencias, claves de la impresora, wifi del centro…',
         h('button', { type: 'button', class: 'btn btn-primary', style: { marginTop: '12px' }, onclick: () => editSheet() }, icon('plus', 16), 'Añadir el primero'))));
       return;
     }

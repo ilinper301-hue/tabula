@@ -3,17 +3,17 @@ import { store } from '../../store.js';
 import { h, icon } from '../../ui.js';
 import { getGroup, getStudents } from '../../school.js';
 import { familyCoverage } from '../../tutoria.js';
-import { plural, listName, initials, shortDate, pill, segmented } from './common.js';
+import { plural, listName, initials, shortDate, pill } from './common.js';
 import { getReuniones } from './data.js';
 import { openReunion } from './reunion-sheet.js';
 import { openFichaTutoria } from './ficha.js';
 
 export function mountFamilias(panel, { groupId }) {
   let filtro = 'todos';
-  const cover = h('div', { class: 'card tu-cover' });
+  const cover = h('div', { class: 'tu-cover' });
   const list = h('div', { class: 'card tu-list' });
-  const seg = segmented('Mostrar', [['todos', 'Todo el grupo'], ['sin', 'Sin tutoría']], filtro, (v) => { filtro = v; paint(); });
-  panel.replaceChildren(h('div', { class: 'tu-stack' }, cover, h('div', { class: 'tu-toolbar' }, seg.el), list));
+  const pillBtn = h('button', { type: 'button', class: 'tu-pill', 'aria-pressed': 'false', onclick: () => { filtro = filtro === 'sin' ? 'todos' : 'sin'; paint(); } });
+  panel.replaceChildren(h('div', { class: 'tu-stack' }, cover, h('div', { class: 'tu-toolbar' }, pillBtn), list));
 
   function paint() {
     const group = getGroup(groupId);
@@ -24,16 +24,14 @@ export function mountFamilias(panel, { groupId }) {
     const pct = Math.round(cov.cobertura * 100);
 
     cover.replaceChildren(
-      h('div', { class: 'tu-cover-top' },
-        h('p', { class: 'tu-cover-text', id: 'tu-cover-text' },
-          h('strong', {}, String(k)), ` de ${n} ${n === 1 ? 'familia atendida' : 'familias atendidas'} este curso`),
-        h('span', { class: 'tu-cover-pct' }, `${pct} %`)),
+      h('p', { class: 'tu-cover-line', id: 'tu-cover-text' },
+        h('strong', {}, `${k} de ${n}`), ` ${n === 1 ? 'familia atendida' : 'familias atendidas'} este curso · ${pct} %`),
       h('div', { class: 'tu-bar', role: 'progressbar', 'aria-labelledby': 'tu-cover-text', 'aria-valuemin': '0', 'aria-valuemax': String(n), 'aria-valuenow': String(k) },
         h('i', { style: { width: `${pct}%` } })),
-      h('p', { class: 'tu-hint' }, n === 0 ? 'Añade alumnado al grupo para llevar el seguimiento.'
-        : cov.sin.length ? `${plural(cov.sin.length, 'familia', 'familias')} sin tutoría realizada todavía.` : 'Has atendido a todas las familias. Enhorabuena.'));
+      n === 0 ? h('p', { class: 'tu-hint' }, 'Añade alumnado al grupo para llevar el seguimiento.') : '');
 
-    seg.el.querySelector('[data-v="sin"]').textContent = `Sin tutoría · ${cov.sin.length}`;
+    pillBtn.textContent = `Sin tutoría · ${cov.sin.length}`;
+    pillBtn.setAttribute('aria-pressed', String(filtro === 'sin'));
     const shown = filtro === 'sin' ? students.filter((s) => !stat.has(s.id)) : students;
     if (!students.length) {
       list.replaceChildren(h('div', { class: 'empty' }, icon('grupos', 40), h('strong', {}, 'Este grupo aún no tiene alumnado'),

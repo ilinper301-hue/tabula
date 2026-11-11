@@ -27,9 +27,9 @@ export function calendarBanner() {
   const year = currentSchoolYear();
   function paint() {
     if (!PRESETS[year] || presetLoaded(year)) { el.replaceChildren(); return; }
-    el.replaceChildren(h('div', { class: 'tu-banner', role: 'region', 'aria-label': 'Calendario escolar' },
-      h('div', { class: 'tu-banner-text' }, h('strong', {}, 'Calendario escolar'), presetBlurb(year)),
-      h('button', { type: 'button', class: 'btn btn-primary', onclick: () => loadCalendar(year) }, icon('calendario', 16), `Cargar el calendario escolar de Andalucía ${yearLabel(year)}`)));
+    el.replaceChildren(h('div', { class: 'cal-banner', role: 'region', 'aria-label': 'Calendario escolar' },
+      h('span', {}, `Falta el calendario escolar ${yearLabel(year)}. `),
+      h('button', { type: 'button', class: 'link-btn', onclick: () => loadCalendar(year) }, 'Cargarlo')));
   }
   paint();
   const unsub = store.subscribe('events', paint);

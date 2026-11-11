@@ -43,9 +43,9 @@ export function mountAlumnado(panel, groupId) {
     count.textContent = q ? `${plural(shown.length, 'resultado', 'resultados')} de ${all.length}` : plural(all.length, 'alumno', 'alumnos');
 
     if (!all.length) {
-      list.replaceChildren(h('div', { class: 'empty' }, icon('grupos', 40),
+      list.replaceChildren(h('div', { class: 'empty' }, icon('grupos', 36),
         h('strong', {}, 'Este grupo aún no tiene alumnado'),
-        'Pega la lista desde Séneca o Excel, o añade a cada alumno uno a uno.',
+        'Pega la lista desde Séneca o Excel.',
         h('div', { class: 'gr-empty-actions' },
           h('button', { class: 'btn btn-primary', type: 'button', onclick: () => openAddStudents(groupId) }, icon('plus', 16), 'Añadir alumnado'))));
       return;

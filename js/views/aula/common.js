@@ -17,6 +17,7 @@ const PATHS = {
   swap: '<path d="M4 8h14l-3.500-3.500M20 16H6l3.500 3.500"/>',
   board: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8"/>',
   shield: '<path d="M12 3 5 6v5.500c0 4.300 2.900 7.500 7 9 4.100-1.500 7-4.700 7-9V6z"/><path d="m9.500 12 2 2 3.500-4"/>',
+  light: '<rect x="7" y="2.5" width="10" height="19" rx="4"/><circle cx="12" cy="7.500" r="1.500"/><circle cx="12" cy="12" r="1.500"/><circle cx="12" cy="16.500" r="1.500"/>',
   star: '<path d="m12 3.500 2.600 5.400 5.900.8-4.300 4.100 1 5.900L12 16.900 6.800 19.700l1-5.900-4.300-4.100 5.900-.8z"/>',
 };
 export function svg(name, size = 22) {

@@ -57,7 +57,13 @@
 .tu-pupil { overflow: hidden; }
 
 /* ---------- Familias ---------- */
-.tu-cover { padding: 20px 22px; }
+.tu-cover { padding: 0 2px; }
+.tu-cover-line { margin: 0 0 8px; font-size: 14px; color: var(--text-2); }
+.tu-cover-line strong { color: var(--text); font-weight: 600; }
+.tu-stack > .tu-toolbar { margin: calc(var(--s-3) * -1) 0 calc(var(--s-3) * -1); }
+.tu-pill { min-height: 44px; padding: 0 16px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface); color: var(--text-2); font: inherit; font-size: 14px; cursor: pointer; }
+.tu-pill:hover { background: var(--hover); }
+.tu-pill[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
 .tu-cover-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .tu-cover-text { margin: 0; font-size: 16px; color: var(--text-2); }
 .tu-cover-text strong { font-family: var(--font-serif); font-size: 34px; font-weight: 500; color: var(--text); margin-right: 2px; }
@@ -218,7 +224,6 @@
   .tu-tabs { display: flex; width: 100%; }
   .tu-tab { flex: 1; justify-content: center; padding: 0 8px; }
   .tu-group-select { min-width: 0; width: 100%; }
-  .tu-cover { padding: 18px; }
   .tu-row-main { flex-wrap: wrap; gap: 8px 12px; }
   .tu-row-main .tu-row-end { flex-basis: 100%; justify-content: flex-start; margin-left: 58px; }
   .tu-mini .tu-row-end { margin-left: 82px; }

@@ -68,9 +68,9 @@ function renderList(container) {
     const archived = all.filter((p) => p.archivado);
     const parts = [];
     if (!active.length) {
-      parts.push(h('div', { class: 'card' }, h('div', { class: 'empty pg-empty-big' }, icon('flag', 44),
+      parts.push(h('div', { class: 'card' }, h('div', { class: 'empty pg-empty-big' }, icon('flag', 36),
         h('strong', {}, archived.length ? 'No tienes programas activos' : 'Aún no tienes planes ni programas'),
-        'Crea el que coordinas o en el que participas y anota cada día lo que haces: al final del curso la memoria saldrá sola.',
+        'Crea uno y anota cada día lo que haces: la memoria saldrá sola.',
         h('div', { class: 'pg-suggest', role: 'group', 'aria-label': 'Sugerencias' },
           SUGGESTIONS.map((s) => h('button', { type: 'button', class: 'btn', onclick: () => openNew(s) }, icon('plus', 15), s.nombre))),
         h('div', { style: { marginTop: '10px' } }, h('button', { type: 'button', class: 'link-btn', onclick: () => openNew() }, 'Crear otro distinto')))));

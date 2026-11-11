@@ -14,6 +14,17 @@ Módulos y estructura: ver `README.md`.
 
 ## Últimos cambios
 
+- **2026-11-12 · Rediseño, fase 5 (resto de pantallas)**
+  - *Calendario*: «‹ Hoy ›» y Semana/Mes/Horario en una sola fila en el móvil; el aviso del calendario escolar es una línea
+    «Falta el calendario escolar… Cargarlo» (desaparece al cargarlo); fuera el «+ Evento» de cada día: se toca la cabecera del día.
+  - *En clase*: al entrar (sin `?herramienta=`) hay una rejilla de 6 herramientas con icono; dentro, «‹ Herramientas» + nombre
+    (las pestañas solo se ven en pantallas anchas y en modo pizarra). Dictar y Modo pizarra ya estaban en «⋯».
+  - *Tutoría → Familias*: el filtro es una píldora «Sin tutoría · N» (activa/desactiva) y el resumen una línea con barra fina.
+  - *Hoy*: sin cambios (ya no tiene botón de reloj; En clase está en «⋯»).
+  - Estados vacíos más cortos en Programas, Códigos, Alumnado, Diario y Resultados de Encuestas. Programas, Encuestas, Códigos,
+    Grupos y Tareas ya usaban la cabecera única desde la fase 1.
+  - Archivos: `js/views/calendario.js`, `js/views/aula.js`, `js/views/tutoria/familias.js`, `js/views/ajustes/calendario-escolar.js`,
+    `css/calendario.css`, `css/aula.css`, `css/tutoria.css`. `sw.js` → `tabula-v51`. Sin ruta que desborde a 360/390.
 - **2026-11-12 · Rediseño, fase 4 (Ajustes y «Más»)**
   - *Ajustes* es ahora un índice de 7 filas con subpantallas en `#/ajustes/<seccion>` (Perfil · Apariencia · Evaluación ·
     Curso · Seguridad · Cuenta y datos · Ayuda), cada una con «‹ Ajustes» para volver. Cada sección crea solo lo suyo

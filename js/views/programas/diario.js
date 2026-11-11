@@ -113,7 +113,7 @@ export function mountDiario(panel, programaId) {
     if (!all.length) {
       list.replaceChildren(h('div', { class: 'card' }, h('div', { class: 'empty' }, icon('note', 36),
         h('strong', {}, 'Todavía no hay anotaciones'),
-        'Escribe arriba lo que has hecho hoy por este programa. Después podrás generar la memoria con un clic.')));
+        'Escribe arriba lo que has hecho hoy.')));
       return;
     }
     if (!shown.length) {
