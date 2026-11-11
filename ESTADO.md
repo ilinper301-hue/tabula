@@ -129,7 +129,7 @@ Módulos y estructura: ver `README.md`.
 
 ## Pendiente / ideas
 
-- **Rediseño**: fases 1 a 4 hechas. Siguen las fases de `PLAN-DISENO.md` (5 resto de pantallas → 6 repaso).
+- **Rediseño**: fases 1 a 5 hechas; falta la fase 6 de `PLAN-DISENO.md` (repaso).
   Fase 3: la vista «Informes» del Cuaderno conserva su propio desplegable de grupo y segmentado (sin tocar). Pendiente de la fase 1: la guía «desplegada dentro de los estados vacíos»
   (tampoco se puso en los de Documentos). Documentos: la pulsación larga solo está probada en Chrome con toque simulado;
   falta probarla en iPhone/iPad y Android reales. «Mover a carpeta» en la selección, sin hacer.
