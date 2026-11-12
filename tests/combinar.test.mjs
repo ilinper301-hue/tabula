@@ -64,3 +64,12 @@ test('Charta: composición → opciones de generar() (una variante, sin nombres)
   assert.equal(chartaPages({ charta: { comp: { actividades: [a('x'), a('y'), a('z')], paginas: [2, 1] } } }), 2);
   assert.equal(chartaPages({ charta: { comp: { actividades: [a('x')] } } }), 1);
 });
+
+test('Charta fase 1: «Mis frases» una vez en la composición → en cada actividad al generar', () => {
+  const fr = ['Mi mamá me mima.'];
+  const o = chartaOpciones({ actividades: [{ tipo: 'escritura.frase', params: { rango: 1 } }, { tipo: 'sumar.h20' }], paginas: [2], misFrases: fr });
+  assert.deepEqual(o.opciones.paginas[0].actividades.map((a) => a.params.misFrases), [fr, fr]);
+  assert.equal(o.opciones.paginas[0].actividades[0].params.rango, 1);
+  const vieja = chartaOpciones({ actividades: [{ tipo: 'escritura.frase', params: { misFrases: fr } }] });
+  assert.deepEqual(vieja.opciones.paginas[0].actividades[0].params.misFrases, fr);
+});

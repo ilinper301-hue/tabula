@@ -20,7 +20,10 @@ export const chartaPages = (doc) => {
  */
 export function chartaOpciones(comp) {
   if (!comp || !Array.isArray(comp.actividades) || !comp.actividades.length) return null;
-  const acts = comp.actividades;
+  // «Mis frases» van una sola vez en la composición (Charta, fase 1); generar() las lee en cada actividad
+  // (las que no usan frases las descarta). Las composiciones antiguas ya las traen en cada actividad.
+  const frases = Array.isArray(comp.misFrases) && comp.misFrases.length ? comp.misFrases : null;
+  const acts = frases ? comp.actividades.map((a) => ({ ...a, params: { ...(a && a.params), misFrases: frases } })) : comp.actividades;
   const cuentas = Array.isArray(comp.paginas) && comp.paginas.length && comp.paginas.reduce((a, b) => a + (Number(b) || 0), 0) === acts.length
     ? comp.paginas.map((n) => Number(n)) : [acts.length];
   let i = 0;

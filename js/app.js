@@ -237,7 +237,7 @@ navigate();
 async function recibirDeCharta() {
   const search = location.search;
   if (!new URLSearchParams(search).has('charta')) return;
-  const { leerEntradaCharta, documentoDeCharta, mismaFichaCharta, miniaturaDeCharta, CLAVE_MINIATURA } = await import('./charta.js');
+  const { leerEntradaCharta, documentoDeCharta, mismaFichaCharta, miniaturaDeCharta, compDeCharta, CLAVE_MINIATURA } = await import('./charta.js');
   const { toast } = await import('./ui.js');
   const { isLocked } = await import('./lock.js');
   // Se espera a que no haya bloqueo ni pantalla de entrada
@@ -245,8 +245,9 @@ async function recibirDeCharta() {
   history.replaceState(null, '', location.pathname + location.hash);
   const p = leerEntradaCharta(search);
   if (!p) { toast('El enlace de Charta no es válido'); return; }
-  let mini = null;
-  try { mini = miniaturaDeCharta(localStorage.getItem(CLAVE_MINIATURA), p.titulo); localStorage.removeItem(CLAVE_MINIATURA); } catch {}
+  let mini = null, raw = null;
+  try { raw = localStorage.getItem(CLAVE_MINIATURA); mini = miniaturaDeCharta(raw, p.titulo); localStorage.removeItem(CLAVE_MINIATURA); } catch {}
+  if (p.compLocal) { p.comp = compDeCharta(raw, p.titulo); delete p.compLocal; if (!p.comp) { toast('No se ha podido recoger la ficha de Charta'); return; } }
   let doc = store.list('documentos').find((d) => mismaFichaCharta(d, p));
   if (!doc) doc = store.add('documentos', { ...documentoDeCharta(p), ...(mini ? { miniatura: mini } : {}) });
   else if (mini) store.update('documentos', doc.id, { miniatura: mini });

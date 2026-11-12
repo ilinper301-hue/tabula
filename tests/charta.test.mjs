@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   CHARTA_URL, b64urlCodificar, b64urlDecodificar, urlCrearFicha, urlAbrirFicha,
-  leerEntradaCharta, documentoDeCharta, mismaFichaCharta, miniaturaDeCharta,
+  leerEntradaCharta, documentoDeCharta, mismaFichaCharta, miniaturaDeCharta, compDeCharta,
 } from '../js/charta.js';
 import { kindOf, canPrint, KINDS } from '../js/documents.js';
 
@@ -98,4 +98,18 @@ test('5.4: miniaturaDeCharta solo acepta imagen pequeña de esa ficha', () => {
   assert.equal(miniaturaDeCharta(raw({ v: 2 }), ok.titulo), null);
   assert.equal(miniaturaDeCharta(null, ok.titulo), null);
   assert.equal(miniaturaDeCharta('no json', ok.titulo), null);
+});
+
+test('Charta fase 1: enlace largo → composición por localStorage (compLocal)', () => {
+  const { comp, ...sin } = ok;
+  const p = leerEntradaCharta(payload({ ...sin, compLocal: true }));
+  assert.ok(p); assert.equal(p.compLocal, true);
+  assert.equal(leerEntradaCharta(payload({ ...ok, compLocal: true })), null, 'compLocal con comp a la vez');
+  assert.equal(leerEntradaCharta(payload(sin)), null, 'sin comp ni compLocal');
+  const raw = JSON.stringify({ v: 1, titulo: ok.titulo, comp: { misFrases: ['Mi mamá me mima.'], actividades: [] } });
+  assert.deepEqual(compDeCharta(raw, ok.titulo), { misFrases: ['Mi mamá me mima.'], actividades: [] });
+  assert.equal(compDeCharta(raw, 'otra'), null);
+  assert.equal(compDeCharta(JSON.stringify({ v: 1, titulo: ok.titulo }), ok.titulo), null);
+  assert.equal(compDeCharta('{roto', ok.titulo), null);
+  assert.equal(compDeCharta(null, ok.titulo), null);
 });

@@ -4,7 +4,8 @@
 //   Tabula → Charta (crear):  ../Charta/?desde=tabula[&grupo=<id>&sesion=<id>&tarea=<id>]
 //   Charta → Tabula (volver): /tabula/?charta=<base64url(JSON UTF-8)>
 //       { v:1, id?, titulo, tipos[], comp{}, grupo?, sesion?, tarea?, variantes?, minutos?, dificultad?, etiquetas? }
-//   Charta deja además la miniatura de la hoja 1 (sin nombres) en localStorage['charta:aTabula'] = { v:1, titulo, miniatura } (mismo origen)
+//   Charta deja además la miniatura de la hoja 1 (sin nombres) en localStorage['charta:aTabula'] = { v:1, titulo, miniatura?, comp? } (mismo origen)
+//   Si el enlace fuera largo (> 6 KB), el payload lleva `compLocal: true` en vez de `comp`, y la composición va en ese mismo objeto.
 //   Tabula → Charta (abrir):  ../Charta/?ficha=<id>  ó  ../Charta/?comp=<base64url(comp)>  (+ &grupo=<id>&desde=tabula)
 // Nunca se envían nombres de alumnos: Charta lee la lista del grupo en el IndexedDB de Tabula.
 
@@ -53,7 +54,8 @@ export function leerEntradaCharta(search) {
     const p = JSON.parse(b64urlDecodificar(raw));
     if (!esObjeto(p) || p.v !== 1) return null;
     if (typeof p.titulo !== 'string' || !p.titulo.trim() || p.titulo.length > 200) return null;
-    if (!esObjeto(p.comp)) return null;
+    if (p.compLocal === true) { if (p.comp != null) return null; }   // la composición llega por localStorage (compDeCharta)
+    else if (!esObjeto(p.comp)) return null;
     if (p.id != null && !idOk(p.id)) return null;
     if (p.tipos != null && (!Array.isArray(p.tipos) || p.tipos.length > 100 || p.tipos.some((t) => typeof t !== 'string' || t.length > 80))) return null;
     for (const k of ['grupo', 'sesion', 'tarea']) if (p[k] != null && !idOk(p[k])) return null;
@@ -89,6 +91,17 @@ export function mismaFichaCharta(doc, p) {
 }
 
 export const CLAVE_MINIATURA = 'charta:aTabula';
+const MAX_COMP_LOCAL = 200000;
+
+/** Composición que Charta dejó en localStorage cuando el enlace iba a ser largo (`compLocal`), o null. Se comprueba el título. */
+export function compDeCharta(raw, titulo) {
+  try {
+    if (!raw || raw.length > MAX_COMP_LOCAL + 70000) return null;
+    const m = JSON.parse(raw);
+    if (!esObjeto(m) || m.v !== 1 || m.titulo !== String(titulo || '').slice(0, 200) || !esObjeto(m.comp)) return null;
+    return JSON.stringify(m.comp).length <= MAX_COMP_LOCAL ? m.comp : null;
+  } catch { return null; }
+}
 const MAX_MINIATURA = 60000;
 
 /** Miniatura que Charta dejó en localStorage para esta ficha (data URL JPEG/PNG) o null. Se comprueba el título. */

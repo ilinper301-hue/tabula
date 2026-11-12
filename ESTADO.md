@@ -14,6 +14,13 @@ Módulos y estructura: ver `README.md`.
 
 ## Últimos cambios
 
+- **2026-11-12 · Charta (su fase 1): «Mis frases» una sola vez y enlaces largos**
+  - Charta guarda ahora «Mis frases» una vez en la composición (`comp.misFrases`) y no en cada actividad (el enlace de vuelta
+    pasa de hasta 36 KB a unos 4 KB; antes Tabula rechazaba los de más de 20 KB). `chartaOpciones()` (`js/combine-model.js`)
+    las reparte por las actividades al dibujar en «Imprimir juntos»; las composiciones antiguas siguen igual.
+  - Si aun así el enlace pasara de 6 KB, llega `compLocal: true` y la composición viene en `localStorage['charta:aTabula']`:
+    `compDeCharta()` en `js/charta.js` (comprueba el título) y `recibirDeCharta()` en `js/app.js`. Pruebas en
+    `tests/charta.test.mjs` y `tests/combinar.test.mjs`. `sw.js` → `tabula-v54`.
 - **2026-11-12 · Calendario (mes) y Charta en «Imprimir juntos»**
   - *Calendario, vista Mes*: el mes y el año son ahora el título grande («Julio 2026»; «Calendario» pasa a la línea pequeña).
     Los días de meses vecinos que se ven en la rejilla (p. ej. 29 y 30 de junio) se pueden tocar y muestran su información
