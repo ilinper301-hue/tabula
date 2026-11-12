@@ -52,7 +52,6 @@
 
 /* ---------- Detalle ---------- */
 .gr-head { margin-bottom: 18px; align-items: flex-end; }
-.gr-back { display: inline-flex; align-items: center; gap: 2px; min-height: 36px; margin-left: -4px; }
 .gr-head-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
 .gr-tabs { margin-bottom: 20px; max-width: 100%; }
 .gr-tab {

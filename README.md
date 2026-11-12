@@ -21,6 +21,15 @@ Planificación, agenda y evaluación para docentes de Primaria.
 - **Copia de seguridad** completa en .zip (datos y archivos), buscador y plan para el sustituto.
 - **Sincronización** opcional con Firebase (cuentas de Google).
 
+## Diseño de la interfaz
+
+Minimalista y pensado primero para móvil: una sola cabecera por pantalla (`pageHead` en `js/ui-kit.js`) con una
+acción principal y un menú «⋯»; lo secundario va en hojas (`openSheet`, `openActionSheet`) y menús accesibles
+(`openMenu`: flechas, Escape y foco que vuelve al botón). Barra de contexto compartida (grupo · evaluación · área)
+en Cuaderno y Planificación; Ajustes es un índice con subpantallas (`#/ajustes/<sección>`). Claro y oscuro con las
+variables de `css/app.css`; en tablet y ordenador aparece la barra lateral. El plan por fases está en `PLAN-DISENO.md`.
+`python3 tests/desbordamiento.py` comprueba en Chrome que ninguna ruta desborda a 360 y 390 px.
+
 ## Estructura
 
 ```

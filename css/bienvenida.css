@@ -13,7 +13,6 @@ html.bv-lock, html.bv-lock body { overflow: hidden; }
   padding: 14px 24px 10px; max-width: 1000px; width: 100%; margin: 0 auto;
 }
 .bv-brand { display: flex; align-items: center; gap: 10px; }
-.bv-brand .brand-name { font-size: 21px; }
 .bv-stepno { font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: .3px; text-align: center; }
 .bv-skipall { justify-self: end; font-size: 13px; color: var(--muted); }
 .bv-skipall:hover, .bv-skip:hover { color: var(--accent-text); text-decoration: underline; }

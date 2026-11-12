@@ -14,6 +14,12 @@ Módulos y estructura: ver `README.md`.
 
 ## Últimos cambios
 
+- **2026-11-12 · Rediseño, fase 6 (repaso final)**
+  - Medidas en Chrome (claro y oscuro; 390, 768 y 1280 px; 16 rutas): sin desbordes ni errores de JS. Foco y Escape de
+    hojas y menús (Añadir, contexto, «⋯») comprobados: el foco entra, se cierra con Escape y vuelve al botón.
+  - Borradas 23 reglas CSS de clases que ya no usa ningún archivo (`brand-*`, `nav-sep`, `side-spacer`, `list-item`,
+    `gr-back`, `pg-back`, `cb-informes-btn`, `cb-inf-back`, `au-hoy-*`, `tu-banner*`, `tu-cover-top/pct`).
+  - `README.md`: sección «Diseño de la interfaz». `sw.js` → `tabula-v52`. **Rediseño terminado.**
 - **2026-11-12 · Rediseño, fase 5 (resto de pantallas)**
   - *Calendario*: «‹ Hoy ›» y Semana/Mes/Horario en una sola fila en el móvil; el aviso del calendario escolar es una línea
     «Falta el calendario escolar… Cargarlo» (desaparece al cargarlo); fuera el «+ Evento» de cada día: se toca la cabecera del día.
@@ -129,7 +135,7 @@ Módulos y estructura: ver `README.md`.
 
 ## Pendiente / ideas
 
-- **Rediseño**: fases 1 a 5 hechas; falta la fase 6 de `PLAN-DISENO.md` (repaso).
+- **Rediseño**: terminado (fases 1 a 6).
   Fase 3: la vista «Informes» del Cuaderno conserva su propio desplegable de grupo y segmentado (sin tocar). Pendiente de la fase 1: la guía «desplegada dentro de los estados vacíos»
   (tampoco se puso en los de Documentos). Documentos: la pulsación larga solo está probada en Chrome con toque simulado;
   falta probarla en iPhone/iPad y Android reales. «Mover a carpeta» en la selección, sin hacer.

@@ -286,9 +286,6 @@
 .au-pop-lv[aria-pressed="true"] { border-color: var(--lv-fg); }
 
 /* ---------- Integraciones en Hoy ---------- */
-.au-hoy-title { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.au-hoy-title .page-title { margin-top: 4px; }
-.au-hoy-link { text-decoration: none; min-height: 40px; }
 .sched-row .au-eval { white-space: nowrap; }
 .sched-row.is-now .au-eval { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .au-tut-group + .au-tut-group { margin-top: 14px; }
@@ -358,7 +355,6 @@ html.au-board-on, html.au-board-on body { overflow: hidden; }
   .au-crit { grid-template-columns: 52px minmax(0, 1fr); }
   .au-crit-tags { grid-column: 2; }
   .au-role-pupil { font-size: 22px; }
-  .au-hoy-title .page-title { font-size: 28px; }
   .sched-row:has(.au-eval) { gap: 8px; }
   .sched-row .au-eval .au-eval-lbl { display: none; }
   .sched-row .btn.au-eval { width: 40px; min-width: 40px; padding: 0; }
