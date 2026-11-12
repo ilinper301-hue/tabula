@@ -1,13 +1,14 @@
 // Tabula · «Imprimir juntos» (varios documentos en un solo trabajo de impresión)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { canCombine, move, blanksAfter, combineSummary, scopeFichaCss, fichaPagesFromHeight } from '../js/combine-model.js';
+import { canCombine, chartaOpciones, chartaPages, move, blanksAfter, combineSummary, scopeFichaCss, fichaPagesFromHeight } from '../js/combine-model.js';
 
 test('combinar: qué documentos se pueden unir', () => {
   assert.ok(canCombine({ tipo: 'application/pdf', fileId: 'f1' }));
   assert.ok(canCombine({ tipo: 'image/png', fileId: 'f1' }));
   assert.ok(canCombine({ tipo: 'text/html', fileId: 'f1' }));
-  assert.ok(!canCombine({ charta: { id: 'x' }, titulo: 'Ficha' }));
+  assert.ok(!canCombine({ charta: { id: 'x' }, titulo: 'Ficha' })); // sin composición no se puede dibujar
+  assert.ok(canCombine({ charta: { id: 'x', comp: { actividades: [{ tipo: 'sumar.h20' }] } }, titulo: 'Ficha' }));
   assert.ok(!canCombine({ enlace: 'https://x', titulo: 'Web' }));
   assert.ok(!canCombine({ nombreArchivo: 'a.docx', fileId: 'f1' }));
   assert.ok(!canCombine(null));
@@ -45,4 +46,21 @@ test('combinar: páginas aproximadas de una ficha por su altura', () => {
   assert.equal(fichaPagesFromHeight(0), 1);
   assert.equal(fichaPagesFromHeight(900), 1);
   assert.equal(fichaPagesFromHeight(1500), 2);
+});
+
+test('Charta: composición → opciones de generar() (una variante, sin nombres)', () => {
+  const a = (t) => ({ tipo: t, params: {} });
+  const o = chartaOpciones({ actividades: [a('x'), a('y'), a('z')], paginas: [2, 1], semilla: 7, titulo: 'Sumas', bn: true, fuente: 'fredoka', grande: true });
+  assert.equal(o.semilla, 7); assert.equal(o.bn, true);
+  assert.deepEqual(o.opciones.paginas.map((p) => p.actividades.length), [2, 1]);
+  assert.equal(o.opciones.variantes, 1);
+  assert.deepEqual(o.opciones.presentacion, { color: false, fuente: 'fredoka', letraGrande: true });
+  assert.equal(o.opciones.titulo, 'Sumas');
+  // Sin `paginas`, o con cuentas que no suman: una sola página; semilla por defecto 1
+  const p = chartaOpciones({ actividades: [a('x'), a('y')], paginas: [1] });
+  assert.equal(p.opciones.paginas.length, 1); assert.equal(p.semilla, 1);
+  assert.equal(chartaOpciones({ actividades: [] }), null);
+  assert.equal(chartaOpciones(null), null);
+  assert.equal(chartaPages({ charta: { comp: { actividades: [a('x'), a('y'), a('z')], paginas: [2, 1] } } }), 2);
+  assert.equal(chartaPages({ charta: { comp: { actividades: [a('x')] } } }), 1);
 });

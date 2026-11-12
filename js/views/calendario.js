@@ -160,7 +160,7 @@ export function render(container, params = new URLSearchParams()) {
   const banner = calendarBanner();
   container.replaceChildren(h('div', { class: 'cal-view' },
     pageHead({
-      eyebrow: eyebrowText, title: 'Calendario',
+      eyebrow: vista === 'mes' ? 'Calendario' : eyebrowText, title: vista === 'mes' ? eyebrowText : 'Calendario',
       primary: { label: 'Nuevo evento', short: 'Evento', run: () => openEventEditor(null, { fecha: vista === 'mes' ? selDay : (validISO(fecha) ? fecha : todayISO()) }) },
     }),
     banner.el,
@@ -289,7 +289,9 @@ export function render(container, params = new URLSearchParams()) {
     const weeks = Math.ceil((isoDia(firstISO) - 1 + nDays) / 7);
     const today = todayISO();
     const month = fd.getMonth();
-    if (fromISO(selDay).getMonth() !== month) selDay = (fromISO(today).getMonth() === month && fromISO(today).getFullYear() === fd.getFullYear()) ? today : firstISO;
+    // El día elegido puede ser de un mes vecino si se ve en la rejilla (se puede tocar y da su información)
+    const gridEnd = addDaysISO(gridStart, weeks * 7 - 1);
+    if (selDay < gridStart || selDay > gridEnd) selDay = (fromISO(today).getMonth() === month && fromISO(today).getFullYear() === fd.getFullYear()) ? today : firstISO;
 
     const grid = h('div', { class: `cal-month${phone ? ' is-phone' : ''}` },
       ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((d) => h('div', { class: 'cal-mh' }, d)));

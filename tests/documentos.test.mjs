@@ -69,6 +69,7 @@ test('«Imprimir lo de hoy»: preguntar solo si hay más de un documento combina
     web: { id: 'web', enlace: 'https://x' },
     word: { id: 'word', nombreArchivo: 'a.docx', fileId: '4' },
     charta: { id: 'charta', charta: { id: 'c' } },
+    chartaComp: { id: 'chartaComp', charta: { id: 'c2', comp: { actividades: [{ tipo: 'sumar.h20' }] } } },
   };
   const it = (id, documentoId) => ({ id, documentoId });
   // Varios combinables → elegir «Uno a uno» o «Todo junto»
@@ -85,6 +86,14 @@ test('«Imprimir lo de hoy»: preguntar solo si hay más de un documento combina
   assert.equal(p.mode, 'none');
   assert.equal(p.charta, 1);
   assert.equal(printTodayPlan([], byId).mode, 'none');
+  // Una ficha de Charta con composición se une a los demás
+  p = printTodayPlan([it(1, 'pdf'), it(2, 'chartaComp')], byId);
+  assert.equal(p.mode, 'choose');
+  assert.deepEqual(p.docIds, ['pdf', 'chartaComp']);
+  assert.deepEqual(p.items.map((i) => i.id), [1]); // «Uno a uno» no incluye la de Charta
+  assert.equal(p.charta, 0);
+  // Una sola de Charta sin más: nada que combinar
+  assert.equal(printTodayPlan([it(1, 'chartaComp')], byId).mode, 'none');
 });
 
 // ---------- Estructura de la interfaz ----------

@@ -14,6 +14,16 @@ Módulos y estructura: ver `README.md`.
 
 ## Últimos cambios
 
+- **2026-11-12 · Calendario (mes) y Charta en «Imprimir juntos»**
+  - *Calendario, vista Mes*: el mes y el año son ahora el título grande («Julio 2026»; «Calendario» pasa a la línea pequeña).
+    Los días de meses vecinos que se ven en la rejilla (p. ej. 29 y 30 de junio) se pueden tocar y muestran su información
+    (en el móvil, el detalle de abajo; en pantallas anchas, la hoja del día). Antes, al tocarlos volvía al día 1 del mes.
+  - *Documentos*: las fichas de Charta (con su composición guardada) ya se pueden elegir en «Imprimir juntos» y en «Imprimir
+    lo de hoy → Todo junto», mezcladas con PDF, imágenes y fichas. Se dibujan con el motor de Charta (`js/charta-hojas.js`
+    abre `../Charta/dist/` en un iframe oculto y usa `Charta.generar`/`Charta.hojas`): una variante, sin nombres, una copia
+    en blanco (las copias se eligen al imprimir). Lógica pura `chartaOpciones`/`chartaPages`/`isChartaComb` en `js/combine-model.js`.
+    «Uno a uno» sigue sin incluirlas (se abren en Charta). Probado en Chrome con Charta real (PDF de 2 páginas, tipografía correcta).
+    `sw.js` → `tabula-v53`.
 - **2026-11-12 · Rediseño, fase 6 (repaso final)**
   - Medidas en Chrome (claro y oscuro; 390, 768 y 1280 px; 16 rutas): sin desbordes ni errores de JS. Foco y Escape de
     hojas y menús (Añadir, contexto, «⋯») comprobados: el foco entra, se cierra con Escape y vuelve al botón.
@@ -143,7 +153,7 @@ Módulos y estructura: ver `README.md`.
   - La copia de seguridad se arma entera en memoria (`createBackup`/`makeZip`/`readZip`): con muchos archivos puede
     agotar la memoria del móvil. Escribirla y leerla por partes (streams). *Opus.*
   - Cifrado opcional de la copia con contraseña, reutilizando `js/codigos-crypto.js`. *Opus o Sonnet.*
-- «Imprimir juntos»: no probado aún en iPad/iPhone ni con impresora real.
+- «Imprimir juntos»: no probado aún en iPad/iPhone ni con impresora real. Con fichas de Charta hace falta que Charta esté publicada en `../Charta/dist/` (mismo origen); sin conexión la primera vez puede tardar o fallar con un aviso. Se imprimen con la letra y opciones guardadas, sin variantes A/B ni nombres: para eso, imprimir desde Charta.
 - App con QR para que el profesorado envíe evidencias de STEAM 4.0 y lleguen a Tabula (idea del usuario).
 
 ## Problemas conocidos
@@ -152,4 +162,4 @@ Módulos y estructura: ver `README.md`.
   el mismo elemento a la vez, gana la edición. Sin probar aún con Firebase real ni en iPhone/iPad.
 - «Estado de tus datos» y los avisos del almacén solo están probados en Chrome (simulando los fallos); falta iPhone/iPad.
 - pdf.js se carga desde cdnjs: sin conexión la primera vez no hay miniaturas de PDF ni «Imprimir juntos» con PDF.
-- Las fichas de Charta no se imprimen desde Tabula (se abren en Charta).
+- Las fichas de Charta solo se imprimen desde Tabula «todo junto» (sin nombres ni variantes); una a una se abren en Charta.

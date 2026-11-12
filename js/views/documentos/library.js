@@ -145,7 +145,7 @@ export function mountLibrary(ctx) {
     {
       id: 'print', icon: 'printer', label: 'Imprimir juntos', className: 'btn-primary',
       enabled: (docs) => docs.some(canCombine),
-      title: (docs) => (docs.length && !docs.some(canCombine) ? 'Solo se pueden imprimir juntos PDF, imágenes y fichas' : null),
+      title: (docs) => (docs.length && !docs.some(canCombine) ? 'Solo se pueden imprimir juntos PDF, imágenes, fichas y fichas de Charta' : null),
       run: (docs) => openCombineSheet(docs.map((d) => d.id), { onPrinted: () => setSelecting(false) }),
     },
   ];

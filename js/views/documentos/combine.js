@@ -5,6 +5,7 @@
 // Cómo se combinan (todo en el dispositivo, sin subir nada):
 //   - PDF: cada página se dibuja como imagen a ~200 ppp con pdf.js (el mismo lector de las miniaturas).
 //   - Imagen: una página A4.
+//   - Ficha de Charta: se dibuja con el motor de Charta (sin nombres, una copia); sus hojas son SVG A4.
 //   - Ficha HTML: se mete en un shadow root para que sus estilos no se mezclen con los de las demás.
 // Lógica pura (orden, páginas en blanco, CSS) en js/combine-model.js.
 import { store } from '../../store.js';
@@ -12,7 +13,8 @@ import { h, icon, openSheet, toast } from '../../ui.js';
 import { kindOf } from '../../documents.js';
 import { loadPdfJs } from '../../files.js';
 import { sanitizeHtml } from '../../fichas.js';
-import { canCombine, move, combineSummary, blanksAfter, scopeFichaCss, fichaPagesFromHeight } from '../../combine-model.js';
+import { abrirCharta, hojasDeFicha } from '../../charta-hojas.js';
+import { canCombine, chartaPages, move, combineSummary, blanksAfter, scopeFichaCss, fichaPagesFromHeight } from '../../combine-model.js';
 import { thumb, fetchBlob, getDoc, plural } from './common.js';
 
 const PDF_PX = 1654; // ancho de cada página de PDF (A4 a 200 ppp)
@@ -35,7 +37,7 @@ export function openCombineSheet(ids, { onPrinted } = {}) {
   sw.addEventListener('change', () => { nuevaHoja = sw.checked; paint(); });
   const printBtn = h('button', { type: 'button', class: 'btn btn-primary', onclick: () => go() }, icon('printer', 16), 'Imprimir juntos');
 
-  const pagesOf = (d) => (kindOf(d) === 'imagen' ? 1 : Math.max(1, Number(d.paginas) || 1));
+  const pagesOf = (d) => (d.charta ? chartaPages(d) : kindOf(d) === 'imagen' ? 1 : Math.max(1, Number(d.paginas) || 1));
 
   function paint() {
     const docs = order.map(getDoc).filter(Boolean);
@@ -90,7 +92,7 @@ export function openCombineSheet(ids, { onPrinted } = {}) {
 
   const body = h('div', { class: 'dc-cb' },
     h('p', { class: 'dc-hint dc-cb-lead' }, 'Se imprimen en un solo trabajo, en este orden. Para que uno salga por delante y otro por detrás, elige «Doble cara» (o «Imprimir en ambas caras») en la ventana de impresión.'),
-    skipped ? h('p', { class: 'dc-hint dc-cb-warn' }, `${plural(skipped, 'documento no se puede', 'documentos no se pueden')} combinar (solo PDF, imágenes y fichas; las de Charta se imprimen desde Charta).`) : null,
+    skipped ? h('p', { class: 'dc-hint dc-cb-warn' }, `${plural(skipped, 'documento no se puede', 'documentos no se pueden')} combinar (solo PDF, imágenes, fichas y fichas de Charta con composición).`) : null,
     list,
     h('label', { class: 'switch-row dc-switch-row' },
       h('span', {}, h('strong', { class: 'dc-sw-label' }, 'Cada documento en una hoja nueva'),
@@ -153,12 +155,20 @@ export async function printCombined(docs, { nuevaHoja = false } = {}) {
   const pageBox = named ? 'width:210mm;height:296mm' : 'width:190mm;height:276mm';
   const fichaW = named ? 794 - 2 * 53 : 794 - 2 * 38;
   const urls = [];
+  let charta = null;
   const parts = [];
   const pagesKnown = [];
   try {
     for (let i = 0; i < docs.length; i++) {
       const d = docs[i];
       toast(`Preparando ${i + 1} de ${docs.length}: ${d.titulo}`);
+      if (d.charta) {
+        charta = charta || await abrirCharta();
+        const svgs = hojasDeFicha(charta.api, d);
+        parts.push(svgs.map((svg, n) => `<div class="cb-page cb-svg" data-part="${i}"${n === svgs.length - 1 ? ` data-end="${i}"` : ''}>${svg}</div>`).join(''));
+        pagesKnown[i] = svgs.length;
+        continue;
+      }
       const blob = await fetchBlob(d);
       if (!blob) throw new Error(`No se pudo obtener «${d.titulo}»`);
       const k = kindOf(d);
@@ -179,11 +189,13 @@ export async function printCombined(docs, { nuevaHoja = false } = {}) {
 
     const title = esc(docs.map((d) => d.titulo).join(' + ').slice(0, 120));
     const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${title}</title><style>
+${charta ? charta.fonts.join('\n') : ''}
 @page{size:A4;margin:${named ? '0' : '10mm'}}
 ${named ? '@page ficha{size:A4;margin:14mm}' : ''}
 html,body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .cb>*+*{break-before:page}
 .cb-page{${pageBox};display:flex;align-items:center;justify-content:center;overflow:hidden;break-inside:avoid;box-sizing:border-box}
+.cb-svg svg{width:100%;height:100%;display:block}
 .cb-page img{max-width:100%;max-height:100%;object-fit:contain;display:block}
 ${named ? '.cb-img{padding:10mm}' : ''}
 .cb-ficha{display:block;${named ? 'page:ficha;' : ''}}
@@ -224,9 +236,11 @@ ${named ? '.cb-img{padding:10mm}' : ''}
       frame.srcdoc = html;
       document.body.append(frame);
     });
+    if (charta) charta.cerrar();
     setTimeout(() => { frame.remove(); urls.forEach((u) => URL.revokeObjectURL(u)); }, 60_000);
     return 'printed';
   } catch (e) {
+    if (charta) charta.cerrar();
     urls.forEach((u) => URL.revokeObjectURL(u));
     throw e;
   }

@@ -36,7 +36,7 @@ export function mountQueue(ctx) {
     openActionSheet('Imprimir lo de hoy', [
       { icon: 'printer', label: 'Uno a uno', desc: 'Una ventana de impresión por documento, con sus copias y opciones', run: () => printOneByOne(plan.items) },
       { icon: 'planificacion', label: 'Todo junto (doble cara)', desc: 'Un solo trabajo, en orden: elige «Doble cara» en la ventana de impresión', run: () => combineAll(plan) },
-    ], { intro: `${plural(plan.docIds.length, 'documento', 'documentos')} para imprimir${plan.charta ? ` (las fichas de Charta, aparte, desde Charta)` : ''}.`, className: 'dc-today-sheet' });
+    ], { intro: `${plural(plan.docIds.length, 'documento', 'documentos')} para imprimir${plan.charta ? ` (las fichas de Charta sin composición, aparte, desde Charta)` : ''}.`, className: 'dc-today-sheet' });
   }
 
   async function printOneByOne(items) {
