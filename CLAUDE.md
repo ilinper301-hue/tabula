@@ -34,3 +34,6 @@
 ## Apps hermanas (mismo origen en GitHub Pages)
 Charta (fichas, ver `js/charta.js` para el contrato de URL), Barri, Lectori, Calculi, Fori.
 Comparten el proyecto de Firebase; las reglas de todas están en `firestore.rules`.
+
+## Ecosistema
+Antes de tocar algo que una app lea o deje para otra (alumnado, resultados, enlaces entre apps), lee `ECOSISTEMA.md`: es el contrato común de las seis apps.
