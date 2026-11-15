@@ -3,7 +3,7 @@
 Documento vivo. **Cada chat que trabaje en Tabula lo lee al empezar y lo actualiza al terminar**
 (sección «Últimos cambios» arriba del todo, y «Pendiente» / «Problemas conocidos» si cambian).
 
-_Última actualización: 2026-11-12_
+_Última actualización: 2026-11-15_
 
 ## Resumen
 
@@ -13,6 +13,11 @@ con sesión de Google, en Firebase (proyecto `mis-apps-educativas`, compartido c
 Módulos y estructura: ver `README.md`.
 
 ## Últimos cambios
+
+- **2026-11-15 · Reglas de Firestore: bloque de Lexi**
+  - `firestore.rules`: bloque nuevo `lexico/{uid}` y `lexico/{uid}/alu/{id}` (solo el dueño, sin sesiones anónimas, campos y
+    tamaño limitados). No cambia ninguna regla de las otras apps. Prueba de estructura en `tests/reglas.test.mjs`.
+  - **Pendiente de Iván:** publicarlas en Firebase → Firestore → Reglas (hasta entonces Lexi no puede sincronizar).
 
 - **2026-11-12 · Charta (su fase 1): «Mis frases» una sola vez y enlaces largos**
   - Charta guarda ahora «Mis frases» una vez en la composición (`comp.misFrases`) y no en cada actividad (el enlace de vuelta
