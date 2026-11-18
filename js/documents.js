@@ -114,6 +114,25 @@ export const toggleOrdered = (list, id) => (list.includes(id) ? list.filter((x) 
 /** Elementos de la cola que dependen de los documentos `ids` (se borran y se restauran con ellos). */
 export const queueItemsOf = (ids, cola) => { const set = new Set(ids); return cola.filter((i) => set.has(i.documentoId)); };
 
+/**
+ * Nombre de carpeta escrito por el usuario → nombre a guardar. Si ya existe una carpeta igual
+ * (sin distinguir mayúsculas ni tildes), se usa la existente para no crear «Tema 3» y «tema 3».
+ */
+export function folderName(text, existing = []) {
+  const t = String(text || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+  if (!t) return '';
+  return existing.find((c) => norm(c) === norm(t)) || t;
+}
+
+/**
+ * Plan para «Mover a carpeta»: solo los documentos que cambian, con su carpeta anterior (para «Deshacer»).
+ * @returns {{ id, antes, despues }[]}
+ */
+export function moveToFolderPlan(docs, carpeta) {
+  const dest = carpeta || '';
+  return docs.filter((d) => (d.carpeta || '') !== dest).map((d) => ({ id: d.id, antes: d.carpeta || '', despues: dest }));
+}
+
 /** Carpetas y etiquetas existentes, con su número de documentos. */
 export function facets(docs) {
   const carpetas = new Map(), etiquetas = new Map();

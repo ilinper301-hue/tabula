@@ -3,7 +3,7 @@
 Documento vivo. **Cada chat que trabaje en Tabula lo lee al empezar y lo actualiza al terminar**
 (sección «Últimos cambios» arriba del todo, y «Pendiente» / «Problemas conocidos» si cambian).
 
-_Última actualización: 2026-11-15_
+_Última actualización: 2026-11-18_
 
 ## Resumen
 
@@ -13,6 +13,14 @@ con sesión de Google, en Firebase (proyecto `mis-apps-educativas`, compartido c
 Módulos y estructura: ver `README.md`.
 
 ## Últimos cambios
+
+- **2026-11-18 · Documentos: «Mover» a carpeta en la selección**
+  - Nueva acción «Mover» en la barra de selección: hoja con las carpetas existentes (un toque mueve), «Carpeta nueva»
+    («Crear y mover») y «Sacar de la carpeta». Toast con «Deshacer». Si se escribe una carpeta que ya existe con otras
+    mayúsculas o sin tildes, se usa la existente. Al cerrar con Escape, el foco vuelve a «Mover».
+  - Lógica pura `folderName` y `moveToFolderPlan` (`js/documents.js`); pruebas en `tests/documentos.test.mjs`;
+    `tests/desbordamiento.py` mide también la hoja. Vista en `js/views/documentos/library.js`, estilos `.dc-move-*`.
+    `sw.js` → `tabula-v55`.
 
 - **2026-11-15 · Reglas de Firestore: bloque de Lexi**
   - `firestore.rules`: bloque nuevo `lexico/{uid}` y `lexico/{uid}/alu/{id}` (solo el dueño, sin sesiones anónimas, campos y
@@ -160,7 +168,7 @@ Módulos y estructura: ver `README.md`.
 - **Rediseño**: terminado (fases 1 a 6).
   Fase 3: la vista «Informes» del Cuaderno conserva su propio desplegable de grupo y segmentado (sin tocar). Pendiente de la fase 1: la guía «desplegada dentro de los estados vacíos»
   (tampoco se puso en los de Documentos). Documentos: la pulsación larga solo está probada en Chrome con toque simulado;
-  falta probarla en iPhone/iPad y Android reales. «Mover a carpeta» en la selección, sin hacer.
+  falta probarla en iPhone/iPad y Android reales.
 - **Datos (de la auditoría, sin hacer)**:
   - La copia de seguridad se arma entera en memoria (`createBackup`/`makeZip`/`readZip`): con muchos archivos puede
     agotar la memoria del móvil. Escribirla y leerla por partes (streams). *Opus.*

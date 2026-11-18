@@ -5,7 +5,7 @@
 # Entra «sin cuenta», carga los datos de ejemplo y mide document.documentElement.scrollWidth por ruta.
 # Sale con código 1 si alguna ruta desborda. Con carpeta, guarda una captura a 390 × 844 por ruta.
 # Además, en Documentos (con varios documentos de prueba, sin datos reales) mide también con las hojas y menús
-# abiertos: Añadir, Filtros, filtros activos, selección, ficha (con «Detalles» y «⋯»), menú de una fila de la cola
+# abiertos: Añadir, Filtros, filtros activos, selección, Mover a carpeta, ficha (con «Detalles» y «⋯»), menú de una fila de la cola
 # e «Imprimir lo de hoy». En Cuaderno y Planificación, con la hoja de contexto y el menú «⋯» abiertos.
 import asyncio, sys
 from playwright.async_api import async_playwright
@@ -40,6 +40,7 @@ DOC_STATES = [
     ('documentos', 'filtros activos', [('click', '.dc-filter-btn'), ('select', '#dc-flt-carpeta', 'Una carpeta con nombre largo'),
                                        ('click', '.dc-filters .dc-chip-btn:nth-child(2)'), ('click', '.dc-filters-foot .btn-primary')]),
     ('documentos', 'selección', [('click', '.ph-menu'), ('click', '.menu-item'), ('click', '.dc-card-open')]),
+    ('documentos', 'hoja Mover', [('click', '.ph-menu'), ('click', '.menu-item'), ('click', '.dc-card-open'), ('click', '[data-act="move"]')]),
     ('documentos', 'ficha + Detalles + ⋯', [('click', '.dc-card-open'), ('click', '.dc-details > summary'), ('click', '.dc-more')]),
     ('documentos?tab=imprimir', 'menú de una fila', [('click', '.dc-row-more')]),
     ('documentos?tab=imprimir', 'Imprimir lo de hoy', [('click', '.dc-today')]),

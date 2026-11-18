@@ -378,3 +378,20 @@
   .dc-cb-row { gap: 10px; padding-left: 10px; }
   .dc-cb-thumb { display: none; }
 }
+
+/* ---------- Mover a carpeta (selección) ---------- */
+.dc-move { display: flex; flex-direction: column; gap: var(--s-4); }
+.dc-move-list { margin: 0 calc(-1 * var(--s-2)); }
+.dc-move-row {
+  width: 100%; min-height: 48px; display: flex; align-items: center; gap: var(--s-3); padding: 8px var(--s-2);
+  background: none; border: 0; border-radius: var(--r-md); color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.dc-move-row:hover { background: var(--hover); }
+.dc-move-row svg { color: var(--muted); flex: none; }
+.dc-move-row.on svg { color: var(--accent); }
+.dc-move-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.dc-move-row small { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+.dc-move-now { font-size: 12px; color: var(--accent); white-space: nowrap; }
+.dc-move-new-row { display: flex; gap: var(--s-2); }
+.dc-move-new-row .input { flex: 1 1 auto; min-width: 0; }
+.dc-move-new-row .btn { flex: none; white-space: nowrap; }

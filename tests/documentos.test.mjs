@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { activeFilters, clearFilter, toggleOrdered, queueItemsOf, SORTS, DEFAULT_SORT, filterDocs } from '../js/documents.js';
+import { activeFilters, clearFilter, toggleOrdered, queueItemsOf, SORTS, DEFAULT_SORT, filterDocs, folderName, moveToFolderPlan } from '../js/documents.js';
 import { printTodayPlan } from '../js/combine-model.js';
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -153,4 +153,28 @@ test('CSS de Documentos: sin restos de la interfaz anterior y sin colores fijos 
   for (const s of ['.dc-sort', '.dc-pill-select', '.dc-sel-btn', '.dc-mark', '.dc-row-actions', '.dc-foot', '.dc-btn-text']) assert.ok(!css.includes(s), `CSS sin usar: ${s}`);
   const rules = css.split('}').filter((r) => /\.dc-(filter|pill|details|detail-actions|selbar|row|danger-solid|confirm-del)/.test(r));
   assert.deepEqual(rules.filter((r) => /#[0-9a-f]{3,6}\b/i.test(r)), [], 'usa variables de app.css');
+});
+
+test('mover a carpeta: el nombre nuevo reutiliza una carpeta igual (mayúsculas, tildes, espacios)', () => {
+  const ex = ['Tema 3', 'Exámenes'];
+  assert.equal(folderName('  tema   3 ', ex), 'Tema 3');
+  assert.equal(folderName('examenes', ex), 'Exámenes');
+  assert.equal(folderName('Lectura', ex), 'Lectura');
+  assert.equal(folderName('   ', ex), '');
+  assert.equal(folderName('x'.repeat(60), ex).length, 40);
+});
+
+test('mover a carpeta: el plan solo incluye los que cambian y guarda la carpeta anterior', () => {
+  const docs = [{ id: 'a', carpeta: 'Tema 3' }, { id: 'b' }, { id: 'c', carpeta: 'Otra' }];
+  assert.deepEqual(moveToFolderPlan(docs, 'Tema 3'), [
+    { id: 'b', antes: '', despues: 'Tema 3' }, { id: 'c', antes: 'Otra', despues: 'Tema 3' }]);
+  assert.deepEqual(moveToFolderPlan(docs, ''), [
+    { id: 'a', antes: 'Tema 3', despues: '' }, { id: 'c', antes: 'Otra', despues: '' }]);
+  assert.deepEqual(moveToFolderPlan([{ id: 'b' }], ''), []);
+});
+
+test('mover a carpeta: la barra de selección tiene la acción «Mover»', () => {
+  const src = readFileSync(join(import.meta.dirname, '..', 'js', 'views', 'documentos', 'library.js'), 'utf8');
+  assert.match(src, /id: 'move'/);
+  assert.match(src, /openMoveSheet/);
 });

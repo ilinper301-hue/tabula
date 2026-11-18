@@ -3,10 +3,10 @@
 // Buscador a todo el ancho + botón «Filtros» (hoja con orden, favoritos, carpeta, etiqueta, tipo y grupo).
 // Bajo el buscador solo se ven las píldoras de los filtros activos, cada una con ✕.
 // Selección: pulsación larga en una tarjeta o «⋯ → Seleccionar» (cabecera). La barra inferior ofrece
-// «Imprimir juntos» y «Eliminar»; las acciones están en SEL_ACTIONS para poder añadir más.
+// «Imprimir juntos», «Mover» (a carpeta) y «Eliminar»; las acciones están en SEL_ACTIONS para poder añadir más.
 import { store } from '../../store.js';
 import { h, icon, toast, openSheet } from '../../ui.js';
-import { filterDocs, facets, kindOf, KINDS, SORTS, DEFAULT_SORT, activeFilters, clearFilter, toggleOrdered } from '../../documents.js';
+import { filterDocs, facets, kindOf, KINDS, SORTS, DEFAULT_SORT, activeFilters, clearFilter, toggleOrdered, folderName, moveToFolderPlan } from '../../documents.js';
 import { getGroups, getGroup } from '../../school.js';
 import { thumb, metaLine, plural } from './common.js';
 import { pendingFileIds, uploadPending, onPendingChange } from '../../files.js';
@@ -138,6 +138,12 @@ export function mountLibrary(ctx) {
   /** Acciones de la barra de selección (para añadir otra, p. ej. «Mover a carpeta», basta con otra entrada). */
   const SEL_ACTIONS = [
     {
+      id: 'move', icon: 'folder', label: 'Mover', className: 'btn-ghost',
+      enabled: (docs) => docs.length > 0,
+      title: () => 'Mover a una carpeta',
+      run: (docs) => openMoveSheet(docs),
+    },
+    {
       id: 'delete', icon: 'trash', label: 'Eliminar', className: 'btn-ghost btn-danger',
       enabled: (docs) => docs.length > 0,
       run: (docs) => confirmDelete(docs),
@@ -173,6 +179,43 @@ export function mountLibrary(ctx) {
   function toggleSel(d) {
     sel = toggleOrdered(sel, d.id);
     paintSel(); paintGrid();
+  }
+
+  /** Hoja «Mover a carpeta»: carpetas existentes (un toque mueve), «Sin carpeta» y una carpeta nueva. */
+  function openMoveSheet(docs) {
+    const n = docs.length;
+    const { carpetas } = facets(store.list('documentos'));
+    const shared = docs.every((d) => (d.carpeta || '') === (docs[0].carpeta || '')) ? (docs[0].carpeta || '') : null;
+    const row = (nombre, label, extra) => h('li', {}, h('button', {
+      type: 'button', class: `dc-move-row${shared === nombre ? ' on' : ''}`, 'aria-current': shared === nombre ? 'true' : null,
+      onclick: () => move(nombre),
+    }, icon(nombre ? 'folder' : 'x', 18), h('span', { class: 'dc-move-name' }, label), extra ? h('small', {}, extra) : null,
+      shared === nombre ? h('span', { class: 'dc-move-now' }, 'Ahora') : null));
+    const input = h('input', { class: 'input', id: 'dc-move-new', type: 'text', placeholder: 'Nombre de la carpeta', maxlength: 40, autocomplete: 'off' });
+    const createBtn = h('button', { type: 'button', class: 'btn btn-primary', disabled: true, onclick: () => move(folderName(input.value, carpetas.map((c) => c.nombre))) }, 'Crear y mover');
+    input.addEventListener('input', () => { createBtn.disabled = !input.value.trim(); });
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && input.value.trim()) { e.preventDefault(); createBtn.click(); } });
+
+    function move(carpeta) {
+      const plan = moveToFolderPlan(docs, carpeta);
+      close(); setSelecting(false);
+      if (!plan.length) { toast(carpeta ? `Ya estaban en «${carpeta}»` : 'Ya estaban sin carpeta'); return; }
+      plan.forEach((c) => store.update('documentos', c.id, { carpeta: c.despues }));
+      const que = plan.length === 1 ? '1 documento movido' : `${plan.length} documentos movidos`;
+      toast(carpeta ? `${que} a «${carpeta}»` : `${que} fuera de su carpeta`, {
+        label: 'Deshacer',
+        run: () => plan.forEach((c) => { if (store.get('documentos', c.id)) store.update('documentos', c.id, { carpeta: c.antes }); }),
+      });
+    }
+
+    const body = h('div', { class: 'dc-move' },
+      carpetas.length ? h('ul', { class: 'list dc-move-list', 'aria-label': 'Carpetas' },
+        ...carpetas.map((c) => row(c.nombre, c.nombre, plural(c.n, 'documento', 'documentos')))) : h('p', { class: 'dc-hint' }, 'Aún no tienes carpetas: crea la primera aquí abajo.'),
+      h('div', { class: 'field dc-move-new' }, h('label', { for: 'dc-move-new' }, 'Carpeta nueva'),
+        h('div', { class: 'dc-move-new-row' }, input, createBtn)),
+      carpetas.length && shared !== '' ? h('ul', { class: 'list dc-move-list' }, row('', 'Sacar de la carpeta')) : null);
+    const close = openSheet(n === 1 ? 'Mover a carpeta' : `Mover ${n} documentos`, body, { className: 'dc-move-sheet', onClose: () => { const b = selBar.querySelector('[data-act="move"]'); if (sel && b) b.focus({ preventScroll: true }); } });
+    requestAnimationFrame(() => (body.querySelector('.dc-move-row') || input).focus({ preventScroll: true }));
   }
 
   function confirmDelete(docs) {
